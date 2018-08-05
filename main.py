@@ -18,14 +18,14 @@ fullMsg = ""
 
 GPIO.setmode(GPIO.BOARD)
 
-MOUTH_OPEN = 3
-GPIO.setup(MOUTH_OPEN, GPIO.OUT, initial = GPIO.LOW)
-MOUTH_CLOSE = 5
-GPIO.setup(MOUTH_CLOSE, GPIO.OUT, initial = GPIO.LOW)
-EYES_OPEN = 7
-GPIO.setup(EYES_OPEN, GPIO.OUT, initial = GPIO.LOW)
-EYES_CLOSE = 11
-GPIO.setup(EYES_CLOSE, GPIO.OUT, initial = GPIO.LOW)
+MOUTH_OPEN = 7
+GPIO.setup(MOUTH_OPEN, GPIO.OUT, initial = 0)
+MOUTH_CLOSE = 11
+GPIO.setup(MOUTH_CLOSE, GPIO.OUT, initial = 0)
+EYES_OPEN = 13
+GPIO.setup(EYES_OPEN, GPIO.OUT, initial = 0)
+EYES_CLOSE = 15
+GPIO.setup(EYES_CLOSE, GPIO.OUT, initial = 0)
 
 audio = None
 isRunning = True
