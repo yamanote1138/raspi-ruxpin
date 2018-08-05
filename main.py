@@ -10,9 +10,9 @@ import subprocess
 import os
 from random import randint
 from threading import Thread
-from lib/audioPlayer import AudioPlayer
-from lib/gpio import GPIO
-from lib/webFramework import WebFramework
+from lib.audioPlayer import AudioPlayer
+from lib.gpio import GPIO
+from lib.webFramework import WebFramework
 
 fullMsg = ""
 
