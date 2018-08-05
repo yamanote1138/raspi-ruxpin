@@ -19,13 +19,13 @@ fullMsg = ""
 GPIO.setmode(GPIO.BOARD)
 
 MOUTH_OPEN = 4
-GPIO.setup(MOUTH_OPEN, GPIO.OUT, initial = 0)
+GPIO.setup(MOUTH_OPEN, GPIO.OUT, initial = GPIO.LOW)
 MOUTH_CLOSE = 17
-GPIO.setup(MOUTH_CLOSE, GPIO.OUT, initial = 0)
+GPIO.setup(MOUTH_CLOSE, GPIO.OUT, initial = GPIO.LOW)
 EYES_OPEN = 27
-GPIO.setup(EYES_OPEN, GPIO.OUT, initial = 0)
+GPIO.setup(EYES_OPEN, GPIO.OUT, initial = GPIO.LOW)
 EYES_CLOSE = 22
-GPIO.setup(EYES_CLOSE, GPIO.OUT, initial = 0)
+GPIO.setup(EYES_CLOSE, GPIO.OUT, initial = GPIO.LOW)
 
 audio = None
 isRunning = True
@@ -43,15 +43,15 @@ def updateMouth():
             lastMouthEventTime = time.time()
 
             if( audio.mouthValue == 1 ):
-                GPIO.output( MOUTH_OPEN, 1 )
-                GPIO.output( MOUTH_CLOSE, 0 )
+                GPIO.output( MOUTH_OPEN, GPIO.HIGH )
+                GPIO.output( MOUTH_CLOSE, GPIO.LOW )
             else:
-                GPIO.output( MOUTH_OPEN, 0 )
-                GPIO.output( MOUTH_CLOSE, 1 )
+                GPIO.output( MOUTH_OPEN, GPIO.LOW )
+                GPIO.output( MOUTH_CLOSE, GPIO.HIGH )
         else:
             if( time.time() - lastMouthEventTime > 0.4 ):
-                GPIO.output( MOUTH_OPEN, 0 )
-                GPIO.output( MOUTH_CLOSE, 0 )
+                GPIO.output( MOUTH_OPEN, GPIO.LOW )
+                GPIO.output( MOUTH_CLOSE, GPIO.LOW )
 
 # A routine for blinking the eyes in a semi-random fashion.
 def updateEyes():
