@@ -20,7 +20,7 @@ class WebFramework:
         
         @get('/naughty')
         def index():
-            return template('naughty')
+            return template('templates/naughty')
 
         @post('/naughty')
         def speak():
@@ -102,7 +102,7 @@ class WebFramework:
 
         @get('/')
         def index():
-            return template('index')
+            return template('templates/index')
 
         @post('/')
         def speak():
