@@ -80,8 +80,8 @@ def talk(myText):
     audio.play("speech.wav")
     return myText
 
-mouthThread = Thread(target=updateMouth)
-mouthThread.start()
+# mouthThread = Thread(target=updateMouth)
+# mouthThread.start()
 # eyesThread = Thread(target=updateEyes)
 # eyesThread.start()     
 audio = AudioPlayer()
