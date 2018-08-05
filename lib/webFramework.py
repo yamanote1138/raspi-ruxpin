@@ -13,8 +13,6 @@ class WebFramework:
         print( "---------")
         self.talkFunc = talkFunc
         self.phraseFunc = phraseFunc
-        self.dirFunc = dirFunc
-        self.tweetFunc = tweetFunc
 
         @get('/public/<filename>')
         def server_static(filename):
