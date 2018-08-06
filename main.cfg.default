@@ -1,0 +1,5 @@
+[pins]
+mouth_open = 11
+mouth_closed = 13
+eyes_open = 16
+eyes_closed = 18
