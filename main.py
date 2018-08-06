@@ -5,6 +5,8 @@ import sys
 import time
 import subprocess
 import os
+import ConfigParser
+import json
 
 from random import randint
 from threading import Thread
@@ -14,18 +16,27 @@ import RPi.GPIO as GPIO
 from lib.audioPlayer import AudioPlayer
 from lib.webFramework import WebFramework
 
-fullMsg = ""
+# read main config file
+config = ConfigParser.RawConfigParser()
+config.read('main.cfg')
+
+# read phrases config file
+with open('phrases.json', 'r') as f:
+  phrases = json.load(f)
+
+# map configured pins to variables
+MOUTH_OPEN = config.getint('pins', 'mouth_open')
+MOUTH_CLOSED = config.getint('pins', 'mouth_closed')
+EYES_OPEN = config.getint('pins', 'eyes_open')
+EYES_CLOSED = config.getint('pins', 'eyes_closed')
 
 GPIO.setmode(GPIO.BOARD)
 
-MOUTH_OPEN = 7
-GPIO.setup(MOUTH_OPEN, GPIO.OUT, initial = 0)
-MOUTH_CLOSE = 11
-GPIO.setup(MOUTH_CLOSE, GPIO.OUT, initial = 0)
-EYES_OPEN = 13
-GPIO.setup(EYES_OPEN, GPIO.OUT, initial = 0)
-EYES_CLOSE = 15
-GPIO.setup(EYES_CLOSE, GPIO.OUT, initial = 0)
+# designate pins as OUT
+GPIO.setup(MOUTH_OPEN, GPIO.OUT)
+GPIO.setup(MOUTH_CLOSED, GPIO.OUT)
+GPIO.setup(EYES_OPEN, GPIO.OUT)
+GPIO.setup(EYES_CLOSED, GPIO.OUT)
 
 audio = None
 isRunning = True
@@ -86,7 +97,7 @@ def talk(myText):
 # eyesThread.start()     
 audio = AudioPlayer()
 
-web = WebFramework(talk, phrase)
+web = WebFramework(talk, phrase, phrases)
 isRunning = False
 GPIO.cleanup()
 sys.exit(1)

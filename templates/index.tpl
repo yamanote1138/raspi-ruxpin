@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Mappy Ruxpin</title>
+    <title>RasPi Ruxpin</title>
     
     <meta name="description" content="Make the bear talk">
     <meta name="author" content="Chad Francis">
@@ -15,17 +15,30 @@
 
     <script src="https://use.fontawesome.com/12a0b300c5.js"></script>
   </head>
-  <body style="background-image: url(public/bg.png)">
+  <body style="background-image: url(public/bg_naughty.png)">
     <div class="container">
-      <a href="/naughty"><img src="public/mappy_ruxpin.png" class="img-responsive"></a>
-      <form action="/" method="post" class="form-inline">
-        <div class="well">
-          <button type="submit" name="demo" value="1" class="btn btn-info btn-block"><i class="fa fa-map-marker"></i> Directions Demo</button>
-          <span class="help-block">Have Mappy read a canned set of turn-by-turn directions from our guidance API</span>
+      <a href="/"><img src="public/naughty_ruxpin.png" class="img-responsive"></a>
+      <form action="/naughty" method="post" class="form-inline">
+        <div class="well form-group">
+          <div class="input-group">
+            <input type="text" name="speech" class="form-control" id="speech" placeholder="Type anything here and Mappy will say it... I mean anything!">
+            <span class="input-group-btn">
+              <button type="submit" class="btn btn-info"><i class="fa fa-bullhorn" aria-hidden="true"></i></button>
+            </span>
+          </div>
         </div>
-        <div class="well">
-          <button type="submit" name="tweet" value="1" class="btn btn-info btn-block"><i class="fa fa-twitter"></i> MapQuest Tweets</button>
-          <span class="help-block">Mappy will read a random tweet that mentions <code>@MapQuest</code></span>
+        <div class="well form-group">
+          <div class="input-group">
+            <select name="phrase" class="form-control" id="phrase">
+              <option value="">Select a pre-recorded sound file</option>
+              % for key in phrases:
+              <option value="{{key}}">{{phrases[key]}}</option>
+              % end
+            </select>
+            <span class="input-group-btn">
+              <button type="submit" class="btn btn-info"><i class="fa fa-play-circle" aria-hidden="true"></i></button>
+            </span>
+          </div>
         </div>
       </form>
     </div>
