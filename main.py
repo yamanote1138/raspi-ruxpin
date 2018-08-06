@@ -91,11 +91,11 @@ def talk(myText):
     audio.play("speech.wav")
     return myText
 
-if(config.getbool('options', 'move_mouth')):
+if(config.getboolean('options', 'move_mouth')):
     mouthThread = Thread(target=updateMouth)
     mouthThread.start()
 
-if(config.getbool('options', 'move_eyes')):
+if(config.getboolean('options', 'move_eyes')):
     eyesThread = Thread(target=updateEyes)
     eyesThread.start()     
 
