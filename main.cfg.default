@@ -3,3 +3,7 @@ mouth_open = 11
 mouth_closed = 13
 eyes_open = 16
 eyes_closed = 18
+
+[options]
+move_eyes = true
+move_mouth = true

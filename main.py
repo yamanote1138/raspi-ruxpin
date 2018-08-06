@@ -91,10 +91,14 @@ def talk(myText):
     audio.play("speech.wav")
     return myText
 
-# mouthThread = Thread(target=updateMouth)
-# mouthThread.start()
-# eyesThread = Thread(target=updateEyes)
-# eyesThread.start()     
+if(config.getbool('options', 'move_mouth')):
+    mouthThread = Thread(target=updateMouth)
+    mouthThread.start()
+
+if(config.getbool('options', 'move_eyes')):
+    eyesThread = Thread(target=updateEyes)
+    eyesThread.start()     
+
 audio = AudioPlayer()
 
 web = WebFramework(talk, phrase, phrases)
