@@ -7,10 +7,10 @@ config = ConfigParser.RawConfigParser()
 config.read('main.cfg')
 
 # map configured pins to variables
-MOUTH_OPEN = config.get('pins', 'mouth_open')
-MOUTH_CLOSED = config.get('pins', 'mouth_closed')
-EYES_OPEN = config.get('pins', 'eyes_open')
-EYES_CLOSED = config.get('pins', 'eyes_closed')
+MOUTH_OPEN = config.getint('pins', 'mouth_open')
+MOUTH_CLOSED = config.getint('pins', 'mouth_closed')
+EYES_OPEN = config.getint('pins', 'eyes_open')
+EYES_CLOSED = config.getint('pins', 'eyes_closed')
 
 # set gpio to map pins using board numbers (as opposed to bcm names)
 GPIO.setmode(GPIO.BOARD)
