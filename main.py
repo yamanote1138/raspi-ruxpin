@@ -55,28 +55,28 @@ def updateMouth():
 
             if( audio.mouthValue == 1 ):
                 GPIO.output( MOUTH_OPEN, GPIO.HIGH )
-                GPIO.output( MOUTH_CLOSE, GPIO.LOW )
+                GPIO.output( MOUTH_CLOSED, GPIO.LOW )
             else:
                 GPIO.output( MOUTH_OPEN, GPIO.LOW )
-                GPIO.output( MOUTH_CLOSE, GPIO.HIGH )
+                GPIO.output( MOUTH_CLOSED, GPIO.HIGH )
         else:
             if( time.time() - lastMouthEventTime > 0.4 ):
                 GPIO.output( MOUTH_OPEN, GPIO.LOW )
-                GPIO.output( MOUTH_CLOSE, GPIO.LOW )
+                GPIO.output( MOUTH_CLOSED, GPIO.LOW )
 
 # A routine for blinking the eyes in a semi-random fashion.
 def updateEyes():
     while isRunning:
-        GPIO.output( EYES_CLOSE, 1 )
+        GPIO.output( EYES_CLOSED, 1 )
         GPIO.output( EYES_OPEN, 0 )
         time.sleep(0.4)
-        GPIO.output( EYES_CLOSE, 0 )
+        GPIO.output( EYES_CLOSED, 0 )
         GPIO.output( EYES_OPEN, 1 )
         time.sleep(0.4)
-        GPIO.output( EYES_CLOSE, 1 )
+        GPIO.output( EYES_CLOSED, 1 )
         GPIO.output( EYES_OPEN, 0 )
         time.sleep(0.4)
-        GPIO.output( EYES_CLOSE, 0 )
+        GPIO.output( EYES_CLOSED, 0 )
         GPIO.output( EYES_OPEN, 0 )
         time.sleep( randint( 5,15) )
    
