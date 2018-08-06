@@ -18,7 +18,7 @@
   <body style="background-image: url(public/bg_naughty.png)">
     <div class="container">
       <a href="/"><img src="public/naughty_ruxpin.png" class="img-responsive"></a>
-      <form action="/naughty" method="post" class="form-inline">
+      <form action="/" method="post" class="form-inline">
         <div class="well form-group">
           <div class="input-group">
             <input type="text" name="speech" class="form-control" id="speech" placeholder="Type anything here and Mappy will say it... I mean anything!">
