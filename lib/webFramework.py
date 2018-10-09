@@ -9,7 +9,7 @@ class WebFramework:
         self.ip = [(s.connect(('8.8.8.8', 80)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]
         print( "---------")
         print( "RasPi Ruxpin in ONLINE!")
-        print( "In your browser, go to " + str(self.ip) + ":8080")
+        print( "In your browser, go to http://" + str(self.ip) + ":8080")
         print( "---------")
         self.talkFunc = talkFunc
         self.phraseFunc = phraseFunc
