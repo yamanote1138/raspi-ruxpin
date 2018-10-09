@@ -28,9 +28,6 @@ class WebPuppet:
       part = request.forms.get('part')
       direction = request.forms.get('direction')
 
-      openMouth = (mouth == "open")
-      openEyes = (eyes == "open")
-
       if(part == 'mouth'):
         self.mouthFunc(direction=="open")
       elif(part=='eyes'):
