@@ -12,8 +12,8 @@ MOUTH_CLOSED = config.getint('pins', 'mouth_closed')
 EYES_OPEN = config.getint('pins', 'eyes_open')
 EYES_CLOSED = config.getint('pins', 'eyes_closed')
 
-# set gpio to map pins using board numbers (as opposed to bcm names)
-GPIO.setmode(GPIO.BOARD)
+# set gpio to map pins using Broadcom designations
+GPIO.setmode(GPIO.BCM)
 
 # designate pins as OUT
 GPIO.setup(MOUTH_OPEN, GPIO.OUT)
