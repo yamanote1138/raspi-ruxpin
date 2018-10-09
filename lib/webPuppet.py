@@ -33,7 +33,7 @@ class WebFramework:
 
       if(part == 'mouth'):
         self.mouthFunc(direction=="open")
-      else if(part=='eyes'):
+      elif(part=='eyes'):
         self.eyesFunc(direction=="open")
       redirect('/')
 
