@@ -3,7 +3,7 @@
 from bottle import run, get, post, request, response, route, redirect, template, static_file
 import socket
 
-class WebFramework:
+class WebPuppet:
   def __init__(self,mouthFunc, eyesFunc):
 
     self.ip = [(s.connect(('8.8.8.8', 80)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]
