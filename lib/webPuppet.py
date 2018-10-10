@@ -4,7 +4,7 @@ from bottle import run, get, post, request, response, route, redirect, template,
 import socket
 
 class WebPuppet:
-  def __init__(self,mouthFunc, eyesFunc):
+  def __init__(self, bear):
 
     self.ip = [(s.connect(('8.8.8.8', 80)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]
     print( "---------")
@@ -12,26 +12,31 @@ class WebPuppet:
     print( "In your browser, go to http://" + str(self.ip) + ":8080")
     print( "---------")
 
-    self.mouthFunc = mouthFunc
-    self.eyesFunc = eyesFunc
+    self.bear = bear
 
-    @get('/public/<filename>')
-    def server_static(filename):
-      return static_file(filename, root='./public')
-    
-    @get('/')
-    def index():
-      return template('templates/puppet')
+  @get('/public/<filename>')
+  def server_static(filename):
+    return static_file(filename, root='./public')
+  
+  @get('/')
+  def index():
+    return template('templates/puppet')
 
-    @post('/')
-    def puppet():
-      part = request.forms.get('part')
-      direction = request.forms.get('direction')
+  @post('/')
+  def puppet():
+    part = request.forms.get('part')
+    direction = request.forms.get('direction')
 
-      if(part == 'mouth'):
-        self.mouthFunc(direction=="open")
-      elif(part=='eyes'):
-        self.eyesFunc(direction=="open")
-      redirect('/')
+    if(part == 'mouth'):
+      if(direction == 'open'):
+        bear.mouth.open()
+      else
+        bear.mouth.close()
+    elif(part=='eyes'):
+      if(direction == 'open'):
+        bear.eyes.open()
+      else
+        bear.eyes.close()
+    redirect('/')
 
-    run(host=self.ip, port=8080, debug=True)
+  run(host=self.ip, port=8080, debug=True)
