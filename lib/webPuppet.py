@@ -30,12 +30,12 @@ class WebPuppet:
     if(part == 'mouth'):
       if(direction == 'open'):
         bear.mouth.open()
-      else
+      else:
         bear.mouth.close()
     elif(part=='eyes'):
       if(direction == 'open'):
         bear.eyes.open()
-      else
+      else:
         bear.eyes.close()
     redirect('/')
 
