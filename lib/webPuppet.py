@@ -14,29 +14,29 @@ class WebPuppet:
 
     self.bear = bear
 
-  @get('/public/<filename>')
-  def server_static(filename):
-    return static_file(filename, root='./public')
-  
-  @get('/')
-  def index():
-    return template('templates/puppet')
+    @get('/public/<filename>')
+    def server_static(filename):
+      return static_file(filename, root='./public')
+    
+    @get('/')
+    def index():
+      return template('templates/puppet')
 
-  @post('/')
-  def puppet():
-    part = request.forms.get('part')
-    direction = request.forms.get('direction')
+    @post('/')
+    def puppet():
+      part = request.forms.get('part')
+      direction = request.forms.get('direction')
 
-    if(part == 'mouth'):
-      if(direction == 'open'):
-        bear.mouth.open()
-      else:
-        bear.mouth.close()
-    elif(part=='eyes'):
-      if(direction == 'open'):
-        bear.eyes.open()
-      else:
-        bear.eyes.close()
-    redirect('/')
+      if(part == 'mouth'):
+        if(direction == 'open'):
+          bear.mouth.open()
+        else:
+          bear.mouth.close()
+      elif(part=='eyes'):
+        if(direction == 'open'):
+          bear.eyes.open()
+        else:
+          bear.eyes.close()
+      redirect('/')
 
-  run(host=self.ip, port=8080, debug=True)
+    run(host=self.ip, port=8080, debug=True)
