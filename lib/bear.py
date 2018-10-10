@@ -14,14 +14,14 @@ class Servo:
   def open(self):
     GPIO.output( self.open_pin, GPIO.HIGH )
     GPIO.output( self.close_pin, GPIO.LOW )
-    time.sleep(1)
+    time.sleep(.5)
     GPIO.output( self.open_pin, GPIO.LOW )
     GPIO.output( self.close_pin, GPIO.LOW )
 
   def close(self):
     GPIO.output( self.open_pin, GPIO.LOW )
     GPIO.output( self.close_pin, GPIO.HIGH )
-    time.sleep(1)
+    time.sleep(.5)
     GPIO.output( self.open_pin, GPIO.LOW )
     GPIO.output( self.close_pin, GPIO.LOW )
 
