@@ -14,7 +14,7 @@ class Servo:
     GPIO.setup(self.close_pin, GPIO.OUT)
 
   def open(self):
-    if(!self.is_open):
+    if(not self.is_open):
       GPIO.output( self.open_pin, GPIO.HIGH )
       GPIO.output( self.close_pin, GPIO.LOW )
       self.is_open = True
@@ -23,7 +23,7 @@ class Servo:
       GPIO.output( self.close_pin, GPIO.LOW )
 
   def close(self):
-    if(!self.is_open):
+    if(self.is_open):
       GPIO.output( self.open_pin, GPIO.LOW )
       GPIO.output( self.close_pin, GPIO.HIGH )
       self.is_open = False
