@@ -37,6 +37,6 @@ class WebPuppet:
           bear.eyes.open()
         else:
           bear.eyes.close()
-      redirect('/')
+      return template('templates/puppet', part=part, direction=direction)
 
     run(host=self.ip, port=8080, debug=True)

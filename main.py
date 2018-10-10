@@ -24,21 +24,6 @@ config.read('main.cfg')
 with open('phrases.json', 'r') as f:
   phrases = json.load(f)
 
-# map configured pins to variables
-MOUTH_OPEN = config.getint('pins', 'mouth_open')
-MOUTH_CLOSED = config.getint('pins', 'mouth_closed')
-EYES_OPEN = config.getint('pins', 'eyes_open')
-EYES_CLOSED = config.getint('pins', 'eyes_closed')
-
-# use Broadcom pin designations
-GPIO.setmode(GPIO.BCM)
-
-# designate pins as OUT
-GPIO.setup(MOUTH_OPEN, GPIO.OUT)
-GPIO.setup(MOUTH_CLOSED, GPIO.OUT)
-GPIO.setup(EYES_OPEN, GPIO.OUT)
-GPIO.setup(EYES_CLOSED, GPIO.OUT)
-
 audio = None
 isRunning = True
 
@@ -48,22 +33,22 @@ def updateMouth():
 
   while( audio == None ):
     time.sleep( 0.1 )
-    
-    while isRunning:
-      if( audio.mouthValue != lastMouthEvent ):
-        lastMouthEvent = audio.mouthValue
-        lastMouthEventTime = time.time()
 
-        if( audio.mouthValue == 1 ):
-          GPIO.output( MOUTH_OPEN, GPIO.HIGH )
-          GPIO.output( MOUTH_CLOSED, GPIO.LOW )
-        else:
+  while isRunning:
+    if( audio.mouthValue != lastMouthEvent ):
+      lastMouthEvent = audio.mouthValue
+      lastMouthEventTime = time.time()
+
+      if( audio.mouthValue == 1 ):
+        GPIO.output( MOUTH_OPEN, GPIO.HIGH )
+        GPIO.output( MOUTH_CLOSED, GPIO.LOW )
+      else:
+        GPIO.output( MOUTH_OPEN, GPIO.LOW )
+        GPIO.output( MOUTH_CLOSED, GPIO.HIGH )
+      else:
+        if( time.time() - lastMouthEventTime > 0.4 ):
           GPIO.output( MOUTH_OPEN, GPIO.LOW )
-          GPIO.output( MOUTH_CLOSED, GPIO.HIGH )
-        else:
-          if( time.time() - lastMouthEventTime > 0.4 ):
-            GPIO.output( MOUTH_OPEN, GPIO.LOW )
-            GPIO.output( MOUTH_CLOSED, GPIO.LOW )
+          GPIO.output( MOUTH_CLOSED, GPIO.LOW )
 
 # A routine for blinking the eyes in a semi-random fashion.
 def updateEyes():
@@ -80,25 +65,25 @@ def updateEyes():
     GPIO.output( EYES_CLOSED, 0 )
     GPIO.output( EYES_OPEN, 0 )
     time.sleep( randint( 5,15) )
-    
+
     def phrase(myPhrase):
       audio.play("sounds/"+myPhrase+".wav")
       return myPhrase
 
-      def talk(myText):
-    os.system( "espeak \",...\" 2>/dev/null" ) # Sometimes the beginning of audio can get cut off. Insert silence.
-    time.sleep( 0.5 )
-    subprocess.call(["espeak", "-w", "speech.wav", myText, "-s", "130", "-a", "200", "-ven-us+m3","-g","5"])
-    audio.play("speech.wav")
-    return myText
+    def talk(myText):
+      os.system( "espeak \",...\" 2>/dev/null" ) # Sometimes the beginning of audio can get cut off. Insert silence.
+      time.sleep( 0.5 )
+      subprocess.call(["espeak", "-w", "speech.wav", myText, "-s", "130", "-a", "200", "-ven-us+m3","-g","5"])
+      audio.play("speech.wav")
+      return myText
 
     if(config.getboolean('options', 'move_mouth')):
       mouthThread = Thread(target=updateMouth)
       mouthThread.start()
 
-      if(config.getboolean('options', 'move_eyes')):
-        eyesThread = Thread(target=updateEyes)
-        eyesThread.start()     
+    if(config.getboolean('options', 'move_eyes')):
+      eyesThread = Thread(target=updateEyes)
+      eyesThread.start()     
 
         audio = AudioPlayer()
 
