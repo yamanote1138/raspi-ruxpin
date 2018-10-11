@@ -23,13 +23,13 @@
           <div class="input-group">
             <select name="part" class="form-control" id="part">
               <option value="">Select part</option>
-              <option value="mouth"{{'selected="selected"' if part=='mouth'}}>mouth</option>
-              <option value="eyes">eyes</option>
+              <option value="mouth"{{'selected="selected"' if defined('part') and part == 'mouth' else ''}}>mouth</option>
+              <option value="eyes"{{'selected="selected"' if defined('part') and part == 'eyes' else ''}}>eyes</option>
             </select>
             <select name="direction" class="form-control" id="part">
               <option value="">Select direction</option>
-              <option value="open">open</option>
-              <option value="close">close</option>
+              <option value="open"{{'selected="selected"' if defined('direction') and direction == 'open' else ''}}>open</option>
+              <option value="close"{{'selected="selected"' if defined('direction') and direction == 'close' else ''}}>close</option>
             </select>
             <span class="input-group-btn">
               <button type="submit" class="btn btn-info"><i class="fa fa-play-circle" aria-hidden="true"></i></button>
