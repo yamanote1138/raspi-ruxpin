@@ -17,23 +17,27 @@ class Servo:
     GPIO.setup(self.open_pin, GPIO.OUT)
     GPIO.setup(self.close_pin, GPIO.OUT)
 
-  def open(self):
+  def open(self, duration=.5):
     if(not self.is_open):
       GPIO.output( self.open_pin, GPIO.HIGH )
       GPIO.output( self.close_pin, GPIO.LOW )
       self.is_open = True
-      time.sleep(.5)
-      GPIO.output( self.open_pin, GPIO.LOW )
-      GPIO.output( self.close_pin, GPIO.LOW )
+      if(duration!=None):
+        time.sleep(duration)
+        self.stop()
 
-  def close(self):
+  def close(self, duration=.5):
     if(self.is_open):
       GPIO.output( self.open_pin, GPIO.LOW )
       GPIO.output( self.close_pin, GPIO.HIGH )
       self.is_open = False
-      time.sleep(.5)
-      GPIO.output( self.open_pin, GPIO.LOW )
-      GPIO.output( self.close_pin, GPIO.LOW )
+      if(duration!=None):
+        time.sleep(.5)
+        self.stop()
+
+  def stop(self):
+    GPIO.output( self.open_pin, GPIO.LOW )
+    GPIO.output( self.close_pin, GPIO.LOW )
 
 class Bear:
   def __init__(self, config, audio):
