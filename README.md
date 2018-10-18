@@ -12,7 +12,11 @@ So, on that note, I've ported and rebuilt the project for use with a Raspberry P
 
 
 ## What You'll Need
-(todo)
+- Teddy Ruxpin
+- RaspberryPi 3 (probably works on earlier versions, but unverified)
+- Breadboard
+- jumpers
+- Sparkfun TB6612FNG H-Bridge Breakout
 
 ## Wiring
 ![Fritzing](fritzing.png)
@@ -23,11 +27,17 @@ Make sure you install the following dependencies:
 
 ```sh
 sudo apt-get install python-setuptools python-dev build-essential espeak alsa-utils
-sudo apt-get install python-alsaaudio python-numpy python-twitter python-bottle mplayer
+sudo apt-get install python-alsaaudio python-numpy python-bottle mplayer
 ```
 
 ## Configuration
-To start the application, run this script:
+make a copy of the default config and name it `main.cfg`
+```sh
+cp main.cfg.default main.cfg
+```
+
+using whatver editor tickles your fancy, set the GPIO pins to whatever you'd like
+NOTE: the default config maps to the GPIO pins as wired in the attached fritzing diagram
 
 ## Operation
 To start the application, run this script:
