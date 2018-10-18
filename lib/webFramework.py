@@ -22,29 +22,32 @@ class WebFramework:
     def index():
       return template('templates/index', phrases=phrasesDict)
 
-    @post('/puppet')
-    def puppet():
-      part = request.forms.get('part')
-      direction = request.forms.get('direction')
+    @get('/puppet')
+    def index():
+      e = request.query.e or 'o'
+      m = request.query.m or 'o'
 
-      if(part == 'mouth'):
-        if(direction == 'open'):
-          bear.mouth.open()
+      if(bear!=None):
+        if(e == 'o'):
+          self.bear.eyes.open()
         else:
-          bear.mouth.close()
-      elif(part=='eyes'):
-        if(direction == 'open'):
-          bear.eyes.open()
+          self.bear.eyes.close()
+        if(m == 'o'):
+          self.bear.mouth.open()
         else:
-          bear.eyes.close()
-      index()
+          self.bear.mouth.close()
+      else:
+        print(('open' if e =='o' else 'close') + ' eyes')
+        print(('open' if m =='o' else 'close') + ' mouth')
+
+      return template('templates/puppet', e=e, m=m)
 
     @post('/phrase')
     def phrase():
-      phrase = request.forms.get('phrase')
+      filename = request.forms.get('phrase')
 
-      if(phrase != ""):
-        self.phraseFunc( phrase )
+      if(filename != ""):
+        if(self.bear!=None) self.bear.phrase( filename )
       redirect('/')
 
     @post('/speak')
@@ -52,7 +55,7 @@ class WebFramework:
       text = request.forms.get('speech')
 
       if(text != ""):
-        self.bear.talk( text )
+        if(self.bear!=None) self.bear.talk( text )
       redirect('/')
 
     @post('/slack')
@@ -69,10 +72,10 @@ class WebFramework:
           return phraseList
       else:
         if(text in phrasesDict):
-          self.bear.phrase( text )
+          if(self.bear!=None) self.bear.phrase( text )
           return "RasPi Ruxpin played the phrase: \"%s\"" % phrasesDict[text]
         else:
-          self.bear.talk( text )
+          if(self.bear!=None) self.bear.talk( text )
           return "Raspi Ruxpin said: \"%s\"" % text
 
     run(host=self.ip, port=8080, debug=True)

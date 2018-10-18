@@ -35,7 +35,7 @@
         <area shape="rect" coords="0,100,200,200" href="?e={{e}}&m={{mx}}" alt="Sun" />
       </map>
       <img src="/public/teddy_e{{e}}m{{m}}.png" class="img-responsive" usemap="#teddymap">
-      <form action="/" method="get" class="form-inline">
+      <form action="/puppet" method="get" class="form-inline">
         <div class="well form-group">
           <label for="e" class="col-sm-2 control-label">Eyes</label>
           <div class="col-sm-10">
@@ -54,18 +54,20 @@
           <button type="submit" class="btn btn-info"><i class="fa fa-play-circle" aria-hidden="true"></i></button>
         </div>
       </form>
-      <form action="/" method="post" class="form-inline">
+      <form action="/speak" method="post" class="form-inline">
         <div class="well form-group">
           <div class="input-group">
-            <input type="text" name="speech" class="form-control" id="speech" placeholder="Type anything here and Mappy will say it... I mean anything!">
+            <input type="filename" name="speech" class="form-control" id="filename" placeholder="Type anything here and the bear will say it... I mean anything!">
             <span class="input-group-btn">
               <button type="submit" class="btn btn-info"><i class="fa fa-bullhorn" aria-hidden="true"></i></button>
             </span>
           </div>
         </div>
+      </form>
+      <form action="/phrase" method="post" class="form-inline">
         <div class="well form-group">
           <div class="input-group">
-            <select name="phrase" class="form-control" id="phrase">
+            <select name="filename" class="form-control" id="filename">
               <option value="">Select a pre-recorded sound file</option>
               % for key in phrases:
               <option value="{{key}}">{{phrases[key]}}</option>
