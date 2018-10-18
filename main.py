@@ -4,10 +4,18 @@
 import sys
 import ConfigParser
 import json
+import os
 
-from lib.audioPlayer import AudioPlayer
+IS_PI = os.uname()[4][:3] == 'arm'
+
+if(IS_PI):
+  from lib.audioPlayer import AudioPlayer
+  from lib.bear import Bear
+else:
+  from lib.mockAudioPlayer import AudioPlayer
+  from lib.mockBear import Bear
+
 from lib.webFramework import WebFramework
-from lib.bear import Bear
 
 # read main config file
 config = ConfigParser.RawConfigParser()

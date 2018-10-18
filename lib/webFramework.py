@@ -7,12 +7,13 @@ import socket
 class WebFramework:
   def __init__(self,bear,phrasesDict):
     self.ip = [(s.connect(('8.8.8.8', 80)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]
+    self.e = 'o'
+    self.m = 'c'
+
     print( "---------")
     print( "RasPi Ruxpin in ONLINE!")
     print( "In your browser, go to http://" + str(self.ip) + ":8080")
     print( "---------")
-    self.talkFunc = talkFunc
-    self.phraseFunc = phraseFunc
 
     @get('/public/<filename>')
     def server_static(filename):
@@ -20,43 +21,36 @@ class WebFramework:
       
     @get('/')
     def index():
-      return template('templates/index', phrases=phrasesDict)
+      return template('templates/index', phrases=phrasesDict, e=self.e, m=self.m)
 
     @get('/puppet')
-    def index():
-      e = request.query.e or 'o'
-      m = request.query.m or 'o'
+    def puppet():
+      self.e = request.query.e or 'o'
+      self.m = request.query.m or 'o'
 
-      if(bear!=None):
-        if(e == 'o'):
-          self.bear.eyes.open()
-        else:
-          self.bear.eyes.close()
-        if(m == 'o'):
-          self.bear.mouth.open()
-        else:
-          self.bear.mouth.close()
+      if(self.e == 'o'):
+        self.bear.eyes.open()
+        self.e == 'c'
       else:
-        print(('open' if e =='o' else 'close') + ' eyes')
-        print(('open' if m =='o' else 'close') + ' mouth')
-
-      return template('templates/puppet', e=e, m=m)
+        self.bear.eyes.close()
+      if(self.m == 'o'):
+        self.bear.mouth.open()
+      else:
+        self.m == 'c'
+        self.bear.mouth.close()
+      index()
 
     @post('/phrase')
     def phrase():
       filename = request.forms.get('phrase')
-
-      if(filename != ""):
-        if(self.bear!=None) self.bear.phrase( filename )
-      redirect('/')
+      if(filename != ""): self.bear.phrase( filename )
+      index()
 
     @post('/speak')
     def speak():
       text = request.forms.get('speech')
-
-      if(text != ""):
-        if(self.bear!=None) self.bear.talk( text )
-      redirect('/')
+      if(text != ""): self.bear.talk( text )
+      index()
 
     @post('/slack')
     def slack():
@@ -72,10 +66,10 @@ class WebFramework:
           return phraseList
       else:
         if(text in phrasesDict):
-          if(self.bear!=None) self.bear.phrase( text )
+          self.bear.phrase( text )
           return "RasPi Ruxpin played the phrase: \"%s\"" % phrasesDict[text]
         else:
-          if(self.bear!=None) self.bear.talk( text )
+          self.bear.talk( text )
           return "Raspi Ruxpin said: \"%s\"" % text
 
     run(host=self.ip, port=8080, debug=True)
