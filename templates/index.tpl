@@ -25,14 +25,14 @@
   </head>
   <body style="background-image: url(public/bg_naughty.png)">
     <div class="container">
-      <a href="/"><img src="public/naughty_ruxpin.png" class="img-responsive"></a>
+      <a href="/"><img src="public/mappy_ruxpin.png" class="img-responsive"></a>
 <%
   ex = 'c' if e == 'o' else 'o'
   mx = 'c' if m == 'o' else 'o'
 %>
       <map name="teddymap">
-        <area shape="rect" coords="0,0,200,100" href="?e={{ex}}&m={{m}}" alt="Sun" />
-        <area shape="rect" coords="0,100,200,200" href="?e={{e}}&m={{mx}}" alt="Sun" />
+        <area shape="rect" coords="0,0,200,100" href="/puppet?e={{ex}}&m={{m}}" alt="Sun" />
+        <area shape="rect" coords="0,100,200,200" href="/puppet?e={{e}}&m={{mx}}" alt="Sun" />
       </map>
       <img src="/public/teddy_e{{e}}m{{m}}.png" class="img-responsive" usemap="#teddymap">
       <form action="/puppet" method="get" class="form-inline">

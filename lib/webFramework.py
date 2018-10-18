@@ -29,28 +29,28 @@ class WebFramework:
       self.m = request.query.m or 'o'
 
       if(self.e == 'o'):
-        self.bear.eyes.open()
+        bear.eyes.open()
         self.e == 'c'
       else:
-        self.bear.eyes.close()
+        bear.eyes.close()
       if(self.m == 'o'):
-        self.bear.mouth.open()
+        bear.mouth.open()
       else:
         self.m == 'c'
-        self.bear.mouth.close()
-      index()
+        bear.mouth.close()
+      return index()
 
     @post('/phrase')
     def phrase():
-      filename = request.forms.get('phrase')
-      if(filename != ""): self.bear.phrase( filename )
-      index()
+      filename = request.forms.get('filename')
+      if(filename != ""): bear.phrase( filename )
+      return index()
 
     @post('/speak')
     def speak():
       text = request.forms.get('speech')
-      if(text != ""): self.bear.talk( text )
-      index()
+      if(text != ""): bear.talk( text )
+      return index()
 
     @post('/slack')
     def slack():
@@ -66,10 +66,10 @@ class WebFramework:
           return phraseList
       else:
         if(text in phrasesDict):
-          self.bear.phrase( text )
+          bear.phrase( text )
           return "RasPi Ruxpin played the phrase: \"%s\"" % phrasesDict[text]
         else:
-          self.bear.talk( text )
+          bear.talk( text )
           return "Raspi Ruxpin said: \"%s\"" % text
 
     run(host=self.ip, port=8080, debug=True)

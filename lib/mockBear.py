@@ -20,10 +20,10 @@ class Bear:
   def blink():
     print("Bear.blink()")
 
-  def phrase(filename):
+  def phrase(self, filename):
     print("Bear.phrase() : \"%s\"" % filename)
 
-  def talk(text):
+  def talk(self, text):
     print("Bear.talk() : \"%s\"" % text)
 
   def __del__(self):
