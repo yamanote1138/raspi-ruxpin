@@ -5,7 +5,7 @@ from bottle import run, get, post, request, response, route, redirect, template,
 import socket
 
 class WebFramework:
-  def __init__(self,talkFunc, phraseFunc, phrasesDict):
+  def __init__(self,bear, phrasesDict):
     self.ip = [(s.connect(('8.8.8.8', 80)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]
     print( "---------")
     print( "RasPi Ruxpin in ONLINE!")
@@ -22,16 +22,21 @@ class WebFramework:
     def index():
       return template('templates/index', phrases=phrasesDict)
 
-    @post('/')
-    def speak():
+    @post('/phrase')
+    def phrase():
       phrase = request.forms.get('phrase')
-      speech = request.forms.get('speech')
 
       if(phrase != ""):
         self.phraseFunc( phrase )
-      else:
+      redirect('/')
+
+    @post('/speak')
+    def speak():
+      speech = request.forms.get('speech')
+
+      if(speech != ""):
         self.talkFunc( speech )
-        redirect('/')
+      redirect('/')
 
     @post('/slack')
     def slack():

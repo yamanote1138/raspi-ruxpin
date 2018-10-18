@@ -1,6 +1,10 @@
 #!/usr/bin/env python
-import time
 import RPi.GPIO as GPIO
+import subprocess
+import time
+
+from random import randint
+from threading import Thread
 
 class Servo:
   def __init__(self, open_pin, close_pin):
@@ -32,11 +36,65 @@ class Servo:
       GPIO.output( self.close_pin, GPIO.LOW )
 
 class Bear:
-  def __init__(self, config):
+  def __init__(self, config, audio):
     # use Broadcom pin designations
     GPIO.setmode(GPIO.BCM)
+
+    # attach audio player
+    self.audio = audio
+
+    # bind mouth and eye servos based on pins defined in config
     self.mouth = Servo(config.getint('pins', 'mouth_open'), config.getint('pins', 'mouth_closed'))
     self.eyes = Servo(config.getint('pins', 'eyes_open'), config.getint('pins', 'eyes_closed'))
 
+    self.mouthThread = Thread(target=updateMouth)
+    self.eyesThread = Thread(target=updateEyes)
+
+    self.mouthThread.start()
+    self.eyesThread.start()     
+
+  # observe audio signal and move mouth accordingly
+  def _updateMouth():
+    lastMouthEvent = 0
+    lastMouthEventTime = 0
+
+    while( audio == None ):
+      time.sleep( 0.1 )
+
+    while isRunning:
+      if( audio.mouthValue != lastMouthEvent ):
+        lastMouthEvent = audio.mouthValue
+        lastMouthEventTime = time.time()
+
+        if( audio.mouthValue == 1 ):
+          self.mouth.open(duration=None)
+        else:
+          self.mouth.close(duration=None)
+      elif( time.time() - lastMouthEventTime > 0.4 ):
+        self.mouth.stop()
+
+  # A routine for blinking the eyes in a semi-random fashion.
+  def blink():
+    self.eyes.open()
+    time.sleep(0.4)
+    self.eyes.close()
+    time.sleep(0.4)
+    self.eyes.open()
+    time.sleep(0.4)
+    self.eyes.stop()
+    time.sleep( randint( 5,15) )
+
+  def phrase(filename):
+    self.audio.play("sounds/"+filename+".wav")
+
+  def talk(text):
+    os.system( "espeak \",...\" 2>/dev/null" ) # Sometimes the beginning of audio can get cut off. Insert silence.
+    time.sleep( 0.5 )
+    # TODO: make speech params configurable
+    subprocess.call(["espeak", "-w", "speech.wav", text, "-s", "130", "-a", "200", "-ven-us+m3","-g","5"])
+    self.audio.play("speech.wav")
+
   def __del__(self):
+    self.mouthThread.stop()
+    self.eyesThread.stop()
     GPIO.cleanup()
