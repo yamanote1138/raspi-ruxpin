@@ -47,6 +47,8 @@ class Bear:
     self.mouth = Servo(config.getint('pins', 'mouth_open'), config.getint('pins', 'mouth_closed'))
     self.eyes = Servo(config.getint('pins', 'eyes_open'), config.getint('pins', 'eyes_closed'))
 
+    # set initial motor state
+
     self.mouthThread = Thread(target=_updateMouth)
     self.mouthThread.start()
 
