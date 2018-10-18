@@ -7,6 +7,7 @@ import json
 
 from lib.audioPlayer import AudioPlayer
 from lib.webFramework import WebFramework
+from lib.bear import Bear
 
 # read main config file
 config = ConfigParser.RawConfigParser()

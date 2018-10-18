@@ -47,33 +47,29 @@ class Bear:
     self.mouth = Servo(config.getint('pins', 'mouth_open'), config.getint('pins', 'mouth_closed'))
     self.eyes = Servo(config.getint('pins', 'eyes_open'), config.getint('pins', 'eyes_closed'))
 
-    self.mouthThread = Thread(target=updateMouth)
-    self.eyesThread = Thread(target=updateEyes)
-
+    self.mouthThread = Thread(target=_updateMouth)
     self.mouthThread.start()
-    self.eyesThread.start()     
 
   # observe audio signal and move mouth accordingly
   def _updateMouth():
     lastMouthEvent = 0
     lastMouthEventTime = 0
 
-    while( audio == None ):
+    while( self.audio == None ):
       time.sleep( 0.1 )
 
     while isRunning:
-      if( audio.mouthValue != lastMouthEvent ):
-        lastMouthEvent = audio.mouthValue
+      if( self.audio.mouthValue != lastMouthEvent ):
+        lastMouthEvent = self.audio.mouthValue
         lastMouthEventTime = time.time()
 
-        if( audio.mouthValue == 1 ):
+        if( self.audio.mouthValue == 1 ):
           self.mouth.open(duration=None)
         else:
           self.mouth.close(duration=None)
       elif( time.time() - lastMouthEventTime > 0.4 ):
         self.mouth.stop()
 
-  # A routine for blinking the eyes in a semi-random fashion.
   def blink():
     self.eyes.open()
     time.sleep(0.4)
@@ -82,7 +78,6 @@ class Bear:
     self.eyes.open()
     time.sleep(0.4)
     self.eyes.stop()
-    time.sleep( randint( 5,15) )
 
   def phrase(filename):
     self.audio.play("sounds/"+filename+".wav")
