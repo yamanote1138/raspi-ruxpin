@@ -11,30 +11,28 @@ class Servo:
     # map configured pins to variables
     self.open_pin = open_pin
     self.close_pin = close_pin
-    self.is_open = None
+    self.open = None
     self.label = label
 
     # designate pins as OUT
     GPIO.setup(self.open_pin, GPIO.OUT)
     GPIO.setup(self.close_pin, GPIO.OUT)
 
-  def open(self, duration=.5):
-    if(not self.is_open):
+  def move(self, opening=True, duration=.5):
+    if(opening and (self.open == None or not self.open)):
       GPIO.output( self.open_pin, GPIO.HIGH )
       GPIO.output( self.close_pin, GPIO.LOW )
-      self.is_open = True
       if(duration!=None):
         time.sleep(duration)
         self.stop()
-
-  def close(self, duration=.5):
-    if(self.is_open):
+      self.open = True
+    else:
       GPIO.output( self.open_pin, GPIO.LOW )
       GPIO.output( self.close_pin, GPIO.HIGH )
-      self.is_open = False
       if(duration!=None):
         time.sleep(.5)
         self.stop()
+      self.open = False
 
   def stop(self):
     GPIO.output( self.open_pin, GPIO.LOW )
@@ -53,6 +51,8 @@ class Bear:
     self.eyes = Servo(config.getint('pins', 'eyes_open'), config.getint('pins', 'eyes_closed'))
 
     # set initial motor state
+    self.eyes.move(True)
+    self.mouth.move(False)
 
     self.mouthThread = Thread(target=_updateMouth)
     self.mouthThread.start()
@@ -71,20 +71,24 @@ class Bear:
         lastMouthEventTime = time.time()
 
         if( self.audio.mouthValue == 1 ):
-          self.mouth.open(duration=None)
+          self.mouth.move(opening=True, duration=None)
         else:
-          self.mouth.close(duration=None)
+          self.mouth.move(opening=False, duration=None)
       elif( time.time() - lastMouthEventTime > 0.4 ):
         self.mouth.stop()
 
+  def update(self, data):
+    self.eyes.move(data['bear']['eyes']['open'])
+    self.mouth.move(data['bear']['mouth']['open'])
+
   def blink():
-    self.eyes.open()
+    self.eyes.move(opening=True)
     time.sleep(0.4)
-    self.eyes.close()
+    self.eyes.move(opening=False)
     time.sleep(0.4)
-    self.eyes.open()
+    self.eyes.move(opening=True)
     time.sleep(0.4)
-    self.eyes.stop()
+    self.eyes.move(opening=False)
 
   def phrase(filename):
     self.audio.play("sounds/"+filename+".wav")

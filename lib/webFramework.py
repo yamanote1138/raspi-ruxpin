@@ -23,6 +23,18 @@ class WebFramework:
     def index():
       return template('templates/index', phrases=phrasesDict, e=self.e, m=self.m)
 
+    @get('/api/bear')
+    def apiBearGetStatus():
+      return { "bear": { "eyes": { "open": bear.eyes.open }, "mouth": { "open": bear.mouth.open } } }
+
+    @post('/api/bear')
+    def apiBearPostStatus():
+      data = request.json
+      bear.update(data)
+      return apiBearGetStatus()
+
+
+
     @get('/puppet')
     def puppet():
       self.e = request.query.e or 'o'

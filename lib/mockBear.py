@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 class Servo:
   def __init__(self, open_pin, close_pin, label="unknown"):
-    self.is_open = None
+    self.open = None
     self.label = label
     print("Servo inited (open_pin=%s, close_pin=%s)" % (open_pin, close_pin))
 
-  def open(self, duration=.5):
-    if(not self.is_open):
+  def move(self, opening=True, duration=.5):
+    if(opening and (self.open == None or not self.open)):
+      self.open = True
       print("opened %s servo" % self.label)
-
-  def close(self, duration=.5):
-    if(self.is_open):
+    else:
+      self.open = False
       print("closed %s servo" % self.label)
 
   def stop(self):
@@ -20,6 +20,13 @@ class Bear:
   def __init__(self, config, audio=None):
     self.mouth = Servo(config.getint('pins', 'mouth_open'), config.getint('pins', 'mouth_closed'), "mouth")
     self.eyes = Servo(config.getint('pins', 'eyes_open'), config.getint('pins', 'eyes_closed'), "eyes")
+    # set initial motor state
+    self.eyes.move(True)
+    self.mouth.move(False)
+
+  def update(self, data):
+    self.eyes.move(opening=data['bear']['eyes']['open'])
+    self.mouth.move(opening=data['bear']['mouth']['open'])
 
   def blink():
     print("Bear.blink()")
