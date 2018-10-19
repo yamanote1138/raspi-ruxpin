@@ -46,6 +46,9 @@ class Bear:
     # attach audio player
     self.audio = audio
 
+    # add list of supported phrases
+    self.phrases = config.phrases
+
     # bind mouth and eye servos based on pins defined in config
     self.mouth = Servo(config.getint('pins', 'mouth_open'), config.getint('pins', 'mouth_closed'))
     self.eyes = Servo(config.getint('pins', 'eyes_open'), config.getint('pins', 'eyes_closed'))
@@ -54,8 +57,8 @@ class Bear:
     self.eyes.move(True)
     self.mouth.move(False)
 
-    self.mouthThread = Thread(target=_updateMouth)
-    self.mouthThread.start()
+    # self.mouthThread = Thread(target=_updateMouth)
+    # self.mouthThread.start()
 
   # observe audio signal and move mouth accordingly
   def _updateMouth():
@@ -78,8 +81,8 @@ class Bear:
         self.mouth.stop()
 
   def update(self, data):
-    self.eyes.move(data['bear']['eyes']['open'])
-    self.mouth.move(data['bear']['mouth']['open'])
+    if('eyes' in data['bear']): self.eyes.move(opening=data['bear']['eyes']['open'])
+    if('mouth' in data['bear']): self.mouth.move(opening=data['bear']['mouth']['open'])
     return self.getStatus()
 
   def getStatus(self):
@@ -94,17 +97,18 @@ class Bear:
     time.sleep(0.4)
     self.eyes.move(opening=False)
 
-  def phrase(filename):
-    self.audio.play("sounds/"+filename+".wav")
+  def play(filename):
+    self.audio.play("public/sounds/"+filename+".wav")
 
   def talk(text):
-    os.system( "espeak \",...\" 2>/dev/null" ) # Sometimes the beginning of audio can get cut off. Insert silence.
+    # Sometimes the beginning of audio can get cut off. Insert silence.
+    os.system( "espeak \",...\" 2>/dev/null" )
     time.sleep( 0.5 )
     # TODO: make speech params configurable
     subprocess.call(["espeak", "-w", "speech.wav", text, "-s", "130", "-a", "200", "-ven-us+m3","-g","5"])
     self.audio.play("speech.wav")
 
   def __del__(self):
-    self.mouthThread.stop()
-    self.eyesThread.stop()
+    if self.mouthThread != None: self.mouthThread.stop()
+    if self.eyesThread != None: self.eyesThread.stop()
     GPIO.cleanup()

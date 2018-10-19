@@ -19,16 +19,17 @@ from lib.webFramework import WebFramework
 
 # read main config file
 config = ConfigParser.RawConfigParser()
-config.read('main.cfg')
+config.read('config/main.cfg')
 
 # read phrases config file
-with open('phrases.json', 'r') as f:
+with open('config/phrases.json', 'r') as f:
   phrases = json.load(f)
+  config.phrases = phrases
 
 # init audio player & bear
 audio = AudioPlayer()
 bear = Bear(config, audio)
 
 # init web framework
-web = WebFramework(bear, phrases)
+web = WebFramework(bear)
 sys.exit(1)

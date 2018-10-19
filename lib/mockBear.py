@@ -18,15 +18,19 @@ class Servo:
 
 class Bear:
   def __init__(self, config, audio=None):
+    # add list of supported phrases
+    self.phrases = config.phrases
+
     self.mouth = Servo(config.getint('pins', 'mouth_open'), config.getint('pins', 'mouth_closed'), "mouth")
     self.eyes = Servo(config.getint('pins', 'eyes_open'), config.getint('pins', 'eyes_closed'), "eyes")
+
     # set initial motor state
     self.eyes.move(True)
     self.mouth.move(False)
 
   def update(self, data):
-    self.eyes.move(opening=data['bear']['eyes']['open'])
-    self.mouth.move(opening=data['bear']['mouth']['open'])
+    if('eyes' in data['bear']): self.eyes.move(opening=data['bear']['eyes']['open'])
+    if('mouth' in data['bear']): self.mouth.move(opening=data['bear']['mouth']['open'])
     return self.getStatus()
 
   def getStatus(self):
@@ -35,13 +39,8 @@ class Bear:
   def blink():
     print("Bear.blink()")
 
-  def phrase(self, filename):
-    print("Bear.phrase() : \"%s\"" % filename)
+  def play(self, filename):
+    print("Bear.play() : \"%s\"" % filename)
 
   def talk(self, text):
     print("Bear.talk() : \"%s\"" % text)
-
-  def __del__(self):
-    self.mouthThread.stop()
-    self.eyesThread.stop()
-    GPIO.cleanup()
