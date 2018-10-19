@@ -1,21 +1,25 @@
 #!/usr/bin/env python
 class Servo:
-  def __init__(self, open_pin, close_pin):
+  def __init__(self, open_pin, close_pin, label="unknown"):
+    self.is_open = None
+    self.label = label
     print("Servo inited (open_pin=%s, close_pin=%s)" % (open_pin, close_pin))
 
   def open(self, duration=.5):
-    print("Servo.open()")
+    if(not self.is_open):
+      print("opened %s servo" % self.label)
 
   def close(self, duration=.5):
-    print("Servo.close()")
+    if(self.is_open):
+      print("closed %s servo" % self.label)
 
   def stop(self):
-    print("Servo.stop()")
+    print("stopped %s servo" % self.label)
 
 class Bear:
   def __init__(self, config, audio=None):
-    self.mouth = Servo(config.getint('pins', 'mouth_open'), config.getint('pins', 'mouth_closed'))
-    self.eyes = Servo(config.getint('pins', 'eyes_open'), config.getint('pins', 'eyes_closed'))
+    self.mouth = Servo(config.getint('pins', 'mouth_open'), config.getint('pins', 'mouth_closed'), "mouth")
+    self.eyes = Servo(config.getint('pins', 'eyes_open'), config.getint('pins', 'eyes_closed'), "eyes")
 
   def blink():
     print("Bear.blink()")

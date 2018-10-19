@@ -7,11 +7,12 @@ from random import randint
 from threading import Thread
 
 class Servo:
-  def __init__(self, open_pin, close_pin):
+  def __init__(self, open_pin, close_pin, label="unknown"):
     # map configured pins to variables
     self.open_pin = open_pin
     self.close_pin = close_pin
     self.is_open = None
+    self.label = label
 
     # designate pins as OUT
     GPIO.setup(self.open_pin, GPIO.OUT)
