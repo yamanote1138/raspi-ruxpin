@@ -25,15 +25,12 @@ class WebFramework:
 
     @get('/api/bear')
     def apiBearGetStatus():
-      return { "bear": { "eyes": { "open": bear.eyes.open }, "mouth": { "open": bear.mouth.open } } }
+      return bear.getStatus
 
     @post('/api/bear')
     def apiBearPostStatus():
       data = request.json
-      bear.update(data)
-      return apiBearGetStatus()
-
-
+      return bear.update(data)
 
     @get('/puppet')
     def puppet():
@@ -82,6 +79,6 @@ class WebFramework:
           return "RasPi Ruxpin played the phrase: \"%s\"" % phrasesDict[text]
         else:
           bear.talk( text )
-          return "Raspi Ruxpin said: \"%s\"" % text
+          return "RasPi Ruxpin said: \"%s\"" % text
 
     run(host=self.ip, port=8080, debug=True)

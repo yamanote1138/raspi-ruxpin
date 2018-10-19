@@ -80,6 +80,10 @@ class Bear:
   def update(self, data):
     self.eyes.move(data['bear']['eyes']['open'])
     self.mouth.move(data['bear']['mouth']['open'])
+    return self.getStatus()
+
+  def getStatus(self):
+    return { "bear": { "eyes": { "open": self.eyes.open }, "mouth": { "open": self.mouth.open } } }
 
   def blink():
     self.eyes.move(opening=True)
