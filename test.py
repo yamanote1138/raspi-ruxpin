@@ -8,7 +8,8 @@ parser.add_argument("-e", "--eyes", choices=["open", "close", "o", "c"], help="p
 parser.add_argument("-m", "--mouth", choices=["open", "close", "o", "c"], help="position of mouth")
 
 args = parser.parse_args()
-print("setting %s to %s" % (args.servo, args.direction))
+print("setting eyes to %s" % args.eyes)
+print("setting mouth to %s" % args.mouth)
 
 EO_PIN = 23
 EC_PIN = 24
