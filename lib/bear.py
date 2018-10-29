@@ -87,6 +87,7 @@ class Bear:
     return self.getStatus()
 
   def getStatus(self):
+    print(self)
     return { "bear": { "eyes": { "open": self.eyes.open }, "mouth": { "open": self.mouth.open } } }
 
   def blink():
