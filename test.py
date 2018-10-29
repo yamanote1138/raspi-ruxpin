@@ -1,38 +1,58 @@
 #!/usr/bin/env python
 import argparse
+import ConfigParser
+import os
 import time
-import RPi.GPIO as GPIO
 
 parser = argparse.ArgumentParser(description='testing open/close of bear motors')
 parser.add_argument("-e", "--eyes", choices=["open", "close", "o", "c"], help="position of eyes")
 parser.add_argument("-m", "--mouth", choices=["open", "close", "o", "c"], help="position of mouth")
-
 args = parser.parse_args()
-print("setting eyes to %s" % args.eyes)
-print("setting mouth to %s" % args.mouth)
 
-EO_PIN = 23
-EC_PIN = 24
-MO_PIN = 17
-MC_PIN = 27
+eyes = 'open' if args.eyes in ["open", "o"] else 'closed'
+mouth = 'open' if args.mouth in ["open", "o"] else 'closed'
 
-if(args.eyes == 'open' or args.eyes == 'o'):
-  epin = EO_PIN
+# read main config file
+config = ConfigParser.RawConfigParser()
+config.read('config/main.cfg')
+
+if(eyes == 'open'):
+  eyes_pin = config.getint('pins', 'eyes_open')
 else:
-  epin = EC_PIN
+  eyes_pin = config.getint('pins', 'eyes_closed')
 
-if(args.mouth == 'open' or args.mouth == 'o'):
-  mpin = MO_PIN
+if(mouth == 'open'):
+  mouth_pin = config.getint('pins', 'mouth_open')
 else:
-  mpin = MC_PIN
+  mouth_pin = config.getint('pins', 'mouth_closed')
 
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(epin, GPIO.OUT)
-GPIO.setup(mpin, GPIO.OUT)
-GPIO.output(epin, GPIO.HIGH)
-GPIO.output(mpin, GPIO.HIGH)
-time.sleep(.5)
-GPIO.output(epin, GPIO.LOW)
-GPIO.output(mpin, GPIO.LOW)
+# print debug output
+print("setting eyes to %s via pin %s" % (eyes, eyes_pin))
+print("setting mouth to %s via pin %s" % (mouth, mouth_pin))
 
-GPIO.cleanup()
+IS_PI = os.uname()[4][:3] == 'arm'
+
+if(IS_PI):
+
+  import RPi.GPIO as GPIO
+
+  # set GPIO to BCM (Broadcom) pin numbering
+  GPIO.setmode(GPIO.BCM)
+
+  # set eye and mouth GPIO pins to output mode
+  GPIO.setup(epin, GPIO.OUT)
+  GPIO.setup(mpin, GPIO.OUT)
+
+  # activate selected GPIO pins
+  GPIO.output(epin, GPIO.HIGH)
+  GPIO.output(mpin, GPIO.HIGH)
+
+  # wait a half-second
+  time.sleep(.5)
+
+  # deactivate selected GPIO pins
+  GPIO.output(epin, GPIO.LOW)
+  GPIO.output(mpin, GPIO.LOW)
+
+  # reset GPIO state
+  GPIO.cleanup()
