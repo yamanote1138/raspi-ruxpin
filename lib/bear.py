@@ -19,6 +19,7 @@ class Servo:
     GPIO.setup(self.close_pin, GPIO.OUT)
 
   def move(self, opening=True, duration=.5):
+    print(self.label + ' ' + self.opening)
     if(opening and (self.open == None or not self.open)):
       GPIO.output( self.open_pin, GPIO.HIGH )
       GPIO.output( self.close_pin, GPIO.LOW )
@@ -30,7 +31,7 @@ class Servo:
       GPIO.output( self.open_pin, GPIO.LOW )
       GPIO.output( self.close_pin, GPIO.HIGH )
       if(duration!=None):
-        time.sleep(.5)
+        time.sleep(duration)
         self.stop()
       self.open = False
 
