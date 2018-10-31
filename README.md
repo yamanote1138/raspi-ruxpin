@@ -43,7 +43,7 @@ NOTE: the default config maps to the GPIO pins as wired in the attached fritzing
 To start the application, run this script:
 
 ```sh
-sudo python chippyRuxpin.py
+sudo python main.py
 ```
 
 Assuming your RasPi is connected to WIFI or ethernet, you should see a message that looks similar to this:
