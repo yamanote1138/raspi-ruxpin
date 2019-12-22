@@ -40,19 +40,19 @@ if(IS_PI):
   GPIO.setmode(GPIO.BCM)
 
   # set eye and mouth GPIO pins to output mode
-  GPIO.setup(epin, GPIO.OUT)
-  GPIO.setup(mpin, GPIO.OUT)
+  GPIO.setup(eyes_pin, GPIO.OUT)
+  GPIO.setup(mouth_pin, GPIO.OUT)
 
   # activate selected GPIO pins
-  GPIO.output(epin, GPIO.HIGH)
-  GPIO.output(mpin, GPIO.HIGH)
+  GPIO.output(eyes_pin, GPIO.HIGH)
+  GPIO.output(mouth_pin, GPIO.HIGH)
 
   # wait a half-second
   time.sleep(.5)
 
   # deactivate selected GPIO pins
-  GPIO.output(epin, GPIO.LOW)
-  GPIO.output(mpin, GPIO.LOW)
+  GPIO.output(eyes_pin, GPIO.LOW)
+  GPIO.output(mouth_pin, GPIO.LOW)
 
   # reset GPIO state
   GPIO.cleanup()
