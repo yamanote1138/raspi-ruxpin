@@ -19,6 +19,18 @@ IS_PI = os.uname()[4][:3] == 'arm'
 if(IS_PI):
   from lib.audioPlayer import AudioPlayer
   from lib.bear import Bear
+else:
+  from lib.mockAudioPlayer import AudioPlayer
+  from lib.mockBear import Bear
+
+# read main config file
+config = ConfigParser.RawConfigParser()
+config.read('config/main.cfg')
+
+# read phrases config file
+with open('config/phrases.json', 'r') as f:
+  phrases = json.load(f)
+  config.phrases = phrases
 
 # init audio player & bear
 bear = Bear(config, None)
