@@ -1,6 +1,8 @@
 #!/usr/bin/env python
+import sys
 import argparse
 import ConfigParser
+import json
 import os
 import time
 
@@ -9,50 +11,18 @@ parser.add_argument("-e", "--eyes", choices=["open", "close", "o", "c"], help="p
 parser.add_argument("-m", "--mouth", choices=["open", "close", "o", "c"], help="position of mouth")
 args = parser.parse_args()
 
-eyes = 'open' if args.eyes in ["open", "o"] else 'closed'
-mouth = 'open' if args.mouth in ["open", "o"] else 'closed'
-
-# read main config file
-config = ConfigParser.RawConfigParser()
-config.read('config/main.cfg')
-
-if(eyes == 'open'):
-  eyes_pin = config.getint('pins', 'eyes_open')
-else:
-  eyes_pin = config.getint('pins', 'eyes_closed')
-
-if(mouth == 'open'):
-  mouth_pin = config.getint('pins', 'mouth_open')
-else:
-  mouth_pin = config.getint('pins', 'mouth_closed')
-
-# print debug output
-print("setting eyes to %s via pin %s" % (eyes, eyes_pin))
-print("setting mouth to %s via pin %s" % (mouth, mouth_pin))
+eyes = 'o' if args.eyes in ["open", "o"] else 'c'
+mouth = 'o' if args.mouth in ["open", "o"] else 'c'
 
 IS_PI = os.uname()[4][:3] == 'arm'
 
 if(IS_PI):
+  from lib.audioPlayer import AudioPlayer
+  from lib.bear import Bear
 
-  import RPi.GPIO as GPIO
+# init audio player & bear
+bear = Bear(config, None)
 
-  # set GPIO to BCM (Broadcom) pin numbering
-  GPIO.setmode(GPIO.BCM)
-
-  # set eye and mouth GPIO pins to output mode
-  GPIO.setup(eyes_pin, GPIO.OUT)
-  GPIO.setup(mouth_pin, GPIO.OUT)
-
-  # activate selected GPIO pins
-  GPIO.output(eyes_pin, GPIO.HIGH)
-  GPIO.output(mouth_pin, GPIO.HIGH)
-
-  # wait a half-second
-  time.sleep(.5)
-
-  # deactivate selected GPIO pins
-  GPIO.output(eyes_pin, GPIO.LOW)
-  GPIO.output(mouth_pin, GPIO.LOW)
-
-  # reset GPIO state
-  GPIO.cleanup()
+data = { "bear": {"eyes": {"open":(eyes == 'o')}, "mouth":{"open":(mouth == 'o')}}}
+print(data)
+bear.update(data)

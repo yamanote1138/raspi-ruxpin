@@ -100,7 +100,8 @@ class Bear:
     self.eyes.move(opening=False)
 
   def play(filename):
-    self.audio.play("public/sounds/"+filename+".wav")
+    if(self.audio!=None):
+      self.audio.play("public/sounds/"+filename+".wav")
 
   def talk(text):
     # Sometimes the beginning of audio can get cut off. Insert silence.
