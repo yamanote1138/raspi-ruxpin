@@ -58,6 +58,8 @@ class Bear:
     self.eyes.move(True)
     self.mouth.move(False)
 
+    self.mouthThread = None
+    self.eyesThread = None
     # self.mouthThread = Thread(target=_updateMouth)
     # self.mouthThread.start()
 
