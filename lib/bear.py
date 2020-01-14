@@ -11,6 +11,7 @@ from threading import Thread
 
 class Bear:
   def __init__(self, config, audio):
+    GPIO.cleanup()
     # use Broadcom pin designations
     GPIO.setmode(GPIO.BCM)
 
