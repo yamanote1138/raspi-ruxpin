@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import importlib.util
 import sys
 import time
 import RPi.GPIO as GPIO
