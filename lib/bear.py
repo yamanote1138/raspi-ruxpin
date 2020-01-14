@@ -21,8 +21,8 @@ class Bear:
     self.phrases = config.phrases
 
     # bind mouth and eye servos based on pins defined in config
-    self.eyes = Servo(config.getint('pins', 'eyes_open'), config.getint('pins', 'eyes_closed'), 'eyes')
-    self.mouth = Servo(config.getint('pins', 'mouth_open'), config.getint('pins', 'mouth_closed'), 'mouth')
+    self.eyes = Servo(config.getint('pins', 'pwma'), config.getint('pins', 'ain1'), config.getint('pins', 'ain2'), 'eyes')
+    self.mouth = Servo(config.getint('pins', 'pwmb'), config.getint('pins', 'bin1'), config.getint('pins', 'bin2'), 'mouth')
 
     # set initial motor state
     self.eyes.move(True)
