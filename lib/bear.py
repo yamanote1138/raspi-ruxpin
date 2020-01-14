@@ -3,41 +3,11 @@ import RPi.GPIO as GPIO
 import subprocess
 import time
 
+from servo import Servo
+
 from random import randint
 from threading import Thread
 
-class Servo:
-  def __init__(self, open_pin, close_pin, label="unknown"):
-    # map configured pins to variables
-    self.open_pin = open_pin
-    self.close_pin = close_pin
-    self.open = None
-    self.label = label
-
-    # designate pins as OUT
-    GPIO.setup(self.open_pin, GPIO.OUT)
-    GPIO.setup(self.close_pin, GPIO.OUT)
-
-  def move(self, opening=True, duration=.5):
-    print("opened %s: %s (op=%s, cp=%s)" % (self.label, opening, self.open_pin, self.close_pin))
-    if(opening and (self.open == None or not self.open)):
-      GPIO.output( self.open_pin, GPIO.HIGH )
-      GPIO.output( self.close_pin, GPIO.LOW )
-      if(duration!=None):
-        time.sleep(duration)
-        self.stop()
-      self.open = True
-    else:
-      GPIO.output( self.open_pin, GPIO.LOW )
-      GPIO.output( self.close_pin, GPIO.HIGH )
-      if(duration!=None):
-        time.sleep(duration)
-        self.stop()
-      self.open = False
-
-  def stop(self):
-    GPIO.output( self.open_pin, GPIO.LOW )
-    GPIO.output( self.close_pin, GPIO.LOW )
 
 class Bear:
   def __init__(self, config, audio):
