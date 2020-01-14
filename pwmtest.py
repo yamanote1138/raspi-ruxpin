@@ -20,7 +20,7 @@ p = GPIO.PWM(PWMA, 0.5)
 # open eyes
 GPIO.output( AIN1, GPIO.HIGH )
 GPIO.output( AIN2, GPIO.LOW )
-p.start(1)
+p.start(100)
 time.sleep(0.4)
 p.stop()
 
@@ -30,7 +30,7 @@ time.sleep(0.5)
 #close eyes
 GPIO.output( AIN1, GPIO.LOW )
 GPIO.output( AIN2, GPIO.HIGH )
-p.start(1)
+p.start(100)
 time.sleep(0.4)
 p.stop()
 
