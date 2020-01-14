@@ -16,12 +16,8 @@ mouth = 'o' if args.mouth in ["open", "o"] else 'c'
 
 IS_PI = os.uname()[4][:3] == 'arm'
 
-if(IS_PI):
-  from lib.audioPlayer import AudioPlayer
-  from lib.bear import Bear
-else:
-  from lib.mockAudioPlayer import AudioPlayer
-  from lib.mockBear import Bear
+from lib.audioPlayer import AudioPlayer
+from lib.bear import Bear
 
 # read main config file
 config = ConfigParser.RawConfigParser()
