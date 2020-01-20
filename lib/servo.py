@@ -25,7 +25,7 @@ class Servo:
   def close(self):
     self.move(False, .4)
 
-  def blink(pause=.5):
+  def blink(self, pause=.5):
     self.open()
     time.sleep(pause)
     self.close()

@@ -63,11 +63,11 @@ class Bear:
     print(self)
     return { "bear": { "eyes": { "open": self.eyes.open }, "mouth": { "open": self.mouth.open } } }
 
-  def play(filename):
+  def play(self, filename):
     if(self.audio!=None):
       self.audio.play("public/sounds/"+filename+".wav")
 
-  def talk(text):
+  def talk(self, text):
     # Sometimes the beginning of audio can get cut off. Insert silence.
     os.system( "espeak \",...\" 2>/dev/null" )
     time.sleep( 0.5 )
