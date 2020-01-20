@@ -20,10 +20,10 @@ class Servo:
     self.pwm = GPIO.PWM(pwm_pin, 1)
 
   def open(self):
-    self.move(True, .4)
+    self.move(True, .3)
 
   def close(self):
-    self.move(False, .4)
+    self.move(False, .3)
 
   def blink(self, pause=.5):
     self.open()
