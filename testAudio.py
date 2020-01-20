@@ -2,7 +2,7 @@
 from lib.audioPlayer import AudioPlayer
 
 audio = AudioPlayer()
-filename = "public/sounds/baleeted.wav"
+filename = "baleeted"
 
 print("trying to play test file")
 audio.play("public/sounds/"+filename+".wav")
