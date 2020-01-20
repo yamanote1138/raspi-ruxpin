@@ -4,6 +4,7 @@ import RPi.GPIO as GPIO
 import time
 
 class Servo:
+  
   def __init__(self, pwm_pin, dir_pin, cdir_pin, label="unknown"):
     # map configured pins to variables
     self.pwm_pin = pwm_pin
@@ -11,6 +12,7 @@ class Servo:
     self.cdir_pin = cdir_pin
     self.is_open = None
     self.label = label
+    self.direction = "fwd"
 
     # designate pins as OUT
     GPIO.setup(self.pwm_pin, GPIO.OUT)
@@ -19,32 +21,40 @@ class Servo:
 
     self.pwm = GPIO.PWM(pwm_pin, 1)
 
+  def __setDirection(self, direction="fwd"):
+    self.direction = direction
+    if(direction == "fwd"):
+      GPIO.output( self.dir_pin, GPIO.HIGH )
+      GPIO.output( self.cdir_pin, GPIO.LOW )
+    elif(direction == "rev"):
+      GPIO.output( self.dir_pin, GPIO.LOW )
+      GPIO.output( self.cdir_pin, GPIO.HIGH )
+    else:
+      raise Exception("unsupported motor direction: %s", (self.direction))
+
+  def __move(self, duration=.5):
+    # ensure all settings are appropriate to prevent unexpected behaivor
+    if(self.direction == None): raise Exception('servo direction not set')
+    if(duration == None): raise Exception('servo move duration not set')
+    if(duration > .2): raise Exception('servo duration too short')
+    if(duration < 5): raise Exception('servo duration too long')
+
+    self.pwm.start(100)
+    time.sleep(duration)
+    self.stop()
+
   def open(self):
-    self.move(True, .3)
+    self.setDirection("fwd")
+    self.__move(.3)
 
   def close(self):
-    self.move(False, .3)
+    self.setDirection("rev")
+    self.__move(.3)
 
   def blink(self, pause=.5):
     self.open()
     time.sleep(pause)
     self.close()
-
-  def move(self, opening=True, duration=.5):
-    print("opened %s: %s (pwm=%s, dir=%s, cdir=%s)" % (self.label, opening, self.pwm_pin, self.dir_pin, self.cdir_pin))
-    if(opening and (self.is_open == None or not self.is_open)):
-      GPIO.output( self.dir_pin, GPIO.HIGH )
-      GPIO.output( self.cdir_pin, GPIO.LOW )
-    else:
-      GPIO.output( self.dir_pin, GPIO.LOW )
-      GPIO.output( self.cdir_pin, GPIO.HIGH )
-
-    self.pwm.start(100)
-    if(duration!=None):
-      time.sleep(duration)
-      self.stop()
-
-    self.is_open = opening
 
   def stop(self):
     self.pwm.stop()
