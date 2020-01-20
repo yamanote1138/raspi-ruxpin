@@ -44,11 +44,11 @@ class Servo:
     self.stop()
 
   def open(self):
-    self.setDirection("fwd")
+    self.__setDirection("fwd")
     self.__move(.3)
 
   def close(self):
-    self.setDirection("rev")
+    self.__setDirection("rev")
     self.__move(.3)
 
   def blink(self, pause=.5):
