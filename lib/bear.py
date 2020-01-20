@@ -27,7 +27,7 @@ class Bear:
 
     self.mouthThread = None
     self.eyesThread = None
-    self.mouthThread = Thread(target=_updateMouth)
+    self.mouthThread = Thread(target=self.__updateMouth)
     self.mouthThread.start()
 
   def __del__(self):
@@ -36,7 +36,7 @@ class Bear:
     GPIO.cleanup()
 
   #observe audio signal and move mouth accordingly
-  def _updateMouth():
+  def __updateMouth():
     lastMouthEvent = 0
     lastMouthEventTime = 0
 
