@@ -26,7 +26,7 @@ class Bear:
     self.mouth = Servo(config.getint('pins', 'pwmb'), config.getint('pins', 'bin1'), config.getint('pins', 'bin2'), 'mouth')
 
     # set initial motor state
-    self.eyes.move(True)
+    self.eyes.move(False)
     self.mouth.move(False)
 
     self.mouthThread = None
@@ -64,13 +64,10 @@ class Bear:
     return { "bear": { "eyes": { "open": self.eyes.open }, "mouth": { "open": self.mouth.open } } }
 
   def blink():
-    self.eyes.move(opening=True)
+    self.eyes.open()
     time.sleep(0.4)
-    self.eyes.move(opening=False)
+    self.eyes.close()
     time.sleep(0.4)
-    self.eyes.move(opening=True)
-    time.sleep(0.4)
-    self.eyes.move(opening=False)
 
   def play(filename):
     if(self.audio!=None):

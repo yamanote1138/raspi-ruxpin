@@ -31,6 +31,4 @@ with open('config/phrases.json', 'r') as f:
 # init audio player & bear
 bear = Bear(config, None)
 
-data = { "bear": {"eyes": {"open":(eyes == 'o')}, "mouth":{"open":(mouth == 'o')}}}
-print(data)
-bear.update(data)
+bear.eyes.blink()

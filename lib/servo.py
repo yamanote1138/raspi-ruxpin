@@ -19,6 +19,12 @@ class Servo:
 
     self.pwm = GPIO.PWM(pwm_pin, 1)
 
+  def open(self):
+    self.move(True, .4)
+
+  def close(self):
+    self.move(False, .4)
+
   def move(self, opening=True, duration=.5):
     print("opened %s: %s (pwm=%s, dir=%s, cdir=%s)" % (self.label, opening, self.pwm_pin, self.dir_pin, self.cdir_pin))
     if(opening and (self.open == None or not self.open)):
