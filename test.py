@@ -29,10 +29,11 @@ with open('config/phrases.json', 'r') as f:
   config.phrases = phrases
 
 # init audio player & bear
-bear = Bear(config, None)
+audio = AudioPlayer()
+bear = Bear(config, audio)
 
-bear.eyes.blink()
-time.sleep(1)
-bear.mouth.blink()
+# bear.eyes.blink()
+# time.sleep(1)
+# bear.mouth.blink()
 
 bear.play("ants")

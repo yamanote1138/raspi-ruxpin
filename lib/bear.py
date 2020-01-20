@@ -31,11 +31,13 @@ class Bear:
     self.mouthThread.start()
 
     isRunning = True
+    print("initialized Bear instance")
 
   def __del__(self):
     if self.mouthThread != None: self.mouthThread.stop()
     if self.eyesThread != None: self.eyesThread.stop()
     GPIO.cleanup()
+    print("deinitialized Bear instance")
 
   #observe audio signal and move mouth accordingly
   def __updateMouth(self):
