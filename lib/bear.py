@@ -8,6 +8,7 @@ from servo import Servo
 from random import randint
 from threading import Thread
 
+isRunning = False
 
 class Bear:
   def __init__(self, config, audio):
