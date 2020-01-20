@@ -35,24 +35,24 @@ class Bear:
     # self.mouthThread.start()
 
   # observe audio signal and move mouth accordingly
-  def _updateMouth():
-    lastMouthEvent = 0
-    lastMouthEventTime = 0
+  # def _updateMouth():
+  #   lastMouthEvent = 0
+  #   lastMouthEventTime = 0
 
-    while( self.audio == None ):
-      time.sleep( 0.1 )
+  #   while( self.audio == None ):
+  #     time.sleep( 0.1 )
 
-    while isRunning:
-      if( self.audio.mouthValue != lastMouthEvent ):
-        lastMouthEvent = self.audio.mouthValue
-        lastMouthEventTime = time.time()
+  #   while isRunning:
+  #     if( self.audio.mouthValue != lastMouthEvent ):
+  #       lastMouthEvent = self.audio.mouthValue
+  #       lastMouthEventTime = time.time()
 
-        if( self.audio.mouthValue == 1 ):
-          self.mouth.move(opening=True, duration=None)
-        else:
-          self.mouth.move(opening=False, duration=None)
-      elif( time.time() - lastMouthEventTime > 0.4 ):
-        self.mouth.stop()
+  #       if( self.audio.mouthValue == 1 ):
+  #         self.mouth.move(opening=True, duration=None)
+  #       else:
+  #         self.mouth.move(opening=False, duration=None)
+  #     elif( time.time() - lastMouthEventTime > 0.4 ):
+  #       self.mouth.stop()
 
   def update(self, data):
     if('eyes' in data['bear']): self.eyes.move(opening=data['bear']['eyes']['open'])
@@ -85,6 +85,6 @@ class Bear:
     self.audio.play("speech.wav")
 
   def __del__(self):
-    if self.mouthThread != None: self.mouthThread.stop()
-    if self.eyesThread != None: self.eyesThread.stop()
+    # if self.mouthThread != None: self.mouthThread.stop()
+    # if self.eyesThread != None: self.eyesThread.stop()
     GPIO.cleanup()
