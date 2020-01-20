@@ -1,9 +1,8 @@
 #!/usr/bin/env python
-import sys
-from lib.audioPlayer import AudioPlayer
+import pyglet
 
-# init audio player and play test file
-audio = AudioPlayer()
-filename = "baleeted"
-audio.play("public/sounds/"+filename+".wav")
+print("trying to play test file")
+baleeted = pyglet.media.load('public/sounds/baleeted.wav', streaming=False)
+baleeted.play()
+
 sys.exit(1)
