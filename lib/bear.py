@@ -11,7 +11,7 @@ from threading import Thread
 
 class Bear:
   def __init__(self, config, audio):
-    GPIO.cleanup()
+    # GPIO.cleanup()
     # use Broadcom pin designations
     GPIO.setmode(GPIO.BCM)
 
@@ -25,30 +25,35 @@ class Bear:
     self.eyes = Servo(config.getint('pins', 'pwma'), config.getint('pins', 'ain1'), config.getint('pins', 'ain2'), 'eyes')
     self.mouth = Servo(config.getint('pins', 'pwmb'), config.getint('pins', 'bin1'), config.getint('pins', 'bin2'), 'mouth')
 
-    # self.mouthThread = None
-    # self.eyesThread = None
-    # self.mouthThread = Thread(target=_updateMouth)
-    # self.mouthThread.start()
+    self.mouthThread = None
+    self.eyesThread = None
+    self.mouthThread = Thread(target=_updateMouth)
+    self.mouthThread.start()
 
-  # observe audio signal and move mouth accordingly
-  # def _updateMouth():
-  #   lastMouthEvent = 0
-  #   lastMouthEventTime = 0
+  def __del__(self):
+    if self.mouthThread != None: self.mouthThread.stop()
+    if self.eyesThread != None: self.eyesThread.stop()
+    GPIO.cleanup()
 
-  #   while( self.audio == None ):
-  #     time.sleep( 0.1 )
+  #observe audio signal and move mouth accordingly
+  def _updateMouth():
+    lastMouthEvent = 0
+    lastMouthEventTime = 0
 
-  #   while isRunning:
-  #     if( self.audio.mouthValue != lastMouthEvent ):
-  #       lastMouthEvent = self.audio.mouthValue
-  #       lastMouthEventTime = time.time()
+    while( self.audio == None ):
+      time.sleep( 0.1 )
 
-  #       if( self.audio.mouthValue == 1 ):
-  #         self.mouth.move(opening=True, duration=None)
-  #       else:
-  #         self.mouth.move(opening=False, duration=None)
-  #     elif( time.time() - lastMouthEventTime > 0.4 ):
-  #       self.mouth.stop()
+    while isRunning:
+      if( self.audio.mouthValue != lastMouthEvent ):
+        lastMouthEvent = self.audio.mouthValue
+        lastMouthEventTime = time.time()
+
+        if( self.audio.mouthValue == 1 ):
+          self.mouth.open()
+        else:
+          self.mouth.close()
+      elif( time.time() - lastMouthEventTime > 0.4 ):
+        self.mouth.stop()
 
   def update(self, data):
     if('eyes' in data['bear']): self.eyes.move(opening=data['bear']['eyes']['open'])
@@ -71,7 +76,3 @@ class Bear:
     subprocess.call(["espeak", "-w", "speech.wav", text, "-s", "130", "-a", "200", "-ven-us+m3","-g","5"])
     self.audio.play("speech.wav")
 
-  def __del__(self):
-    # if self.mouthThread != None: self.mouthThread.stop()
-    # if self.eyesThread != None: self.eyesThread.stop()
-    GPIO.cleanup()

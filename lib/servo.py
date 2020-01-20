@@ -21,6 +21,9 @@ class Servo:
 
     self.pwm = GPIO.PWM(pwm_pin, 1000)
 
+  def __del__(self):
+    self.pwm.stop()
+
   def __setDirection(self, direction="fwd"):
     self.direction = direction
     if(direction == "fwd"):
@@ -32,29 +35,31 @@ class Servo:
     else:
       raise Exception("unsupported motor direction: %s", (self.direction))
 
+  # set duration to 0 for continuous movement
   def __move(self, duration=.5):
     # ensure all settings are appropriate to prevent unexpected behaivor
     if(self.direction == None): raise Exception('servo direction not set')
-    if(duration == None): raise Exception('servo move duration not set')
-    if(duration < .2): raise Exception('servo duration too short')
+    if(duration is None): raise Exception('servo move duration not set')
     if(duration > 5): raise Exception('servo duration too long')
 
     self.pwm.start(100)
-    time.sleep(duration)
-    self.pwm.stop()
 
-  def open(self):
+    if(duration is not None and duration > 0):
+      time.sleep(duration)
+      self.pwm.stop()
+
+  def open(self, duration=0):
     self.__setDirection("fwd")
-    self.__move(.3)
+    self.__move(duration)
 
-  def close(self):
+  def close(self, duration=0):
     self.__setDirection("rev")
-    self.__move(.3)
+    self.__move(duration)
 
-  def blink(self, pause=.5):
-    self.open()
-    time.sleep(pause)
-    self.close()
+  def blink(self):
+    self.open(.4)
+    time.sleep(.5)
+    self.close(.4)
 
   def stop(self):
     self.pwm.stop()
