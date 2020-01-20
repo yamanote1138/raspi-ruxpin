@@ -39,9 +39,9 @@ class Servo:
     if(duration < .2): raise Exception('servo duration too short')
     if(duration > 5): raise Exception('servo duration too long')
 
-    self.pwm.start(100)
+    self.pwm.start(255)
     time.sleep(duration)
-    self.stop()
+    self.pwm.stop()
 
   def open(self):
     self.__setDirection("fwd")

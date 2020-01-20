@@ -32,5 +32,5 @@ with open('config/phrases.json', 'r') as f:
 bear = Bear(config, None)
 
 bear.eyes.blink(.4)
-time.sleep(2)
+time.sleep(1)
 bear.mouth.blink(.4)
