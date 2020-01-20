@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import sys
 from lib.audioPlayer import AudioPlayer
 
 audio = AudioPlayer()
