@@ -34,3 +34,5 @@ bear = Bear(config, None)
 bear.eyes.blink()
 time.sleep(1)
 bear.mouth.blink()
+
+bear.play("ants")
