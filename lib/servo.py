@@ -36,8 +36,8 @@ class Servo:
     # ensure all settings are appropriate to prevent unexpected behaivor
     if(self.direction == None): raise Exception('servo direction not set')
     if(duration == None): raise Exception('servo move duration not set')
-    if(duration > .2): raise Exception('servo duration too short')
-    if(duration < 5): raise Exception('servo duration too long')
+    if(duration < .2): raise Exception('servo duration too short')
+    if(duration > 5): raise Exception('servo duration too long')
 
     self.pwm.start(100)
     time.sleep(duration)
