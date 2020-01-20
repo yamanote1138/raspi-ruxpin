@@ -38,7 +38,7 @@ class Bear:
     GPIO.cleanup()
 
   #observe audio signal and move mouth accordingly
-  def __updateMouth():
+  def __updateMouth(self):
     lastMouthEvent = 0
     lastMouthEventTime = 0
 
