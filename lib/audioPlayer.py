@@ -22,7 +22,7 @@ class AudioPlayer:
     self.mouthValue = 0
         
   def setVolume(self, volume=75):
-    m = alsaaudio.Mixer()
+    m = aa.Mixer()
     m.setvolume(volume)
     current_volume = m.getvolume() # Get the current Volume
     print("volume set at %s", (current_volume))
