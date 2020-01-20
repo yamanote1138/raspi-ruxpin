@@ -19,7 +19,7 @@ class Servo:
     GPIO.setup(self.dir_pin, GPIO.OUT)
     GPIO.setup(self.cdir_pin, GPIO.OUT)
 
-    self.pwm = GPIO.PWM(pwm_pin, 1)
+    self.pwm = GPIO.PWM(pwm_pin, 1000)
 
   def __setDirection(self, direction="fwd"):
     self.direction = direction
@@ -39,7 +39,7 @@ class Servo:
     if(duration < .2): raise Exception('servo duration too short')
     if(duration > 5): raise Exception('servo duration too long')
 
-    self.pwm.start(255)
+    self.pwm.start(100)
     time.sleep(duration)
     self.pwm.stop()
 
