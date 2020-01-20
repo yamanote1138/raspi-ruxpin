@@ -71,6 +71,7 @@ class Bear:
 
   def play(self, filename):
     if(self.audio!=None):
+      print("playing audio file %s", (filename))
       self.audio.play("public/sounds/"+filename+".wav")
 
   def talk(self, text):
