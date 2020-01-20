@@ -31,6 +31,6 @@ with open('config/phrases.json', 'r') as f:
 # init audio player & bear
 bear = Bear(config, None)
 
-bear.eyes.blink(.4)
+bear.eyes.blink()
 time.sleep(1)
-bear.mouth.blink(.4)
+bear.mouth.blink()

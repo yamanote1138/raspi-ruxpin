@@ -30,6 +30,8 @@ class Bear:
     self.mouthThread = Thread(target=self.__updateMouth)
     self.mouthThread.start()
 
+    isRunning = True
+
   def __del__(self):
     if self.mouthThread != None: self.mouthThread.stop()
     if self.eyesThread != None: self.eyesThread.stop()
