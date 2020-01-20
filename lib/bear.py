@@ -63,12 +63,6 @@ class Bear:
     print(self)
     return { "bear": { "eyes": { "open": self.eyes.open }, "mouth": { "open": self.mouth.open } } }
 
-  def blink():
-    self.eyes.open()
-    time.sleep(0.4)
-    self.eyes.close()
-    time.sleep(0.4)
-
   def play(filename):
     if(self.audio!=None):
       self.audio.play("public/sounds/"+filename+".wav")

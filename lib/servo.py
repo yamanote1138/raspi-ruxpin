@@ -25,6 +25,11 @@ class Servo:
   def close(self):
     self.move(False, .4)
 
+  def blink(pause=.5):
+    self.open()
+    time.sleep(pause)
+    self.close()
+
   def move(self, opening=True, duration=.5):
     print("opened %s: %s (pwm=%s, dir=%s, cdir=%s)" % (self.label, opening, self.pwm_pin, self.dir_pin, self.cdir_pin))
     if(opening and (self.open == None or not self.open)):
