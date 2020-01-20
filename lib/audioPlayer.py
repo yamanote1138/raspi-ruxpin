@@ -21,6 +21,12 @@ class AudioPlayer:
     self.prevAudiovalue = 0
     self.mouthValue = 0
         
+  def setVolume(self, volume=75):
+    m = alsaaudio.Mixer()
+    m.setvolume(volume)
+    current_volume = m.getvolume() # Get the current Volume
+    print("volume set at %s", (current_volume))
+
   def play(self,fileName):
     # Initialise matrix
     matrix=[0,0,0,0,0,0,0,0]
