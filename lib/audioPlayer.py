@@ -20,9 +20,10 @@ class AudioPlayer:
     subprocess.Popen('amixer cset numid=4 1' ,shell=True, stdout=subprocess.PIPE ) # Set DAC self.output to be "Direct" (2... or 1 for "Mixed" if you prefer)
     self.prevAudiovalue = 0
     self.mouthValue = 0
+    self.setVolume(100)
         
   def setVolume(self, volume=75):
-    m = aa.Mixer()
+    m = aa.Mixer('PCM')
     m.setvolume(volume)
     current_volume = m.getvolume() # Get the current Volume
     print("volume set at %s", (current_volume))
