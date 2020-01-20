@@ -9,7 +9,7 @@ class Servo:
     self.pwm_pin = pwm_pin
     self.dir_pin = dir_pin
     self.cdir_pin = cdir_pin
-    self.open = None
+    self.is_open = None
     self.label = label
 
     # designate pins as OUT
@@ -32,7 +32,7 @@ class Servo:
 
   def move(self, opening=True, duration=.5):
     print("opened %s: %s (pwm=%s, dir=%s, cdir=%s)" % (self.label, opening, self.pwm_pin, self.dir_pin, self.cdir_pin))
-    if(opening and (self.open == None or not self.open)):
+    if(opening and (self.is_open == None or not self.is_open)):
       GPIO.output( self.dir_pin, GPIO.HIGH )
       GPIO.output( self.cdir_pin, GPIO.LOW )
     else:
@@ -44,7 +44,7 @@ class Servo:
       time.sleep(duration)
       self.stop()
 
-    self.open = opening
+    self.is_open = opening
 
   def stop(self):
     self.pwm.stop()
