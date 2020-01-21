@@ -27,7 +27,8 @@ class Bear:
       pwm_pin=config.getint('pins', 'pwma'),
       dir_pin=config.getint('pins', 'ain1'),
       cdir_pin=config.getint('pins', 'ain2'),
-      duration=.3,
+      duration=config.getfloat('settings', 'eyes_duration'),
+      speed=config.getint('settings', 'eyes_speed'),
       label='eyes'
     )
 
@@ -35,7 +36,8 @@ class Bear:
       pwm_pin=config.getint('pins', 'pwmb'),
       dir_pin=config.getint('pins', 'bin1'),
       cdir_pin=config.getint('pins', 'bin2'),
-      duration=.3,
+      duration=config.getfloat('settings', 'eyes_duration'),
+      speed=config.getint('settings', 'eyes_speed'),
       label='mouth'
     )
 

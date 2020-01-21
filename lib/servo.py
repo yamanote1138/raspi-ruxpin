@@ -5,7 +5,7 @@ import time
 
 class Servo:
   
-  def __init__(self, pwm_pin=None, dir_pin=None, cdir_pin=None, pwm_freq=2000, duration=.5, label="unknown"):
+  def __init__(self, pwm_pin=None, dir_pin=None, cdir_pin=None, pwm_freq=2000, duration=.5, speed=100, label="unknown"):
 
     # validate parameters
     if(pwm_pin is None): raise Exception("pwm pin not set")
@@ -21,6 +21,7 @@ class Servo:
     self.is_open = None
     self.label = label
     self.direction = "fwd"
+    self.speed = speed
     self.duration = duration
 
     # designate pins as OUT
@@ -52,7 +53,7 @@ class Servo:
     if(self.duration is None): raise Exception('servo move duration not set')
     if(self.duration > 2): raise Exception('servo duration too long')
 
-    self.pwm.start(100)
+    self.pwm.start(self.speed)
 
     if(autoStop):
       time.sleep(self.duration)
