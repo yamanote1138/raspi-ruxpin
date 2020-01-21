@@ -12,6 +12,11 @@ class Servo:
     if(dir_pin is None): raise Exception("dir pin not set")
     if(cdir_pin is None): raise Exception("cdir pin not set")
 
+    # set pin values for later use
+    self.pwm_pin = pwm_pin
+    self.dir_pin = dir_pin
+    self.cdir_pin = cdir_pin
+
     # set initial state
     self.is_open = None
     self.label = label
@@ -19,12 +24,12 @@ class Servo:
     self.duration = duration
 
     # designate pins as OUT
-    GPIO.setup(pwm_pin, GPIO.OUT)
-    GPIO.setup(dir_pin, GPIO.OUT)
-    GPIO.setup(cdir_pin, GPIO.OUT)
+    GPIO.setup(self.pwm_pin, GPIO.OUT)
+    GPIO.setup(self.dir_pin, GPIO.OUT)
+    GPIO.setup(self.cdir_pin, GPIO.OUT)
 
-    # initialize PEM
-    self.pwm = GPIO.PWM(pwm_pin, pwm_freq)
+    # initialize PWM
+    self.pwm = GPIO.PWM(self.pwm_pin, pwm_freq)
 
   def __del__(self):
     self.pwm.stop()
@@ -44,22 +49,22 @@ class Servo:
   def __move(self, autoStop):
     # ensure all settings are appropriate to prevent unexpected behaivor
     if(self.direction == None): raise Exception('servo direction not set')
-    if(duration is None): raise Exception('servo move duration not set')
-    if(duration > 2): raise Exception('servo duration too long')
+    if(self.duration is None): raise Exception('servo move duration not set')
+    if(self.duration > 2): raise Exception('servo duration too long')
 
     self.pwm.start(100)
 
     if(autoStop):
-      time.sleep(duration)
+      time.sleep(self.duration)
       self.pwm.stop()
 
   def open(self, autoStop=True):
     self.__setDirection("fwd")
-    self.__move(duration, autoStop)
+    self.__move(autoStop)
 
   def close(self, autoStop=True):
     self.__setDirection("rev")
-    self.__move(duration, autoStop)
+    self.__move(autoStop)
 
   def blink(self):
     self.open()
