@@ -19,7 +19,7 @@ class Servo:
     GPIO.setup(self.dir_pin, GPIO.OUT)
     GPIO.setup(self.cdir_pin, GPIO.OUT)
 
-    self.pwm = GPIO.PWM(pwm_pin, 1000)
+    self.pwm = GPIO.PWM(pwm_pin, 2000)
 
   def __del__(self):
     self.pwm.stop()

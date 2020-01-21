@@ -12,7 +12,7 @@ isRunning = False
 
 class Bear:
   def __init__(self, config, audio):
-    # GPIO.cleanup()
+    GPIO.cleanup()
     # use Broadcom pin designations
     GPIO.setmode(GPIO.BCM)
 
