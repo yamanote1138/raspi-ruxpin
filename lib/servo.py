@@ -5,21 +5,26 @@ import time
 
 class Servo:
   
-  def __init__(self, pwm_pin, dir_pin, cdir_pin, label="unknown"):
-    # map configured pins to variables
-    self.pwm_pin = pwm_pin
-    self.dir_pin = dir_pin
-    self.cdir_pin = cdir_pin
+  def __init__(self, pwm_pin=None, dir_pin=None, cdir_pin=None, pwm_freq=2000, duration=.5, label="unknown"):
+
+    # validate parameters
+    if(pwm_pin is None): raise Exception("pwm pin not set")
+    if(dir_pin is None): raise Exception("dir pin not set")
+    if(cdir_pin is None): raise Exception("cdir pin not set")
+
+    # set initial state
     self.is_open = None
     self.label = label
     self.direction = "fwd"
+    self.duration = duration
 
     # designate pins as OUT
-    GPIO.setup(self.pwm_pin, GPIO.OUT)
-    GPIO.setup(self.dir_pin, GPIO.OUT)
-    GPIO.setup(self.cdir_pin, GPIO.OUT)
+    GPIO.setup(pwm_pin, GPIO.OUT)
+    GPIO.setup(dir_pin, GPIO.OUT)
+    GPIO.setup(cdir_pin, GPIO.OUT)
 
-    self.pwm = GPIO.PWM(pwm_pin, 2000)
+    # initialize PEM
+    self.pwm = GPIO.PWM(pwm_pin, pwm_freq)
 
   def __del__(self):
     self.pwm.stop()
@@ -36,30 +41,30 @@ class Servo:
       raise Exception("unsupported motor direction: %s", (self.direction))
 
   # set duration to 0 for continuous movement
-  def __move(self, duration=.5):
+  def __move(self, autoStop):
     # ensure all settings are appropriate to prevent unexpected behaivor
     if(self.direction == None): raise Exception('servo direction not set')
     if(duration is None): raise Exception('servo move duration not set')
-    if(duration > 5): raise Exception('servo duration too long')
+    if(duration > 2): raise Exception('servo duration too long')
 
     self.pwm.start(100)
 
-    if(duration is not None and duration > 0):
+    if(autoStop):
       time.sleep(duration)
       self.pwm.stop()
 
-  def open(self, duration=0):
+  def open(self, autoStop=True):
     self.__setDirection("fwd")
-    self.__move(duration)
+    self.__move(duration, autoStop)
 
-  def close(self, duration=0):
+  def close(self, autoStop=True):
     self.__setDirection("rev")
-    self.__move(duration)
+    self.__move(duration, autoStop)
 
   def blink(self):
-    self.open(.4)
+    self.open()
     time.sleep(.5)
-    self.close(.4)
+    self.close()
 
   def stop(self):
     self.pwm.stop()

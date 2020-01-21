@@ -23,8 +23,21 @@ class Bear:
     self.phrases = config.phrases
 
     # bind mouth and eye servos based on pins defined in config
-    self.eyes = Servo(config.getint('pins', 'pwma'), config.getint('pins', 'ain1'), config.getint('pins', 'ain2'), 'eyes')
-    self.mouth = Servo(config.getint('pins', 'pwmb'), config.getint('pins', 'bin1'), config.getint('pins', 'bin2'), 'mouth')
+    self.eyes = Servo(
+      pwm_pin=config.getint('pins', 'pwma'),
+      dir_pin=config.getint('pins', 'ain1'),
+      cdir_pin=config.getint('pins', 'ain2'),
+      duration=.3,
+      label='eyes'
+    )
+
+    self.mouth = Servo(
+      pwm_pin=config.getint('pins', 'pwmb'),
+      dir_pin=config.getint('pins', 'bin1'),
+      cdir_pin=config.getint('pins', 'bin2'),
+      duration=.3,
+      label='mouth'
+    )
 
     # self.mouthThread = None
     # self.eyesThread = None
