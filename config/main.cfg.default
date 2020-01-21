@@ -6,7 +6,7 @@ pwmb = 17
 bin1 = 22
 bin2 = 27
 [settings]
-eye_speed = 100
-eye_duration = .3
+eyes_speed = 100
+eyes_duration = .3
 mouth_speed = 100
 mouth_duration = .3
