@@ -1,4 +1,13 @@
 #!/usr/bin/env python
+import sys
+from lib.audioPlayer import AudioPlayer
 
-from playsound import playsound
-playsound('public/sounds/baleeted.wav')
+audio = AudioPlayer()
+filename = "baleeted"
+
+audio.setVolume(100)
+
+print("trying to play test file")
+audio.play("public/sounds/"+filename+".wav")
+
+sys.exit(1)

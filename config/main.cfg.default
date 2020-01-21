@@ -1,5 +1,12 @@
 [pins]
-mouth_open = 18
-mouth_closed = 23
-eyes_open = 24
-eyes_closed = 25
+pwma = 18
+ain1 = 24
+ain2 = 23
+pwmb = 17
+bin1 = 22
+bin2 = 27
+[settings]
+eyes_speed = 100
+eyes_duration = .3
+mouth_speed = 100
+mouth_duration = .3

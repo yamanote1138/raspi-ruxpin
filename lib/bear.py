@@ -3,44 +3,16 @@ import RPi.GPIO as GPIO
 import subprocess
 import time
 
+from servo import Servo
+
 from random import randint
 from threading import Thread
 
-class Servo:
-  def __init__(self, open_pin, close_pin, label="unknown"):
-    # map configured pins to variables
-    self.open_pin = open_pin
-    self.close_pin = close_pin
-    self.open = None
-    self.label = label
-
-    # designate pins as OUT
-    GPIO.setup(self.open_pin, GPIO.OUT)
-    GPIO.setup(self.close_pin, GPIO.OUT)
-
-  def move(self, opening=True, duration=.5):
-    print("opened %s: %s (op=%s, cp=%s)" % (self.label, opening, self.open_pin, self.close_pin))
-    if(opening and (self.open == None or not self.open)):
-      GPIO.output( self.open_pin, GPIO.HIGH )
-      GPIO.output( self.close_pin, GPIO.LOW )
-      if(duration!=None):
-        time.sleep(duration)
-        self.stop()
-      self.open = True
-    else:
-      GPIO.output( self.open_pin, GPIO.LOW )
-      GPIO.output( self.close_pin, GPIO.HIGH )
-      if(duration!=None):
-        time.sleep(duration)
-        self.stop()
-      self.open = False
-
-  def stop(self):
-    GPIO.output( self.open_pin, GPIO.LOW )
-    GPIO.output( self.close_pin, GPIO.LOW )
+isRunning = False
 
 class Bear:
   def __init__(self, config, audio):
+    GPIO.cleanup()
     # use Broadcom pin designations
     GPIO.setmode(GPIO.BCM)
 
@@ -51,37 +23,57 @@ class Bear:
     self.phrases = config.phrases
 
     # bind mouth and eye servos based on pins defined in config
-    self.eyes = Servo(config.getint('pins', 'eyes_open'), config.getint('pins', 'eyes_closed'), 'eyes')
-    self.mouth = Servo(config.getint('pins', 'mouth_open'), config.getint('pins', 'mouth_closed'), 'mouth')
+    self.eyes = Servo(
+      pwm_pin=config.getint('pins', 'pwma'),
+      dir_pin=config.getint('pins', 'ain1'),
+      cdir_pin=config.getint('pins', 'ain2'),
+      duration=config.getfloat('settings', 'eyes_duration'),
+      speed=config.getint('settings', 'eyes_speed'),
+      label='eyes'
+    )
 
-    # set initial motor state
-    self.eyes.move(True)
-    self.mouth.move(False)
+    self.mouth = Servo(
+      pwm_pin=config.getint('pins', 'pwmb'),
+      dir_pin=config.getint('pins', 'bin1'),
+      cdir_pin=config.getint('pins', 'bin2'),
+      duration=config.getfloat('settings', 'mouth_duration'),
+      speed=config.getint('settings', 'mouth_speed'),
+      label='mouth'
+    )
 
-    self.mouthThread = None
-    self.eyesThread = None
-    # self.mouthThread = Thread(target=_updateMouth)
+    # self.mouthThread = None
+    # self.eyesThread = None
+    # self.mouthThread = Thread(target=self.__updateMouth)
     # self.mouthThread.start()
 
-  # observe audio signal and move mouth accordingly
-  def _updateMouth():
-    lastMouthEvent = 0
-    lastMouthEventTime = 0
+    isRunning = True
+    print("initialized Bear instance")
 
-    while( self.audio == None ):
-      time.sleep( 0.1 )
+  def __del__(self):
+    # if self.mouthThread != None: self.mouthThread.stop()
+    # if self.eyesThread != None: self.eyesThread.stop()
+    GPIO.cleanup()
+    print("deinitialized Bear instance")
 
-    while isRunning:
-      if( self.audio.mouthValue != lastMouthEvent ):
-        lastMouthEvent = self.audio.mouthValue
-        lastMouthEventTime = time.time()
+  #observe audio signal and move mouth accordingly
+  # def __updateMouth(self):
+  #   lastMouthEvent = 0
+  #   lastMouthEventTime = 0
 
-        if( self.audio.mouthValue == 1 ):
-          self.mouth.move(opening=True, duration=None)
-        else:
-          self.mouth.move(opening=False, duration=None)
-      elif( time.time() - lastMouthEventTime > 0.4 ):
-        self.mouth.stop()
+  #   while( self.audio == None ):
+  #     time.sleep( 0.1 )
+
+  #   while isRunning:
+  #     if( self.audio.mouthValue != lastMouthEvent ):
+  #       lastMouthEvent = self.audio.mouthValue
+  #       lastMouthEventTime = time.time()
+
+  #       if( self.audio.mouthValue == 1 ):
+  #         self.mouth.open()
+  #       else:
+  #         self.mouth.close()
+  #     elif( time.time() - lastMouthEventTime > 0.4 ):
+  #       self.mouth.stop()
 
   def update(self, data):
     if('eyes' in data['bear']): self.eyes.move(opening=data['bear']['eyes']['open'])
@@ -92,20 +84,12 @@ class Bear:
     print(self)
     return { "bear": { "eyes": { "open": self.eyes.open }, "mouth": { "open": self.mouth.open } } }
 
-  def blink():
-    self.eyes.move(opening=True)
-    time.sleep(0.4)
-    self.eyes.move(opening=False)
-    time.sleep(0.4)
-    self.eyes.move(opening=True)
-    time.sleep(0.4)
-    self.eyes.move(opening=False)
-
-  def play(filename):
+  def play(self, filename):
     if(self.audio!=None):
+      print("playing audio file %s", (filename))
       self.audio.play("public/sounds/"+filename+".wav")
 
-  def talk(text):
+  def talk(self, text):
     # Sometimes the beginning of audio can get cut off. Insert silence.
     os.system( "espeak \",...\" 2>/dev/null" )
     time.sleep( 0.5 )
@@ -113,7 +97,3 @@ class Bear:
     subprocess.call(["espeak", "-w", "speech.wav", text, "-s", "130", "-a", "200", "-ven-us+m3","-g","5"])
     self.audio.play("speech.wav")
 
-  def __del__(self):
-    if self.mouthThread != None: self.mouthThread.stop()
-    if self.eyesThread != None: self.eyesThread.stop()
-    GPIO.cleanup()
