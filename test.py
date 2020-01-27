@@ -24,9 +24,9 @@ bear = Bear(config, audio)
 # time.sleep(1)
 # bear.mouth.blink()
 
-# bear.play("88miles")
+bear.play("88miles")
 
-bear.say("I have seen roadkill with better taste")
+# bear.say("I have seen roadkill with better taste")
 
 # should give process time to finish
 raw_input("Press Enter to quit...")
