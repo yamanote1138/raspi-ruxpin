@@ -9,13 +9,13 @@ from servo import Servo
 from random import randint
 from threading import Thread
 
-isRunning = False
-
 class Bear:
   def __init__(self, config, audio):
     GPIO.cleanup()
     # use Broadcom pin designations
     GPIO.setmode(GPIO.BCM)
+
+    self.isTalking = False
 
     # attach audio player
     self.audio = audio
@@ -47,7 +47,6 @@ class Bear:
     self.mouthThread = Thread(target=self.__updateMouth)
     self.mouthThread.start()
 
-    isRunning = True
     print("initialized Bear instance")
 
   def __del__(self):
@@ -58,14 +57,7 @@ class Bear:
 
   #observe audio signal and move mouth accordingly
   def __updateMouth(self):
-    lastMouthEvent = 0
-    lastMouthEventTime = 0
-
-    # noop until audio is initialized
-    while( self.audio == None ):
-      time.sleep( 0.1 )
-
-    while isRunning:
+    while self.isTalking:
       if( self.audio.mouthValue != lastMouthEvent ):
         lastMouthEvent = self.audio.mouthValue
         lastMouthEventTime = time.time()
@@ -87,7 +79,9 @@ class Bear:
     return { "bear": { "eyes": { "open": self.eyes.open }, "mouth": { "open": self.mouth.open } } }
 
   def play(self, filename):
+    self.isTalking = True
     self.audio.play("public/sounds/"+filename+".wav")
+    self.isTalking = False
 
   def say(self, text):
     # Sometimes the beginning of audio can get cut off. Insert silence.
