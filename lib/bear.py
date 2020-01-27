@@ -88,7 +88,7 @@ class Bear:
   def play(self, filename):
     self.audio.play("public/sounds/"+filename+".wav")
 
-  def talk(self, text):
+  def say(self, text):
     # Sometimes the beginning of audio can get cut off. Insert silence.
     os.system( "espeak \",...\" 2>/dev/null" )
     time.sleep( 0.5 )
