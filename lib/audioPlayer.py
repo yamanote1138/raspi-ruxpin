@@ -44,7 +44,7 @@ class AudioPlayer:
       stream.write(data)
       data = wf.readframes(chunk)
       rms = audioop.rms(data, 2)
-      generateMouthSignal(rms)
+      self.generateMouthSignal(rms)
 
     # Close and terminate the stream
     stream.close()
