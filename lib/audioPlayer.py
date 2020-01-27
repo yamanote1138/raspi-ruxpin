@@ -10,11 +10,11 @@ class AudioPlayer:
     self.prevAudiovalue = 0
     self.mouthValue = 0
     self.setVolume(100)
-    self.mixer = aa.Mixer('PCM')
 
   def setVolume(self, volume=75):
-    self.mixer.setvolume(volume)
-    current_volume = self.mixer.getvolume() # Get the current Volume
+    mixer = aa.Mixer('PCM')
+    mixer.setvolume(volume)
+    current_volume = mixer.getvolume() # Get the current Volume
     print("volume set at {}").format(current_volume)
 
   def play(self,fileName):
