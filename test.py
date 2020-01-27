@@ -21,10 +21,10 @@ with open('config/phrases.json', 'r') as f:
 audio = None
 bear = Bear(config, audio)
 
-bear.eyes.blink()
-time.sleep(1)
-bear.mouth.blink()
+# bear.eyes.blink()
+# time.sleep(1)
+# bear.mouth.blink()
 
-#bear.play("ants")
+bear.play("88miles")
 
 sys.exit(1)
