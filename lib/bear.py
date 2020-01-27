@@ -85,11 +85,7 @@ class Bear:
     return { "bear": { "eyes": { "open": self.eyes.open }, "mouth": { "open": self.mouth.open } } }
 
   def play(self, filename):
-    if(self.audio!=None):
-      print("playing audio file %s", (filename))
-      self.audio.play("public/sounds/"+filename+".wav")
-    else:
-      print("audio not initialized")
+    self.audio.play("public/sounds/"+filename+".wav")
 
   def talk(self, text):
     # Sometimes the beginning of audio can get cut off. Insert silence.
