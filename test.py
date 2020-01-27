@@ -27,4 +27,7 @@ bear = Bear(config, audio)
 
 bear.play("88miles")
 
-sys.exit(1)
+# should give process time to finish
+raw_input("Press Enter to quit...")
+
+# sys.exit(1)
