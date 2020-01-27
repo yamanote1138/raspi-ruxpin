@@ -7,7 +7,7 @@ audio = AudioPlayer()
 audio.setVolume(100)
 
 print("trying to play test file")
-filename = "baleeted"
+filename = "88miles"
 audio.play("public/sounds/"+filename+".wav")
 
 sys.exit(1)

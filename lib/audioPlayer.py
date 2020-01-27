@@ -51,10 +51,11 @@ class AudioPlayer:
     p.terminate()
 
   def generateMouthSignal(self,val):
-    print(val)
-    # delta = val - self.prevAudiovalue 
-    # if( delta < -2 or val == 0 ):
-    #   self.mouthValue = 0
-    # elif( delta > 0 ):
-    #   self.mouthValue = 1
-    #   self.prevAudiovalue = val
+    delta = val - self.prevAudiovalue 
+    if( delta < -2 or val == 0 ):
+      self.mouthValue = 0
+    elif( delta > 0 ):
+      self.mouthValue = 1
+      self.prevAudiovalue = val
+
+    print(self.mouthValue)
