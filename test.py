@@ -17,8 +17,7 @@ with open('config/phrases.json', 'r') as f:
   config.phrases = phrases
 
 # init audio player & bear
-# audio = AudioPlayer()
-audio = None
+audio = AudioPlayer()
 bear = Bear(config, audio)
 
 # bear.eyes.blink()
