@@ -60,6 +60,7 @@ class Bear:
     lastMouthEvent = 0
     lastMouthEventTime = 0
 
+    # noop until audio is initialized
     while( self.audio == None ):
       time.sleep( 0.1 )
 

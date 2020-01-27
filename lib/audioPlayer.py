@@ -58,4 +58,4 @@ class AudioPlayer:
       self.mouthValue = 1
       self.prevAudiovalue = val
 
-    # print(self.mouthValue)
+    print(self.mouthValue)
