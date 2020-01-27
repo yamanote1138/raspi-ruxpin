@@ -96,13 +96,12 @@ class Bear:
     # TODO: make speech params configurable
     subprocess.call([
       "espeak", 
-      "-w speech.wav",
-      text,
-      "-s 125", 
-      "-a 150", 
-      "-v en+m3",
-      "-p 25",
-      "-g 5"
+      "-w","speech.wav",
+      "-s","125", 
+      "-v","en+m3",
+      "-p","25",
+      "-a","150", 
+      text
     ])
     self.audio.play("speech.wav")
 
