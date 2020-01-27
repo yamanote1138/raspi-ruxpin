@@ -94,6 +94,15 @@ class Bear:
     os.system( "espeak \",...\" 2>/dev/null" )
     time.sleep( 0.5 )
     # TODO: make speech params configurable
-    subprocess.call(["espeak", "-w", "speech.wav", text, "-s", "130", "-a", "200", "-ven-us+m3","-g","5"])
+    subprocess.call([
+      "espeak", 
+      "-w speech.wav",
+      text,
+      "-s 125", 
+      "-a 150", 
+      "-v en+m3",
+      "-p 25",
+      "-g 5"
+    ])
     self.audio.play("speech.wav")
 
