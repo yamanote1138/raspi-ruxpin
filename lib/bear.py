@@ -58,6 +58,7 @@ class Bear:
   #observe audio signal and move mouth accordingly
   def __updateMouth(self):
     while self.isTalking:
+      print("talking")
       if( self.audio.mouthValue != lastMouthEvent ):
         lastMouthEvent = self.audio.mouthValue
         lastMouthEventTime = time.time()
