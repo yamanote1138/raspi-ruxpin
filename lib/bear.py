@@ -88,6 +88,8 @@ class Bear:
     if(self.audio!=None):
       print("playing audio file %s", (filename))
       self.audio.play("public/sounds/"+filename+".wav")
+    elif:
+      print("audio not initialized")
 
   def talk(self, text):
     # Sometimes the beginning of audio can get cut off. Insert silence.
