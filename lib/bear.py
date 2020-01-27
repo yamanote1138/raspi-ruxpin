@@ -55,7 +55,7 @@ class Bear:
     GPIO.cleanup()
     print("deinitialized Bear instance")
 
-  observe audio signal and move mouth accordingly
+  #observe audio signal and move mouth accordingly
   def __updateMouth(self):
     lastMouthEvent = 0
     lastMouthEventTime = 0
