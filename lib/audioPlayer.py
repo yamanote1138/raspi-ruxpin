@@ -17,7 +17,7 @@ class AudioPlayer:
     current_volume = mixer.getvolume() # Get the current Volume
     print("volume set at {}").format(current_volume)
 
-  def play(self,fileName):
+  def play(self,filename):
     # Set chunk size of 1024 samples per data frame
     chunk = 1024  
 
