@@ -26,7 +26,7 @@ class AudioPlayer:
     m = aa.Mixer('PCM')
     m.setvolume(volume)
     current_volume = m.getvolume() # Get the current Volume
-    print("volume set at %s", (current_volume))
+    print("volume set at {}").format(current_volume)
 
   def play(self,fileName):
     # Initialise matrix
