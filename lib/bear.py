@@ -41,39 +41,39 @@ class Bear:
       label='mouth'
     )
 
-    # self.mouthThread = None
     # self.eyesThread = None
-    # self.mouthThread = Thread(target=self.__updateMouth)
-    # self.mouthThread.start()
+    # self.mouthThread = None
+    self.mouthThread = Thread(target=self.__updateMouth)
+    self.mouthThread.start()
 
     isRunning = True
     print("initialized Bear instance")
 
   def __del__(self):
-    # if self.mouthThread != None: self.mouthThread.stop()
     # if self.eyesThread != None: self.eyesThread.stop()
+    if self.mouthThread != None: self.mouthThread.stop()
     GPIO.cleanup()
     print("deinitialized Bear instance")
 
   #observe audio signal and move mouth accordingly
-  # def __updateMouth(self):
-  #   lastMouthEvent = 0
-  #   lastMouthEventTime = 0
+  def __updateMouth(self):
+    lastMouthEvent = 0
+    lastMouthEventTime = 0
 
-  #   while( self.audio == None ):
-  #     time.sleep( 0.1 )
+    while( self.audio == None ):
+      time.sleep( 0.1 )
 
-  #   while isRunning:
-  #     if( self.audio.mouthValue != lastMouthEvent ):
-  #       lastMouthEvent = self.audio.mouthValue
-  #       lastMouthEventTime = time.time()
+    while isRunning:
+      if( self.audio.mouthValue != lastMouthEvent ):
+        lastMouthEvent = self.audio.mouthValue
+        lastMouthEventTime = time.time()
 
-  #       if( self.audio.mouthValue == 1 ):
-  #         self.mouth.open()
-  #       else:
-  #         self.mouth.close()
-  #     elif( time.time() - lastMouthEventTime > 0.4 ):
-  #       self.mouth.stop()
+        if( self.audio.mouthValue == 1 ):
+          self.mouth.open()
+        else:
+          self.mouth.close()
+      elif( time.time() - lastMouthEventTime > 0.4 ):
+        self.mouth.stop()
 
   def update(self, data):
     if('eyes' in data['bear']): self.eyes.move(opening=data['bear']['eyes']['open'])
