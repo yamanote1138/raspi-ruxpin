@@ -55,3 +55,10 @@ In your browser, go to http://[ipaddress]:8080
 ---------
 ```
 
+## Mac Local Dev notes
+`brew install pyenv`
+`pyenv install 2.7.13`
+`brew install portaudio`
+`pip install ConfigParser`
+`pip install pyaudio`
+

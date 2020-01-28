@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
-import alsaaudio as aa
+try:
+  import alsaaudio as aa
+except ImportError:
+  aa = None
 import audioop
 import pyaudio
 import wave
@@ -12,10 +15,13 @@ class AudioPlayer:
     self.setVolume(100)
 
   def setVolume(self, volume=75):
-    mixer = aa.Mixer('PCM')
-    mixer.setvolume(volume)
-    current_volume = mixer.getvolume() # Get the current Volume
-    print("volume set at {}").format(current_volume)
+    if aa is not None:
+      mixer = aa.Mixer('PCM')
+      mixer.setvolume(volume)
+      current_volume = mixer.getvolume() # Get the current Volume
+      print("volume set at {}").format(current_volume)
+    else:
+      print("alsaaudio not installed, unable to set volume")
 
   def play(self,filename):
     # Set chunk size of 1024 samples per data frame
