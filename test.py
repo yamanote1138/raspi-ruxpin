@@ -5,7 +5,7 @@ import json
 import time
 
 from lib.audioPlayer import AudioPlayer
-from lib.bear import Bear
+from lib.mockbear import Bear
 
 # read main config file
 config = ConfigParser.RawConfigParser()

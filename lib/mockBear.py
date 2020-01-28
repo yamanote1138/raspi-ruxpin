@@ -1,32 +1,67 @@
 #!/usr/bin/env python
-class Servo:
-  def __init__(self, open_pin, close_pin, label="unknown"):
-    self.open = None
-    self.label = label
-    print("Servo inited (open_pin=%s, close_pin=%s)" % (open_pin, close_pin))
+import os
+import subprocess
+import time
 
-  def move(self, opening=True, duration=.5):
-    if(opening and (self.open == None or not self.open)):
-      self.open = True
-      print("opened %s servo" % self.label)
-    else:
-      self.open = False
-      print("closed %s servo" % self.label)
-
-  def stop(self):
-    print("stopped %s servo" % self.label)
+from mockServo import Servo
+from random import randint
+from threading import Thread
 
 class Bear:
-  def __init__(self, config, audio=None):
+  def __init__(self, config, audio):
+    self.isTalking = False
+
+    # attach audio player
+    self.audio = audio
+
     # add list of supported phrases
     self.phrases = config.phrases
 
-    self.mouth = Servo(config.getint('pins', 'mouth_open'), config.getint('pins', 'mouth_closed'), "mouth")
-    self.eyes = Servo(config.getint('pins', 'eyes_open'), config.getint('pins', 'eyes_closed'), "eyes")
+    # bind mouth and eye servos based on pins defined in config
+    self.eyes = Servo(
+      pwm_pin=config.getint('pins', 'pwma'),
+      dir_pin=config.getint('pins', 'ain1'),
+      cdir_pin=config.getint('pins', 'ain2'),
+      duration=config.getfloat('settings', 'eyes_duration'),
+      speed=config.getint('settings', 'eyes_speed'),
+      label='eyes'
+    )
 
-    # set initial motor state
-    self.eyes.move(True)
-    self.mouth.move(False)
+    self.mouth = Servo(
+      pwm_pin=config.getint('pins', 'pwmb'),
+      dir_pin=config.getint('pins', 'bin1'),
+      cdir_pin=config.getint('pins', 'bin2'),
+      duration=config.getfloat('settings', 'mouth_duration'),
+      speed=config.getint('settings', 'mouth_speed'),
+      label='mouth'
+    )
+
+    # self.eyesThread = None
+    # self.mouthThread = None
+    self.mouthThread = Thread(target=self.__updateMouth)
+    self.mouthThread.start()
+
+    print("initialized Bear instance")
+
+  def __del__(self):
+    # if self.eyesThread != None: self.eyesThread.stop()
+    if self.mouthThread != None: self.mouthThread.stop()
+    print("deinitialized Bear instance")
+
+  #observe audio signal and move mouth accordingly
+  def __updateMouth(self):
+    while self.isTalking:
+      print("talking")
+      if( self.audio.mouthValue != lastMouthEvent ):
+        lastMouthEvent = self.audio.mouthValue
+        lastMouthEventTime = time.time()
+
+        if( self.audio.mouthValue == 1 ):
+          self.mouth.open()
+        else:
+          self.mouth.close()
+      elif( time.time() - lastMouthEventTime > 0.4 ):
+        self.mouth.stop()
 
   def update(self, data):
     if('eyes' in data['bear']): self.eyes.move(opening=data['bear']['eyes']['open'])
@@ -34,13 +69,27 @@ class Bear:
     return self.getStatus()
 
   def getStatus(self):
+    print(self)
     return { "bear": { "eyes": { "open": self.eyes.open }, "mouth": { "open": self.mouth.open } } }
 
-  def blink():
-    print("Bear.blink()")
-
   def play(self, filename):
-    print("Bear.play() : \"%s\"" % filename)
+    self.isTalking = True
+    self.audio.play("public/sounds/"+filename+".wav")
+    self.isTalking = False
 
-  def talk(self, text):
-    print("Bear.talk() : \"%s\"" % text)
+  def say(self, text):
+    # Sometimes the beginning of audio can get cut off. Insert silence.
+    os.system( "espeak \",...\" 2>/dev/null" )
+    time.sleep( 0.5 )
+    # TODO: make speech params configurable
+    subprocess.call([
+      "espeak", 
+      "-w","speech.wav",
+      "-s","125", 
+      "-v","en+m3",
+      "-p","25",
+      "-a","150", 
+      text
+    ])
+    self.audio.play("speech.wav")
+

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import RPi.GPIO as GPIO
 import time
 
 class Servo:
@@ -23,27 +22,12 @@ class Servo:
     self.speed = speed
     self.duration = duration
 
-    # designate pins as OUT
-    GPIO.setup(self.pwm_pin, GPIO.OUT)
-    GPIO.setup(self.dir_pin, GPIO.OUT)
-    GPIO.setup(self.cdir_pin, GPIO.OUT)
-
-    # initialize PWM
-    self.pwm = GPIO.PWM(self.pwm_pin, pwm_freq)
-
   def __del__(self):
-    self.pwm.stop()
+    print("deleted servo instance '{}'").format(self.label)
 
   def __setDirection(self, direction="fwd"):
     self.direction = direction
-    if(direction == "fwd"):
-      GPIO.output( self.dir_pin, GPIO.HIGH )
-      GPIO.output( self.cdir_pin, GPIO.LOW )
-    elif(direction == "rev"):
-      GPIO.output( self.dir_pin, GPIO.LOW )
-      GPIO.output( self.cdir_pin, GPIO.HIGH )
-    else:
-      raise Exception("unsupported motor direction: %s", (self.direction))
+    print("direction set to {}").format(direction)
 
   # set duration to 0 for continuous movement
   def __move(self, autoStop):
@@ -52,11 +36,11 @@ class Servo:
     if(self.duration is None): raise Exception('servo move duration not set')
     if(self.duration > 2): raise Exception('servo duration too long')
 
-    self.pwm.start(self.speed)
+    print("{} motor started at speed {}").format(self.label, self.speed)
 
     if(autoStop):
       time.sleep(self.duration)
-      self.pwm.stop()
+      self.stop()
 
   def open(self, autoStop=True):
     self.__setDirection("fwd")
@@ -72,4 +56,4 @@ class Servo:
     self.close()
 
   def stop(self):
-    self.pwm.stop()
+    print("motor {} stopped").format(self.label)
