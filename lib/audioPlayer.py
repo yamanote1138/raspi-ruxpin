@@ -16,7 +16,7 @@ class AudioPlayer:
 
   def setVolume(self, volume=75):
     if aa is not None:
-      mixer = aa.Mixer('Master')
+      mixer = aa.Mixer('PCM')
       mixer.setvolume(volume)
       current_volume = mixer.getvolume() # Get the current Volume
       print("volume set at {}").format(current_volume)
