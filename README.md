@@ -21,19 +21,47 @@ So, on that note, I've ported and rebuilt the project for use with a Raspberry P
 ## Wiring
 ![Fritzing](fritzing.png)
 
-## Installation
-
-Make sure you install the following dependencies:
-
+## update apt package lists
 ```sh
-sudo apt-get install python-setuptools python-dev build-essential espeak alsa-utils
-sudo apt-get install python-alsaaudio python-numpy python-bottle mplayer
+sudo apt-get update
 ```
+
+## Setup git
+```sh
+sudo apt-get install git
+```
+
+## setup ssh key in github (optional)
+```sh
+ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+```
+```sh
+cat ~/.ssh/id_rsa.pub
+```
+copy entire output of previous command
+navigate to `https://github.com/settings/keys`
+select "New SSH key"
+follow instructions from there...
+
+## Clone repo
+```sh
+git clone git@github.com:yamanote1138/raspi-ruxpin.git
+cd raspi-ruxpin
+```
+
+## Install System Dependencies
+```sh
+sudo apt-get install python-setuptools python-dev python-alsaaudio python-pyaudio python-numpy python-bottle espeak
+```
+note: the following additional dependencies appear to be pre-installed (at least on Raspbian Buster)
+`alsa-utils`
+`build-essential`
+`python-configparser`
 
 ## Configuration
 make a copy of the default config and name it `main.cfg`
 ```sh
-cp main.cfg.default main.cfg
+cp config/main.cfg.default config/main.cfg
 ```
 
 using whatver editor tickles your fancy, set the GPIO pins to whatever you'd like
