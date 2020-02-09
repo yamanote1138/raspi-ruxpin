@@ -21,13 +21,13 @@ with open('config/phrases.json', 'r') as f:
 audio = AudioPlayer()
 bear = Bear(config, audio)
 
-bear.eyes.blink()
-time.sleep(1)
-bear.mouth.blink()
+# bear.eyes.blink()
+# time.sleep(1)
+# bear.mouth.blink()
 
-# bear.play("88miles")
+bear.play("baleeted")
 
-bear.say("I have seen roadkill with better taste")
+# bear.say("I have seen roadkill with better taste")
 
 # should give process time to finish
 raw_input("Press Enter to quit...")
