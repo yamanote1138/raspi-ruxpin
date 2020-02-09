@@ -15,6 +15,7 @@ class Bear:
     # use Broadcom pin designations
     GPIO.setmode(GPIO.BCM)
 
+    self.isRunning = True
     self.isTalking = False
 
     # attach audio player
@@ -51,25 +52,25 @@ class Bear:
 
   def __del__(self):
     # if self.eyesThread != None: self.eyesThread.stop()
+    self.isRunning = False
     if self.mouthThread != None: self.mouthThread.stop()
     GPIO.cleanup()
     print("deinitialized Bear instance")
 
   #observe audio signal and move mouth accordingly
   def __updateMouth(self):
-    print("self.isTalking={}").format(self.isTalking)
-    while self.isTalking:
-      print("talking")
-      if( self.audio.mouthValue != lastMouthEvent ):
-        lastMouthEvent = self.audio.mouthValue
-        lastMouthEventTime = time.time()
+    while self.isRunning:
+      if self.isTalking:
+        if( self.audio.mouthValue != lastMouthEvent ):
+          lastMouthEvent = self.audio.mouthValue
+          lastMouthEventTime = time.time()
 
-        if( self.audio.mouthValue == 1 ):
-          self.mouth.open()
-        else:
-          self.mouth.close()
-      elif( time.time() - lastMouthEventTime > 0.4 ):
-        self.mouth.stop()
+          if( self.audio.mouthValue == 1 ):
+            self.mouth.open()
+          else:
+            self.mouth.close()
+        elif( time.time() - lastMouthEventTime > 0.4 ):
+          self.mouth.stop()
 
   def update(self, data):
     if('eyes' in data['bear']): self.eyes.move(opening=data['bear']['eyes']['open'])
