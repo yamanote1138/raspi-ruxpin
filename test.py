@@ -79,11 +79,16 @@ def main(argv):
   time.sleep(duration)
   pwm.stop()
 
+  print('done')
+
   # unset pin levels
   GPIO.output(dir_pin, GPIO.LOW)
   GPIO.output(cdir_pin, GPIO.LOW)
 
   GPIO.cleanup()
+
+  print('cleanup')
+
 
 if __name__ == "__main__":
   main(sys.argv[1:])
