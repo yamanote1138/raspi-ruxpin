@@ -52,7 +52,6 @@ class Bear:
     # if self.eyesThread != None: self.eyesThread.stop()
     self.isRunning = False
     if self.mouthThread != None: self.mouthThread.stop()
-    GPIO.cleanup()
     print("deinitialized Bear instance")
 
   #observe audio signal and move mouth accordingly
@@ -74,13 +73,21 @@ class Bear:
           self.mouth.stop()
 
   def update(self, data):
-    if('eyes' in data['bear']): self.eyes.move(opening=data['bear']['eyes']['open'])
-    if('mouth' in data['bear']): self.mouth.move(opening=data['bear']['mouth']['open'])
+    if('eyes' in data['bear']):
+      if data['bear']['eyes']['open']:
+        self.eyes.open()
+      elif not data['bear']['eyes']['open']:
+        self.eyes.close()
+    if('mouth' in data['bear']):
+      if data['bear']['mouth']['open']:
+        self.mouth.open()
+      elif not data['bear']['mouth']['open']:
+        self.mouth.close()
     return self.getStatus()
 
   def getStatus(self):
     print(self)
-    return { "bear": { "eyes": { "open": self.eyes.open }, "mouth": { "open": self.mouth.open } } }
+    return { "bear": { "eyes": { "open": self.eyes.is_open }, "mouth": { "open": self.mouth.is_open } } }
 
   def play(self, filename):
     self.isTalking = True

@@ -6,15 +6,8 @@ import json
 import os
 import RPi.GPIO as GPIO
 
-IS_PI = os.uname()[4][:3] == 'arm'
-
-if(IS_PI):
-  from lib.audioPlayer import AudioPlayer
-  from lib.bear import Bear
-else:
-  from lib.mockAudioPlayer import AudioPlayer
-  from lib.mockBear import Bear
-
+from lib.audioPlayer import AudioPlayer
+from lib.bear import Bear
 from lib.webFramework import WebFramework
 
 # read main config file

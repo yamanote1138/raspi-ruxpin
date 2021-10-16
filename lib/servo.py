@@ -4,7 +4,7 @@ import time
 
 class Servo:
   
-  def __init__(self, pwm_pin=None, dir_pin=None, cdir_pin=None, pwm_freq=2000, duration=.5, speed=100, label="unknown"):
+  def __init__(self, pwm_pin=None, dir_pin=None, cdir_pin=None, pwm_freq=100, duration=.5, speed=100, label="unknown"):
 
     # validate parameters
     if(pwm_pin is None): raise Exception("pwm pin not set")
@@ -36,6 +36,7 @@ class Servo:
 
   def __setDirection(self, direction="fwd"):
     self.direction = direction
+
     if(direction == "fwd"):
       GPIO.output( self.dir_pin, GPIO.HIGH )
       GPIO.output( self.cdir_pin, GPIO.LOW )
@@ -59,12 +60,18 @@ class Servo:
       self.pwm.stop()
 
   def open(self, autoStop=True):
+    if self.is_open:
+      return
     self.__setDirection("fwd")
     self.__move(autoStop)
+    self.is_open = True
 
   def close(self, autoStop=True):
+    if not self.is_open:
+      return
     self.__setDirection("rev")
     self.__move(autoStop)
+    self.is_open = False
 
   def blink(self):
     self.open()
