@@ -19,12 +19,17 @@ with open('config/phrases.json', 'r') as f:
   phrases = json.load(f)
   config.phrases = phrases
 
+# mute annoying 'This channel is already in use' warnings
+GPIO.setwarnings(False)
+
 # init audio player & bear
 audio = AudioPlayer()
 bear = Bear(config, audio, GPIO)
 
 # init web framework
 web = WebFramework(bear)
+
+web.start()
 
 GPIO.cleanup()
 
