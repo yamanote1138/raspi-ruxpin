@@ -25,15 +25,15 @@ def main(argv):
       elif opt=="-s":
         speed = int(arg)
   
-  print(format('motor: {} direction: {} speed: {}', motor, direction, speed))
+  print('motor: {} direction: {} speed: {}'.format(motor, direction, speed))
 
-# set config variables
-pwm_freq = 2000
-pwm_pin = 18
-dir_pin = 14
-cdir_pin = 23
-speed = 100
-duration = .5
+# # set config variables
+# pwm_freq = 2000
+# pwm_pin = 18
+# dir_pin = 14
+# cdir_pin = 23
+# speed = 100
+# duration = .5
 
 # # use Broadcom pin designations
 # GPIO.setmode(GPIO.BCM)
