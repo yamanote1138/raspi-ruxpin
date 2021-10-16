@@ -8,7 +8,7 @@ def main(argv):
   motor = 'eyes'
   direction = 'open'
   speed = 100
-  pwm_freq = 2000
+  pwm_freq = 100
   duration = .5
 
   try:
@@ -38,12 +38,9 @@ def main(argv):
   AIN1 = 24
   AIN2 = 23
 
-  PWMB = 17
+  PWMB = 13
   BIN1 = 22
   BIN2 = 27
-
-  speed = 100
-  duration = .5
 
   # use Broadcom pin designations
   GPIO.setmode(GPIO.BCM)
