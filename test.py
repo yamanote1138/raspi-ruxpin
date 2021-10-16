@@ -74,14 +74,14 @@ def main(argv):
     GPIO.output(dir_pin, GPIO.LOW)
     GPIO.output(cdir_pin, GPIO.HIGH)
 
-  # pwm = GPIO.PWM(pwm_pin, pwm_freq)
-  # pwm.start(speed)
-  # time.sleep(duration)
-  # pwm.stop()
-
-  GPIO.output(pwm_pin, GPIO.HIGH)
+  pwm = GPIO.PWM(pwm_pin, pwm_freq)
+  pwm.start(speed)
   time.sleep(duration)
-  GPIO.output(pwm_pin, GPIO.LOW)
+  pwm.stop()
+
+  # GPIO.output(pwm_pin, GPIO.HIGH)
+  # time.sleep(duration)
+  # GPIO.output(pwm_pin, GPIO.LOW)
   
   print('done')
 
