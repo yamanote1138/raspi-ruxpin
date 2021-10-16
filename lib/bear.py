@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import RPi.GPIO as GPIO
 import os
 import subprocess
 import time
@@ -10,8 +9,7 @@ from random import randint
 from threading import Thread
 
 class Bear:
-  def __init__(self, config, audio):
-    GPIO.cleanup()
+  def __init__(self, config, audio, GPIO):
     # use Broadcom pin designations
     GPIO.setmode(GPIO.BCM)
 

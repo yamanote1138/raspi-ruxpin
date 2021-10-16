@@ -5,6 +5,7 @@ import sys
 import ConfigParser
 import json
 import os
+import RPi.GPIO as GPIO
 
 IS_PI = os.uname()[4][:3] == 'arm'
 
@@ -28,8 +29,11 @@ with open('config/phrases.json', 'r') as f:
 
 # init audio player & bear
 audio = AudioPlayer()
-bear = Bear(config, audio)
+bear = Bear(config, audio, GPIO)
 
 # init web framework
 web = WebFramework(bear)
+
+GPIO.cleanup()
+
 sys.exit(1)
