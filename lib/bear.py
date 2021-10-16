@@ -41,15 +41,15 @@ class Bear:
       label='mouth'
     )
 
-    # self.eyesThread = None
-    # self.mouthThread = None
-    self.mouthThread = Thread(target=self.__updateMouth)
-    self.mouthThread.start()
+    self.eyesThread = None
+    self.mouthThread = None
+    #self.mouthThread = Thread(target=self.__updateMouth)
+    #self.mouthThread.start()
 
     print("initialized Bear instance")
 
   def __del__(self):
-    # if self.eyesThread != None: self.eyesThread.stop()
+    if self.eyesThread != None: self.eyesThread.stop()
     self.isRunning = False
     if self.mouthThread != None: self.mouthThread.stop()
     print("deinitialized Bear instance")

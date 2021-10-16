@@ -79,5 +79,5 @@ class WebFramework:
           bear.talk( text )
           return "RasPi Ruxpin said: \"%s\"" % text
 
-  def start():
+  def start(self):
     run(host=self.ip, port=8080, debug=True)
