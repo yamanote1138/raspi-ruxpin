@@ -4,17 +4,9 @@ import sys
 import ConfigParser
 import json
 import os
-import RPi.GPIO as GPIO
 
-IS_PI = os.uname()[4][:3] == 'arm'
-
-if(IS_PI):
-  from lib.audioPlayer import AudioPlayer
-  from lib.bear import Bear
-else:
-  from lib.mockAudioPlayer import AudioPlayer
-  from lib.mockBear import Bear
-
+from lib.mockAudioPlayer import AudioPlayer
+from lib.mockBear import Bear
 from lib.webFramework import WebFramework
 
 # read main config file
@@ -28,11 +20,9 @@ with open('config/phrases.json', 'r') as f:
 
 # init audio player & bear
 audio = AudioPlayer()
-bear = Bear(config, audio, GPIO)
+bear = Bear(config, audio)
 
 # init web framework
 web = WebFramework(bear)
 
-GPIO.cleanup()
-
-# sys.exit(1)
+sys.exit(1)

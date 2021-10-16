@@ -45,10 +45,12 @@ class Servo:
   def open(self, autoStop=True):
     self.__setDirection("fwd")
     self.__move(autoStop)
+    print("motor {} opened").format(self.label)
 
   def close(self, autoStop=True):
     self.__setDirection("rev")
     self.__move(autoStop)
+    print("motor {} closed").format(self.label)
 
   def blink(self):
     self.open()
