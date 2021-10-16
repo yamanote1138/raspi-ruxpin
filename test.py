@@ -9,15 +9,16 @@ def main(argv):
   direction = 'open'
   speed = 100
   pwm_freq = 2000
+  duration = .5
 
   try:
-    opts, args = getopt.getopt(argv,"hm:ocs:")
+    opts, args = getopt.getopt(argv,"hm:ocs:d:")
   except getopt.GetoptError:
-    print('test.py -m motor -o/c -s speed')
+    print('test.py -m motor -o/c -s speed -d duration')
     sys.exit(2)
   for opt, arg in opts:
       if opt == '-h':
-        print('test.py -m motor -o/c -s speed')
+        print('test.py -m motor -o/c -s speed -d duration')
         sys.exit()
       elif opt=="-m":
         motor = arg
@@ -27,6 +28,8 @@ def main(argv):
         direction = 'closed'
       elif opt=="-s":
         speed = int(arg)
+      elif opt=="-d":
+        duration = float(arg)
   
   print('arguments:\nmotor: {}\ndirection: {}\nspeed: {}\n'.format(motor, direction, speed))
 
