@@ -34,13 +34,13 @@ def main(argv):
   print('arguments:\nmotor: {}\ndirection: {}\nspeed: {}\nduration: {}\n'.format(motor, direction, speed, duration))
 
   # set config variables
-  pwma_pin = 18
-  dira_pin = 24
-  cdira_pin = 23
+  PWMA = 18
+  AIN1 = 24
+  AIN2 = 23
 
-  pwmb_pin = 17
-  dirb_pin = 22
-  cdirb_pin = 27
+  PWMB = 17
+  BIN1 = 22
+  BIN2 = 27
 
   speed = 100
   duration = .5
@@ -54,18 +54,17 @@ def main(argv):
 
   # set up motor pins
   if(motor=='eyes'):
-    pwm_pin = pwma_pin
-    dir_pin = dira_pin
-    cdir_pin = cdira_pin
+    pwm_pin = PWMA
+    dir_pin = AIN1
+    cdir_pin = AIN2
   else:
-    pwm_pin = pwmb_pin
-    dir_pin = dirb_pin
-    cdir_pin = cdirb_pin
+    pwm_pin = PWMB
+    dir_pin = BIN1
+    cdir_pin = BIN2
 
   GPIO.setup(pwm_pin, GPIO.OUT)
   GPIO.setup(dir_pin, GPIO.OUT)
   GPIO.setup(cdir_pin, GPIO.OUT)
-  pwm = GPIO.PWM(pwm_pin, pwm_freq)
 
   # set pin levels
   if(direction=='open'):
@@ -75,13 +74,19 @@ def main(argv):
     GPIO.output(dir_pin, GPIO.LOW)
     GPIO.output(cdir_pin, GPIO.HIGH)
 
-  pwm.start(speed)
-  time.sleep(duration)
-  pwm.stop()
+  # pwm = GPIO.PWM(pwm_pin, pwm_freq)
+  # pwm.start(speed)
+  # time.sleep(duration)
+  # pwm.stop()
 
+  GPIO.output(pwm_pin, GPIO.HIGH)
+  time.sleep(duration)
+  GPIO.output(pwm_pin, GPIO.LOW)
+  
   print('done')
 
   # unset pin levels
+  GPIO.output(pwm_pin, GPIO.LOW)
   GPIO.output(dir_pin, GPIO.LOW)
   GPIO.output(cdir_pin, GPIO.LOW)
 
