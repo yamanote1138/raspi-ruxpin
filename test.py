@@ -1,35 +1,36 @@
 #!/usr/bin/env python
-import sys
-import ConfigParser
-import json
+import RPi.GPIO as GPIO
 import time
 
-from lib.audioPlayer import AudioPlayer
-from lib.bear import Bear
-# from lib.mockBear import Bear
+# set config variables
+pwm_freq = 2000
+pwm_pin = 18
+dir_pin = 14
+cdir_pin = 23
+speed = 100
+duration = .5
 
-# read main config file
-config = ConfigParser.RawConfigParser()
-config.read('config/main.cfg')
+# use Broadcom pin designations
+GPIO.setmode(GPIO.BCM)
 
-# read phrases config file
-with open('config/phrases.json', 'r') as f:
-  phrases = json.load(f)
-  config.phrases = phrases
+# designate pins as OUT
+GPIO.setup(pwm_pin, GPIO.OUT)
+GPIO.setup(dir_pin, GPIO.OUT)
+GPIO.setup(cdir_pin, GPIO.OUT)
 
-# init audio player & bear
-audio = AudioPlayer()
-bear = Bear(config, audio)
+# initialize PWM
+pwm = GPIO.PWM(pwm_pin, pwm_freq)
 
-# bear.eyes.blink()
-# time.sleep(1)
-# bear.mouth.blink()
+# set pin levels
+GPIO.output( self.dir_pin, GPIO.HIGH )
+GPIO.output( self.cdir_pin, GPIO.LOW )
 
-bear.play("baleeted")
+pwm.start(speed)
+time.sleep(duration)
+pwm.stop()
 
-# bear.say("I have seen roadkill with better taste")
+# unset pin levels
+GPIO.output( self.dir_pin, GPIO.LOW )
+GPIO.output( self.cdir_pin, GPIO.LOW )
 
-# should give process time to finish
-raw_input("Press Enter to quit...")
-
-sys.exit(1)
+GPIO.cleanup()
