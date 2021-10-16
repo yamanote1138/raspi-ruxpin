@@ -22,15 +22,15 @@ GPIO.setup(cdir_pin, GPIO.OUT)
 pwm = GPIO.PWM(pwm_pin, pwm_freq)
 
 # set pin levels
-GPIO.output( self.dir_pin, GPIO.HIGH )
-GPIO.output( self.cdir_pin, GPIO.LOW )
+GPIO.output(dir_pin, GPIO.HIGH)
+GPIO.output(cdir_pin, GPIO.LOW)
 
 pwm.start(speed)
 time.sleep(duration)
 pwm.stop()
 
 # unset pin levels
-GPIO.output( self.dir_pin, GPIO.LOW )
-GPIO.output( self.cdir_pin, GPIO.LOW )
+GPIO.output(dir_pin, GPIO.LOW)
+GPIO.output(cdir_pin, GPIO.LOW)
 
 GPIO.cleanup()
