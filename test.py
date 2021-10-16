@@ -31,7 +31,7 @@ def main(argv):
       elif opt=="-d":
         duration = float(arg)
   
-  print('arguments:\nmotor: {}\ndirection: {}\nspeed: {}\n'.format(motor, direction, speed))
+  print('arguments:\nmotor: {}\ndirection: {}\nspeed: {}\nduration: {}\n'.format(motor, direction, speed, duration))
 
   # set config variables
   pwma_pin = 18
