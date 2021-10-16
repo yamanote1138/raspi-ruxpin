@@ -16,7 +16,7 @@ def main(argv):
     sys.exit(2)
   for opt, arg in opts:
       if opt == '-h':
-        print('test.py -d direction -s speed')
+        print('test.py -m motor -d direction -s speed')
         sys.exit()
       elif opt=="-m":
         motor = arg
@@ -25,7 +25,7 @@ def main(argv):
       elif opt=="-s":
         speed = int(arg)
   
-  print('motor: {} direction: {} speed: {}'.format(motor, direction, speed))
+  print('motor: {}\ndirection: {}\nspeed: {}\n'.format(motor, direction, speed))
 
 # # set config variables
 # pwm_freq = 2000
