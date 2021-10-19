@@ -26,9 +26,12 @@ def sigint_handler(signal, frame):
 signal.signal(signal.SIGINT, sigint_handler)
 
 # init web framework
-web = WebFramework(bear)
-web.start()
-bear.activate()
+try:
+  web = WebFramework(bear)
+  web.start()
+  bear.activate()
+except KeyboardInterrupt:
+  bear.deactivate()
 
 bear.deactivate()
 sys.exit(1)
