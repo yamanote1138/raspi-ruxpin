@@ -52,6 +52,12 @@ class WebFramework:
       if(text != ""): bear.say(text)
       return index()
 
+    @post('/phrase')
+    def speak():
+      filename = request.forms.get('filename')
+      if(filename != ""): bear.play(filename)
+      return index()
+
     @post('/slack')
     def slack():
       text = request.forms.get('text')
