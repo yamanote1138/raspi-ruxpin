@@ -15,7 +15,7 @@ class WebFramework:
       
     @get('/')
     def index():
-      return template('templates/index', phrases=bear.phrases, e=bear.eyes.status, m=bear.mouth.status)
+      return template('templates/index', phrases=bear.phrases, e=bear.eyes.state, m=bear.mouth.state)
 
     @get('/api/bear')
     def apiBearGetStatus():
