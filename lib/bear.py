@@ -76,10 +76,8 @@ class Bear:
   def update(self, data):
     if('eyes' in data['bear']): self.eyes.to=data['bear']['eyes']['to']
     if('mouth' in data['bear']): self.mouth.to=data['bear']['mouth']['to']
-    return self.getStatus()
 
   def getStatus(self):
-    print(self)
     return { "bear": { "eyes": { "state": self.eyes.state }, "mouth": { "state": self.mouth.state } } }
 
   def play(self, filename):
