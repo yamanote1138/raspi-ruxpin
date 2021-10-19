@@ -27,9 +27,9 @@ signal.signal(signal.SIGINT, sigint_handler)
 
 # init web framework
 try:
+  bear.activate()
   web = WebFramework(bear)
   web.start()
-  # bear.activate()
 except KeyboardInterrupt:
   bear.deactivate()
 
