@@ -41,14 +41,14 @@
           <div class="col-sm-10">
             <select name="e" class="form-control" id="e">
               <option value="open"{{'selected="selected"' if e == 'open' else ''}}>open</option>
-              <option value="closed"{{'selected="selected"' if e == 'closed' else ''}}>close</option>
+              <option value="closed"{{'selected="selected"' if e == 'closed' else ''}}>closed</option>
             </select>
           </div>
           <label for="m" class="col-sm-2 control-label">Mouth</label>
           <div class="col-sm-10">
             <select name="m" class="form-control" id="m">
               <option value="open"{{'selected="selected"' if m == 'open' else ''}}>open</option>
-              <option value="closed"{{'selected="selected"' if m == 'closed' else ''}}>close</option>
+              <option value="closed"{{'selected="selected"' if m == 'closed' else ''}}>closed</option>
             </select>
           </div>
           <button type="submit" class="btn btn-info"><i class="fa fa-play-circle" aria-hidden="true"></i></button>
