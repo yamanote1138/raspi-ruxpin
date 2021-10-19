@@ -35,10 +35,6 @@ class WebFramework:
     def puppet():
       self.e = request.query.e or 'open'
       self.m = request.query.m or 'open'
-
-      bear.eyes.to = self.e
-      bear.mouth.to = self.m
-
       data = { "bear": {"eyes": {"to":self.e}, "mouth":{"to":self.m}}}
       bear.update(data)
       return index()

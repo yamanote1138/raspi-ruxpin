@@ -40,6 +40,7 @@ class Bear:
     #set starting motor positions
     self.eyes.open()
     self.mouth.close()
+    self.eyesThread = Thread(target=self.__updateEyes)
     self.mouthThread = Thread(target=self.__updateMouth)
     print("bear constructor finished")
 
@@ -62,11 +63,16 @@ class Bear:
       elif self.mouth.to =='closed' and self.mouth.state != 'closed':
           self.mouth.close()
 
+  def __updateEyes(self):
+    while self.isRunning:
+      if self.eyes.to == 'open' and self.eyes.state != 'open':
+          self.eyes.open()
+      elif self.eyes.to =='closed' and self.eyes.state != 'closed':
+          self.eyes.close()
+
   def update(self, data):
-    if('eyes' in data['bear']):
-      if data['bear']['eyes']['to']: self.eyes.to=data['bear']['eyes']['to']
-    if('mouth' in data['bear']):
-      if data['bear']['mouth']['to']: self.mouth.to=data['bear']['mouth']['to']
+    if('eyes' in data['bear']): self.eyes.to=data['bear']['eyes']['to']
+    if('mouth' in data['bear']): self.mouth.to=data['bear']['mouth']['to']
     return self.getStatus()
 
   def getStatus(self):
