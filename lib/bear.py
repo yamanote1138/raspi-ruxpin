@@ -99,5 +99,5 @@ class Bear:
       "-a","150", 
       text
     ])
-    self.audio.play("speech.wav")
+    self.audio.play("speech.wav", self)
 
