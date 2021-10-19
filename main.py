@@ -18,12 +18,10 @@ with open('config/phrases.json', 'r') as f:
 # init audio player & bear
 audio = AudioPlayer()
 bear = Bear(config, audio)
+bear.activate()
 
 # init web framework
 web = WebFramework(bear)
-
-bear.activate()
-time.sleep(1)
 web.start()
 
 # properly handle SIGINT (ctrl-c)
