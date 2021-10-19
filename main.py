@@ -1,10 +1,6 @@
 #!/usr/bin/python
 
-import sys
-import ConfigParser
-import json
-import os
-import RPi.GPIO as GPIO
+import sys, ConfigParser, json, os, signal
 
 from lib.audioPlayer import AudioPlayer
 from lib.bear import Bear
@@ -19,18 +15,21 @@ with open('config/phrases.json', 'r') as f:
   phrases = json.load(f)
   config.phrases = phrases
 
-# mute annoying 'This channel is already in use' warnings
-GPIO.setwarnings(False)
-
 # init audio player & bear
 audio = AudioPlayer()
-bear = Bear(config, audio, GPIO)
+bear = Bear(config, audio)
 
 # init web framework
 web = WebFramework(bear)
 
 web.start()
+bear.activate()
 
-GPIO.cleanup()
+# properly handle SIGINT (ctrl-c)
+def sigint_handler(signal, frame):    
+  bear.deactivate()
+  sys.exit(0)
+signal.signal(signal.SIGINT, sigint_handler)
 
-# sys.exit(1)
+bear.deactivate()
+sys.exit(1)
