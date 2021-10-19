@@ -37,6 +37,7 @@ class WebFramework:
       self.e = request.query.e or 'open'
       self.m = request.query.m or 'open'
       data = { "bear": {"eyes": {"to":self.e}, "mouth":{"to":self.m}}}
+      print(data)
       bear.update(data)
       return index()
 
