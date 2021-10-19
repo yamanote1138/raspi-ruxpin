@@ -3,6 +3,7 @@
 
 from bottle import run, get, post, request, response, route, redirect, template, static_file
 import socket
+import time
 
 class WebFramework:
   def __init__(self,bear):
@@ -39,6 +40,7 @@ class WebFramework:
       data = { "bear": {"eyes": {"to":self.e}, "mouth":{"to":self.m}}}
       print(data)
       bear.update(data)
+      time.sleep(bear.mouth.duration)
       return index()
 
     @post('/api/play/<filename>')
