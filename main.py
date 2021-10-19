@@ -18,17 +18,18 @@ with open('config/phrases.json', 'r') as f:
 # init audio player & bear
 audio = AudioPlayer()
 bear = Bear(config, audio)
-bear.activate()
-
-# init web framework
-web = WebFramework(bear)
-web.start()
 
 # properly handle SIGINT (ctrl-c)
 def sigint_handler(signal, frame):    
   bear.deactivate()
   sys.exit(0)
 signal.signal(signal.SIGINT, sigint_handler)
+
+bear.activate()
+
+# init web framework
+web = WebFramework(bear)
+web.start()
 
 bear.deactivate()
 sys.exit(1)
