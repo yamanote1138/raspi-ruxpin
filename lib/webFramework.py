@@ -80,4 +80,4 @@ class WebFramework:
     print( "In your browser, go to http://" + str(self.ip) + ":8080")
     print( "---------")
 
-    run(host=self.ip, port=8080, debug=True, server='cherrypy')
+    run(host=self.ip, port=8080, debug=True, threaded=True)
