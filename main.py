@@ -25,11 +25,10 @@ def sigint_handler(signal, frame):
   sys.exit(0)
 signal.signal(signal.SIGINT, sigint_handler)
 
-bear.activate()
-
 # init web framework
 web = WebFramework(bear)
 web.start()
+bear.activate()
 
 bear.deactivate()
 sys.exit(1)
