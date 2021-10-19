@@ -63,6 +63,7 @@ class Bear:
           self.eyes.open()
       elif self.eyes.to =='closed' and self.eyes.state != 'closed':
           self.eyes.close()
+      time.sleep(.1)
 
   def __updateMouth(self):
     while self.isRunning:
@@ -70,6 +71,7 @@ class Bear:
           self.mouth.open()
       elif self.mouth.to =='closed' and self.mouth.state != 'closed':
           self.mouth.close()
+      time.sleep(.1)
 
   def update(self, data):
     if('eyes' in data['bear']): self.eyes.to=data['bear']['eyes']['to']
