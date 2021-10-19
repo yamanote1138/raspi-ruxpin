@@ -46,7 +46,7 @@ class Bear:
 
   def activate(self):
     self.isRunning = True
-    self.testThread.start()
+    self.mouthThread.start()
     print("instance activated")
 
   def deactivate(self):

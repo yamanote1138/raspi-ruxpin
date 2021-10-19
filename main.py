@@ -22,8 +22,8 @@ bear = Bear(config, audio)
 # init web framework
 web = WebFramework(bear)
 
-web.start()
 bear.activate()
+web.start()
 
 # properly handle SIGINT (ctrl-c)
 def sigint_handler(signal, frame):    
