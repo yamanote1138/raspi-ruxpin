@@ -32,6 +32,7 @@ try:
   web.start()
 except KeyboardInterrupt:
   bear.deactivate()
+  sys.exit(0)
 
 bear.deactivate()
 sys.exit(1)

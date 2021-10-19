@@ -60,7 +60,7 @@ class Servo:
     self.__move()
     self.state = 'open'
     self.to = ''
-    print("servo opened")
+    print("{} servo opened".format(self.label))
 
   def close(self):
     self.stop()
@@ -69,7 +69,7 @@ class Servo:
     self.__move()
     self.state = 'closed'
     self.to = ''
-    print("servo closed")
+    print("{} servo closed".format(self.label))
 
   def stop(self):
     self.pwm.stop()

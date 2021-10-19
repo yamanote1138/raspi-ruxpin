@@ -49,6 +49,7 @@ class Bear:
 
   def activate(self):
     self.isRunning = True
+    self.eyesThread.start()
     self.mouthThread.start()
     print("bear instance activated")
 
@@ -56,19 +57,19 @@ class Bear:
     self.isRunning = False
     print("bear instance deactivated")
 
-  def __updateMouth(self):
-    while self.isRunning:
-      if self.mouth.to == 'open' and self.mouth.state != 'open':
-          self.mouth.open()
-      elif self.mouth.to =='closed' and self.mouth.state != 'closed':
-          self.mouth.close()
-
   def __updateEyes(self):
     while self.isRunning:
       if self.eyes.to == 'open' and self.eyes.state != 'open':
           self.eyes.open()
       elif self.eyes.to =='closed' and self.eyes.state != 'closed':
           self.eyes.close()
+
+  def __updateMouth(self):
+    while self.isRunning:
+      if self.mouth.to == 'open' and self.mouth.state != 'open':
+          self.mouth.open()
+      elif self.mouth.to =='closed' and self.mouth.state != 'closed':
+          self.mouth.close()
 
   def update(self, data):
     if('eyes' in data['bear']): self.eyes.to=data['bear']['eyes']['to']
