@@ -23,7 +23,7 @@ class AudioPlayer:
     else:
       print("alsaaudio not installed, unable to set volume")
 
-  def play(self,filename):
+  def play(self,filename, bear):
     # Set chunk size of 1024 samples per data frame
     chunk = 1024  
 
@@ -50,18 +50,20 @@ class AudioPlayer:
       stream.write(data)
       data = wf.readframes(chunk)
       rms = audioop.rms(data, 2)
-      self.generateMouthSignal(rms)
+      self.generateMouthSignal(rms, bear)
 
     # Close and terminate the stream
     stream.close()
     p.terminate()
 
-  def generateMouthSignal(self,val):
+  def generateMouthSignal(self,val, bear):
     delta = val - self.prevAudiovalue 
     if( delta < -2 or val == 0 ):
       self.mouthValue = 0
+      bear.mouth.to = 'closed'
     elif( delta > 0 ):
       self.mouthValue = 1
+      bear.mouth.to = 'open'
       self.prevAudiovalue = val
 
     print(self.mouthValue)

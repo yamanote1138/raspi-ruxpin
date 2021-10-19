@@ -82,7 +82,7 @@ class Bear:
 
   def play(self, filename):
     self.isTalking = True
-    self.audio.play("public/sounds/"+filename+".wav")
+    self.audio.play("public/sounds/"+filename+".wav", self)
     self.isTalking = False
 
   def say(self, text):
