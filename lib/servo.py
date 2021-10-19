@@ -67,7 +67,7 @@ class Servo:
     GPIO.output( self.dir_pin, GPIO.LOW )
     GPIO.output( self.cdir_pin, GPIO.HIGH )
     self.__move()
-    self.state = 'close'
+    self.state = 'closed'
     self.to = ''
     print("servo closed")
 
