@@ -34,7 +34,7 @@
         <area shape="rect" coords="0,0,200,100" href="/puppet?e={{ex}}&m={{m}}" alt="change eye state" />
         <area shape="rect" coords="0,100,200,200" href="/puppet?e={{e}}&m={{mx}}" alt="change mouth state" />
       </map>
-      <img src="/public/img/teddy_e{{e}}m{{m}}.png" class="img-responsive" usemap="#teddymap">
+      <img src="/public/img/teddy_e{{e[0]}}m{{m[0]}}.png" class="img-responsive" usemap="#teddymap">
       <form action="/puppet" method="get" class="form-inline">
         <div class="well form-group">
           <label for="e" class="col-sm-2 control-label">Eyes</label>
