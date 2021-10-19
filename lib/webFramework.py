@@ -49,7 +49,7 @@ class WebFramework:
     @post('/speak')
     def speak():
       text = request.forms.get('speech')
-      if(text != ""): bear.talk(text)
+      if(text != ""): bear.say(text)
       return index()
 
     @post('/slack')
