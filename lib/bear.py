@@ -47,11 +47,11 @@ class Bear:
   def activate(self):
     self.isRunning = True
     self.mouthThread.start()
-    print("instance activated")
+    print("bear instance activated")
 
   def deactivate(self):
     self.isRunning = False
-    print("instance deactivated")
+    print("bear instance deactivated")
 
   def __updateMouth(self):
     while self.isRunning:

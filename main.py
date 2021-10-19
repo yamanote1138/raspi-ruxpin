@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import sys, ConfigParser, json, os, signal
+import sys, ConfigParser, json, os, signal, time
 
 from lib.audioPlayer import AudioPlayer
 from lib.bear import Bear
@@ -23,6 +23,7 @@ bear = Bear(config, audio)
 web = WebFramework(bear)
 
 bear.activate()
+time.sleep(1)
 web.start()
 
 # properly handle SIGINT (ctrl-c)
