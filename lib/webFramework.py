@@ -40,7 +40,7 @@ class WebFramework:
       data = { "bear": {"eyes": {"to":self.e}, "mouth":{"to":self.m}}}
       print(data)
       bear.update(data)
-      time.sleep(bear.mouth.duration)
+      time.sleep(2)
       return index()
 
     @post('/api/play/<filename>')
