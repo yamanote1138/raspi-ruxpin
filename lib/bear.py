@@ -37,6 +37,8 @@ class Bear:
       label='mouth'
     )
 
+    #set starting motor positions
+    self.eyes.open()
     self.mouth.close()
     self.mouthThread = Thread(target=self.__updateMouth)
     print("bear constructor finished")

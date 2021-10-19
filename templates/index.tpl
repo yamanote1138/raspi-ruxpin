@@ -27,12 +27,12 @@
     <div class="container">
       <a href="/"><img src="public/img/mappy_ruxpin.png" class="img-responsive"></a>
 <%
-  ex = 'c' if e == 'o' else 'o'
-  mx = 'c' if m == 'o' else 'o'
+  ex = 'closed' if e == 'open' else 'open'
+  mx = 'closed' if m == 'open' else 'open'
 %>
       <map name="teddymap">
-        <area shape="rect" coords="0,0,200,100" href="/puppet?e={{ex}}&m={{m}}" alt="Sun" />
-        <area shape="rect" coords="0,100,200,200" href="/puppet?e={{e}}&m={{mx}}" alt="Sun" />
+        <area shape="rect" coords="0,0,200,100" href="/puppet?e={{ex}}&m={{m}}" alt="change eye state" />
+        <area shape="rect" coords="0,100,200,200" href="/puppet?e={{e}}&m={{mx}}" alt="change mouth state" />
       </map>
       <img src="/public/img/teddy_e{{e}}m{{m}}.png" class="img-responsive" usemap="#teddymap">
       <form action="/puppet" method="get" class="form-inline">
@@ -40,15 +40,15 @@
           <label for="e" class="col-sm-2 control-label">Eyes</label>
           <div class="col-sm-10">
             <select name="e" class="form-control" id="e">
-              <option value="o"{{'selected="selected"' if e == 'o' else ''}}>open</option>
-              <option value="c"{{'selected="selected"' if e == 'c' else ''}}>close</option>
+              <option value="open"{{'selected="selected"' if e == 'open' else ''}}>open</option>
+              <option value="closed"{{'selected="selected"' if e == 'closed' else ''}}>close</option>
             </select>
           </div>
           <label for="m" class="col-sm-2 control-label">Mouth</label>
           <div class="col-sm-10">
             <select name="m" class="form-control" id="m">
-              <option value="o"{{'selected="selected"' if m == 'o' else ''}}>open</option>
-              <option value="c"{{'selected="selected"' if m == 'c' else ''}}>close</option>
+              <option value="open"{{'selected="selected"' if m == 'open' else ''}}>open</option>
+              <option value="closed"{{'selected="selected"' if m == 'closed' else ''}}>close</option>
             </select>
           </div>
           <button type="submit" class="btn btn-info"><i class="fa fa-play-circle" aria-hidden="true"></i></button>
