@@ -44,32 +44,35 @@ class Servo:
     GPIO.cleanup()
     print("servo \"{}\" deleted".format(self.label))
 
-  def __move(self):
+  def __move(self, duration=None):
     # stop any current movement
     self.pwm.stop()
 
+    # check for duration override, else use configured val
+    if duration is None: duration = self.duration
+
     # ensure all settings are appropriate to prevent unexpected behaivor
-    if(self.duration is None): raise Exception('servo move duration not set')
-    if(self.duration > 2): raise Exception('servo duration too long')
+    if(duration is None): raise Exception('servo move duration not set')
+    if(duration > 2): raise Exception('servo duration too long')
 
     self.pwm.start(self.speed)
-    time.sleep(self.duration)
+    time.sleep(duration)
     self.pwm.stop()
 
-  def open(self):
+  def open(self, duration=None):
     self.stop()
     GPIO.output( self.dir_pin, GPIO.HIGH )
     GPIO.output( self.cdir_pin, GPIO.LOW )
-    self.__move()
+    self.__move(duration)
     self.state = 'open'
     self.to = ''
     print("{} servo opened".format(self.label))
 
-  def close(self):
+  def close(self, duration=None):
     self.stop()
     GPIO.output( self.dir_pin, GPIO.LOW )
     GPIO.output( self.cdir_pin, GPIO.HIGH )
-    self.__move()
+    self.__move(duration)
     self.state = 'closed'
     self.to = ''
     print("{} servo closed".format(self.label))

@@ -65,11 +65,11 @@ class AudioPlayer:
     #if delta is positive, volume is increasing, open mouth
     if( delta > 0 ):
       self.mouthValue = 1
-      bear.mouth.to = 'open'
+      bear.mouth.open(.2)
     #if delta is negative, volume is decreasing, close mouth
     elif( delta < 0 ):
       self.mouthValue = 0
-      bear.mouth.to = 'closed'
+      bear.mouth.close(.2)
     
     self.prevAudiovalue = val
 
