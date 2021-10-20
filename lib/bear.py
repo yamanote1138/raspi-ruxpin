@@ -83,6 +83,7 @@ class Bear:
       time.sleep(.1)
 
   def __talkMonitor(self):
+    lastMouthEvent = 0
     while self.isRunning:
       while self.isTalking:
         print(self.isTalking)
