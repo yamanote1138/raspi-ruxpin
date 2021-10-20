@@ -130,7 +130,7 @@ class Bear:
     time.sleep( 0.5 )
     # TODO: make speech params configurable
 
-    txtPipe = subprocess.Popen("echo","\"{}\"".format(text),stdout=subprocess.PIPE)
+    txtPipe = subprocess.Popen(["echo","\"{}\"".format(text)],stdout=subprocess.PIPE)
 
     subprocess.run([
       "text2wave",
