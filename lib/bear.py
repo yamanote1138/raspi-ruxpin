@@ -9,7 +9,7 @@ from threading import Thread
 
 class Bear:
   def __init__(self, config, audio):
-
+    self.isRunning = True
     self.isPuppet = True
     self.isTalking = False
 
@@ -50,46 +50,54 @@ class Bear:
     print("bear deconstructor finished")
 
   def activate(self):
+    self.isRunning = True
     self.eyesThread.start()
     self.mouthThread.start()
     self.talkThread.start()
     print("bear instance activated")
 
   def deactivate(self):
+    self.isRunning = False
     self.isPuppet = False
     self.isTalking = False
     print("bear instance deactivated")
 
   def __updateEyes(self):
-    while self.isPuppet:
-      if self.eyes.to == 'open' and self.eyes.state != 'open':
-          self.eyes.open()
-      elif self.eyes.to =='closed' and self.eyes.state != 'closed':
-          self.eyes.close()
+    while self.isRunning:
+      while self.isPuppet:
+        if self.eyes.to == 'open' and self.eyes.state != 'open':
+            self.eyes.open()
+        elif self.eyes.to =='closed' and self.eyes.state != 'closed':
+            self.eyes.close()
+        time.sleep(.1)
       time.sleep(.1)
 
   def __updateMouth(self):
-    while self.isPuppet:
-      if self.mouth.to == 'open' and self.mouth.state != 'open':
-          self.mouth.open()
-      elif self.mouth.to =='closed' and self.mouth.state != 'closed':
-          self.mouth.close()
+    while self.isRunning:
+      while self.isPuppet:
+        if self.mouth.to == 'open' and self.mouth.state != 'open':
+            self.mouth.open()
+        elif self.mouth.to =='closed' and self.mouth.state != 'closed':
+            self.mouth.close()
+        time.sleep(.1)
       time.sleep(.1)
 
   def __talkMonitor(self):
-    while self.isTalking:
-      print(self.isTalking)
-      if( self.audio.mouthValue != lastMouthEvent ):
-        lastMouthEvent = self.audio.mouthValue
-        lastMouthEventTime = time.time()
+    while self.isRunning:
+      while self.isTalking:
+        print(self.isTalking)
+        if( self.audio.mouthValue != lastMouthEvent ):
+          lastMouthEvent = self.audio.mouthValue
+          lastMouthEventTime = time.time()
 
-        if( self.audio.mouthValue == 1 ):
-          self.mouth.open()
+          if( self.audio.mouthValue == 1 ):
+            self.mouth.open()
+          else:
+            self.mouth.close()
         else:
-          self.mouth.close()
-      else:
-        if( time.time() - lastMouthEventTime > 0.4 ):
-          self.mouth.stop()
+          if( time.time() - lastMouthEventTime > 0.4 ):
+            self.mouth.stop()
+      time.sleep(.1)
 
   def update(self, data):
     if 'eyes' in data['bear']: self.eyes.to=data['bear']['eyes']['to']
