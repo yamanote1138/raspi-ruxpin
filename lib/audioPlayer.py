@@ -51,14 +51,18 @@ class AudioPlayer:
     try:
       while data!='':
         output.write(data)
-        # Split channel data and find maximum volume
-        # channel_l=audioop.tomono(data, 2, 1.0, 0.0)
-        channel_r=audioop.tomono(data, 2, 0.0, 1.0)
-        # max_l = audioop.max(channel_l,2)/max_vol_factor
-        max_r = audioop.max(channel_r,2)/max_vol_factor
 
-        for i in range (1,8):
-          self.generateMouthSignal((1<<max_r)-1)
+        try:
+          # Split channel data and find maximum volume
+          # channel_l=audioop.tomono(data, 2, 1.0, 0.0)
+          channel_r=audioop.tomono(data, 2, 0.0, 1.0)
+          # max_l = audioop.max(channel_l,2)/max_vol_factor
+          max_r = audioop.max(channel_r,2)/max_vol_factor
+
+          for i in range (1,8):
+            self.generateMouthSignal((1<<max_r)-1)
+        except:
+          logging.exception('')
           
         data = wavfile.readframes(chunk)
     except:
