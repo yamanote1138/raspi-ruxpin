@@ -132,8 +132,8 @@ class Bear:
     subprocess.call([
       "espeak", 
       "-w","speech.wav",
-      "-s","125", 
-      "-v","en+m3",
+      "-s","100", 
+      "-v","en+m1",
       "-p","25",
       "-a","150", 
       text
