@@ -129,12 +129,14 @@ class Bear:
     os.system( "espeak \",...\" 2>/dev/null" )
     time.sleep( 0.5 )
     # TODO: make speech params configurable
+
+    txtPipe = subprocess.Popen("echo","\"{}\"".format(text),stdout=subprocess.PIPE)
+
     subprocess.call([
-      "echo","\"{}\"".format(text),
-      "|",
       "text2wave",
       "-o","speech.wav",
       "-f","22050"
-    ])
+    ], stdin=txtPipe)
+
     self.audio.play("speech.wav")
 
