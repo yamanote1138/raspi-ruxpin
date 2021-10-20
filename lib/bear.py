@@ -74,8 +74,17 @@ class Bear:
       time.sleep(.1)
 
   def update(self, data):
+    updated = False
     if('eyes' in data['bear']): self.eyes.to=data['bear']['eyes']['to']
     if('mouth' in data['bear']): self.mouth.to=data['bear']['mouth']['to']
+
+    # wait for motor functions to complete before proceeding
+    while not updated:
+      if self.eyes.to == self.eyes.status and self.mouth.to == self.mouth.status:
+        updated = True
+      else:
+        time.sleep(.1)
+
 
   def getStatus(self):
     return { "bear": { "eyes": { "state": self.eyes.state }, "mouth": { "state": self.mouth.state } } }
