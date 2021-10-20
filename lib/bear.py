@@ -107,7 +107,7 @@ class Bear:
   def play(self, filename):
     self.isPuppet = False
     self.isTalking = True
-    self.audio.play("public/sounds/"+filename+".wav", self)
+    self.audio.play("public/sounds/"+filename+".wav")
     self.isTalking = False
     self.isPuppet = True
 
@@ -125,5 +125,5 @@ class Bear:
       "-a","150", 
       text
     ])
-    self.audio.play("speech.wav", self)
+    self.audio.play("speech.wav")
 
