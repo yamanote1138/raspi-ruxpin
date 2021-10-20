@@ -59,7 +59,7 @@ class AudioPlayer:
         max_r = audioop.max(channel_r,2)/max_vol_factor
 
         for i in range (1,8):
-          self.generateMouthSignal((1<<max_r)-1)
+          self.generateMouthSignal((1<<max_r)-1, bear)
           
         data = wavfile.readframes(chunk)
     except:
@@ -69,7 +69,7 @@ class AudioPlayer:
     os.system( '/etc/init.d/alsa-utils restart' )
     sleep( .25 )
 
-  def generateMouthSignal(self,val):
+  def generateMouthSignal(self,val, bear):
     delta = val - self.prevAudiovalue 
     if( delta < -2 or val == 0 ):
       self.mouthValue = 0
