@@ -69,8 +69,7 @@ class Bear:
             self.eyes.open()
         elif self.eyes.to =='closed' and self.eyes.state != 'closed':
             self.eyes.close()
-      else:
-        time.sleep(.1)
+      time.sleep(.1)
 
   def __updateMouth(self):
     while self.isRunning:
@@ -79,8 +78,7 @@ class Bear:
             self.mouth.open()
         elif self.mouth.to =='closed' and self.mouth.state != 'closed':
             self.mouth.close()
-      else:
-        time.sleep(.1)
+      time.sleep(.1)
 
   def __talkMonitor(self):
     lastMouthEvent = 0
@@ -98,6 +96,7 @@ class Bear:
         else:
           if( time.time() - lastMouthEventTime > 0.4 ):
             self.mouth.setDirection('stall')
+        time.sleep(.05)
       else:
         time.sleep(.1)
 
