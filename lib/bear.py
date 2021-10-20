@@ -95,8 +95,8 @@ class Bear:
             self.mouth.setDirection('closed')
         else:
           if( time.time() - lastMouthEventTime > 0.4 ):
-            self.mouth.setDirection('stall')
-        time.sleep(.05)
+            self.mouth.setDirection('brake')
+        # time.sleep(.05)
       else:
         time.sleep(.1)
 
@@ -117,6 +117,7 @@ class Bear:
   def play(self, filename):
     self.isPuppet = False
     self.isTalking = True
+    self.mouth.setDirection('brake')
     self.mouth.pwm.start(self.mouth.speed)
     self.audio.play("public/sounds/"+filename+".wav")
     self.mouth.stop()

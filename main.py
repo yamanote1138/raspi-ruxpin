@@ -13,7 +13,8 @@ config.read('config/main.cfg')
 # read phrases config file
 with open('config/phrases.json', 'r') as f:
   phrases = json.load(f)
-  config.phrases = phrases
+  sorted_phrases = dict(sorted(phrases.items()))
+  config.phrases = sorted_phrases
 
 # init audio player & bear
 audio = AudioPlayer()

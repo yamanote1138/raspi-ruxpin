@@ -78,7 +78,7 @@ class Servo:
 
   def setDirection(self, direction):
     if direction is None: raise Exception('direction not specified')
-    if direction not in ['open', 'closed', 'stall']: raise Exception('unsupported direction')
+    if direction not in ['open', 'closed', 'brake']: raise Exception('unsupported direction')
 
     if direction == 'open':
       GPIO.output( self.dir_pin, GPIO.HIGH )
