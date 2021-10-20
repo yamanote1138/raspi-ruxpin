@@ -141,5 +141,5 @@ class Bear:
       "-a","175", 
       text
     ])
-    self.audio.play("espeak")
+    self.play("espeak")
 
