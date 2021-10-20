@@ -42,7 +42,8 @@ class AudioPlayer:
     chunk = 1024
     output = aa.PCM(aa.PCM_PLAYBACK, aa.PCM_NORMAL)
     output.setchannels(1)
-    output.setrate(22050)
+    output.setrate(16000)
+    # output.setrate(22050)
     output.setformat(aa.PCM_FORMAT_S16_LE)
     output.setperiodsize(chunk)
 
