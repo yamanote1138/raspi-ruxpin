@@ -10,7 +10,8 @@ from threading import Thread
 class Bear:
   def __init__(self, config, audio):
 
-    self.isRunning = False
+    self.isPuppet = True
+    self.isTalking = False
 
     # attach audio player
     self.audio = audio
@@ -42,15 +43,16 @@ class Bear:
     self.mouth.close()
     self.eyesThread = Thread(target=self.__updateEyes)
     self.mouthThread = Thread(target=self.__updateMouth)
+    self.talkThread = Thread(target=self.__talkMonitor)
     print("bear constructor finished")
 
   def __del__(self):
     print("bear deconstructor finished")
 
   def activate(self):
-    self.isRunning = True
     self.eyesThread.start()
     self.mouthThread.start()
+    self.talkThread.start()
     print("bear instance activated")
 
   def deactivate(self):
@@ -58,7 +60,7 @@ class Bear:
     print("bear instance deactivated")
 
   def __updateEyes(self):
-    while self.isRunning:
+    while self.isPuppet:
       if self.eyes.to == 'open' and self.eyes.state != 'open':
           self.eyes.open()
       elif self.eyes.to =='closed' and self.eyes.state != 'closed':
@@ -66,12 +68,26 @@ class Bear:
       time.sleep(.1)
 
   def __updateMouth(self):
-    while self.isRunning:
+    while self.isPuppet:
       if self.mouth.to == 'open' and self.mouth.state != 'open':
           self.mouth.open()
       elif self.mouth.to =='closed' and self.mouth.state != 'closed':
           self.mouth.close()
       time.sleep(.1)
+
+  def __talkMonitor(self):
+    while self.isTalking:
+      if( self.audio.mouthValue != lastMouthEvent ):
+        lastMouthEvent = self.audio.mouthValue
+        lastMouthEventTime = time.time()
+
+        if( self.audio.mouthValue == 1 ):
+          self.mouth.open()
+        else:
+          self.mouth.close()
+      else:
+        if( time.time() - lastMouthEventTime > 0.4 ):
+          self.mouth.stop()
 
   def update(self, data):
     if 'eyes' in data['bear']: self.eyes.to=data['bear']['eyes']['to']
@@ -88,9 +104,11 @@ class Bear:
     return { "bear": { "eyes": { "state": self.eyes.state }, "mouth": { "state": self.mouth.state } } }
 
   def play(self, filename):
+    self.isPuppet = False
     self.isTalking = True
     self.audio.play("public/sounds/"+filename+".wav", self)
     self.isTalking = False
+    self.isPuppet = True
 
   def say(self, text):
     # Sometimes the beginning of audio can get cut off. Insert silence.

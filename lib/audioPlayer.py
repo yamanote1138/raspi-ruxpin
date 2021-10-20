@@ -30,7 +30,7 @@ class AudioPlayer:
     else:
       print("alsaaudio not installed, unable to set volume")
 
-  def play(self,fileName, bear):
+  def play(self,fileName):
 
     print("playing file: {}".format(fileName))
 
@@ -59,7 +59,7 @@ class AudioPlayer:
         max_r = audioop.max(channel_r,2)/max_vol_factor
 
         for i in range (1,8):
-          self.generateMouthSignal((1<<max_r)-1, bear)
+          self.generateMouthSignal((1<<max_r)-1)
           
         data = wavfile.readframes(chunk)
     except:
@@ -69,14 +69,12 @@ class AudioPlayer:
     os.system( '/etc/init.d/alsa-utils restart' )
     sleep( .25 )
 
-  def generateMouthSignal(self,val, bear):
+  def generateMouthSignal(self,val):
     delta = val - self.prevAudiovalue 
     if( delta < -2 or val == 0 ):
       self.mouthValue = 0
-      bear.mouth.close(.2)
     elif( delta > 0 ):
       self.mouthValue = 1
-      bear.mouth.open(.2)
 
     self.prevAudiovalue = val
 
