@@ -119,7 +119,10 @@ class Bear:
     self.isTalking = True
     self.mouth.setDirection('brake')
     self.mouth.pwm.start(self.mouth.speed)
-    self.audio.play("public/sounds/"+filename+".wav")
+    if filename == 'espeak':
+      self.audio.play("espeak.wav")
+    else:
+      self.audio.play("public/sounds/"+filename+".wav")
     self.mouth.stop()
     self.isTalking = False
     self.isPuppet = True
@@ -131,12 +134,12 @@ class Bear:
     # TODO: make speech params configurable
     subprocess.call([
       "espeak", 
-      "-w","speech.wav",
+      "-w","espeak.wav",
       "-s","125", 
       "-v","en+m3",
       "-p","25",
-      "-a","150", 
+      "-a","175", 
       text
     ])
-    self.audio.play("speech.wav")
+    self.audio.play("espeak")
 
