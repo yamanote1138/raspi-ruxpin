@@ -130,7 +130,7 @@ class Bear:
     time.sleep( 0.5 )
     # TODO: make speech params configurable
     subprocess.call([
-      "echo",text,
+      "echo","\"{}\"".format(text),
       "|",
       "text2wave",
       "-o","speech.wav",
