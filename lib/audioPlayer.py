@@ -58,6 +58,7 @@ class AudioPlayer:
           
         data = wavfile.readframes(chunk)
     except:
+      print("some kinda audio failure")
       data = None
       
     os.system( '/etc/init.d/alsa-utils restart' )
