@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from logging import raiseExceptions
 import RPi.GPIO as GPIO
 import time
 
@@ -76,6 +77,22 @@ class Servo:
     self.state = 'closed'
     self.to = ''
     print("{} servo closed".format(self.label))
+
+  def setDirection(self, direction):
+    if direction is None: raise Exception('direction not specified')
+    if direction not in ['open', 'closed', 'stall']: raise Exception('unsupported direction')
+
+    if direction == 'open':
+      GPIO.output( self.dir_pin, GPIO.HIGH )
+      GPIO.output( self.cdir_pin, GPIO.LOW )
+    elif direction == 'closed':
+      GPIO.output( self.dir_pin, GPIO.LOW )
+      GPIO.output( self.cdir_pin, GPIO.HIGH )
+    else:
+      GPIO.output( self.dir_pin, GPIO.LOW )
+      GPIO.output( self.cdir_pin, GPIO.LOW )
+
+
 
   def stop(self):
     self.pwm.stop()

@@ -47,7 +47,6 @@ class AudioPlayer:
     output.setperiodsize(chunk)
 
     data = wavfile.readframes(chunk)
-    print("wav data chunk: {}".format(data))
     try:
       while data!='':
         output.write(data)
