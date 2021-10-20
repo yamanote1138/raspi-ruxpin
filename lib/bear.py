@@ -80,7 +80,7 @@ class Bear:
 
     # wait for motor functions to complete before proceeding
     while not updated:
-      if self.eyes.to == self.eyes.status and self.mouth.to == self.mouth.status:
+      if self.eyes.to == self.eyes.state and self.mouth.to == self.mouth.state:
         updated = True
       else:
         time.sleep(.1)
