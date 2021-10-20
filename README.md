@@ -51,7 +51,7 @@ cd raspi-ruxpin
 
 ## Install System Dependencies
 ```sh
-sudo apt-get install python-setuptools python-dev python-alsaaudio python-pyaudio python-numpy python-bottle espeak
+sudo apt-get install python-setuptools python-dev python-alsaaudio python-pyaudio python-numpy python-bottle libttspico-utils
 ```
 note: the following additional dependencies appear to be pre-installed (at least on Raspbian Buster)
 `alsa-utils`
@@ -90,3 +90,4 @@ In your browser, go to http://[ipaddress]:8080
 `pip install ConfigParser`
 `pip install pyaudio`
 
+Note: mac local dev hasn't been tested in several versions, just leaving the notes here for posterity
