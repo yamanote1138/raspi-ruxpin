@@ -56,7 +56,8 @@ class Bear:
     print("bear instance activated")
 
   def deactivate(self):
-    self.isRunning = False
+    self.isPuppet = False
+    self.isTalking = False
     print("bear instance deactivated")
 
   def __updateEyes(self):
