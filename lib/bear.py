@@ -130,9 +130,11 @@ class Bear:
     time.sleep( 0.5 )
     # TODO: make speech params configurable
     subprocess.call([
-      "pico2wave",
-      "-w","speech.wav",      
-      text
+      "echo",text,
+      "|",
+      "text2wave",
+      "-o","speech.wav",
+      "-f",22050
     ])
     self.audio.play("speech.wav")
 
