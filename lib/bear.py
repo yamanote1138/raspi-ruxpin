@@ -134,7 +134,7 @@ class Bear:
       "|",
       "text2wave",
       "-o","speech.wav",
-      "-f",22050
+      "-f","22050"
     ])
     self.audio.play("speech.wav")
 
