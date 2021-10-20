@@ -45,6 +45,9 @@ class Servo:
     print("servo \"{}\" deleted".format(self.label))
 
   def __move(self):
+    # stop any current movement
+    self.pwm.stop()
+
     # ensure all settings are appropriate to prevent unexpected behaivor
     if(self.duration is None): raise Exception('servo move duration not set')
     if(self.duration > 2): raise Exception('servo duration too long')

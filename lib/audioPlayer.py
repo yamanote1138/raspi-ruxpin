@@ -57,13 +57,20 @@ class AudioPlayer:
     p.terminate()
 
   def generateMouthSignal(self,val, bear):
-    delta = val - self.prevAudiovalue 
-    if( delta < -2 or val == 0 ):
-      self.mouthValue = 0
-      bear.mouth.to = 'closed'
-    elif( delta > 0 ):
+    #normalize value (anything less than 50 is essentially silence)
+    if val<=100: val = 0
+
+    delta = val - self.prevAudiovalue
+    
+    #if delta is positive, volume is increasing, open mouth
+    if( delta > 0 ):
       self.mouthValue = 1
       bear.mouth.to = 'open'
-      self.prevAudiovalue = val
+    #if delta is negative, volume is decreasing, close mouth
+    elif( delta < 0 ):
+      self.mouthValue = 0
+      bear.mouth.to = 'closed'
+    
+    self.prevAudiovalue = val
 
     print("val:{}, prevAudiovalue:{}, delta:{}, mouthValue:{}\n".format(val, self.prevAudiovalue, delta, self.mouthValue))
