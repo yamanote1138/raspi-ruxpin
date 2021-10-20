@@ -96,7 +96,7 @@ class Bear:
         else:
           if( time.time() - lastMouthEventTime > 0.4 ):
             self.mouth.setDirection('brake')
-        # time.sleep(.05)
+        time.sleep(.02)
       else:
         time.sleep(.1)
 
