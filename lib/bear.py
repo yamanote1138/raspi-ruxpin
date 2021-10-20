@@ -74,12 +74,15 @@ class Bear:
       time.sleep(.1)
 
   def update(self, data):
-    if('eyes' in data['bear']): self.eyes.to=data['bear']['eyes']['to']
-    if('mouth' in data['bear']): self.mouth.to=data['bear']['mouth']['to']
+    if 'eyes' in data['bear']: self.eyes.to=data['bear']['eyes']['to']
+    if 'mouth' in data['bear']: self.mouth.to=data['bear']['mouth']['to']
 
-    # wait for motor functions to complete before proceeding
-    time.sleep(1.1)
-
+    # wait for slowest motor functions to complete before proceeding
+    delayBuffer = .2
+    if self.eyes.duration >= self.mouth.duration:
+      time.sleep(self.eyes.duration + delayBuffer)
+    else:
+      time.sleep(self.mouth.duration + delayBuffer)
 
   def getStatus(self):
     return { "bear": { "eyes": { "state": self.eyes.state }, "mouth": { "state": self.mouth.state } } }
