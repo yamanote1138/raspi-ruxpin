@@ -14,8 +14,7 @@ config.read('config/main.cfg')
 with open('config/phrases.json', 'r') as f:
   phrases = json.load(f)
   # sort phrases alphabetically by key
-  sorted_phrases = dict(sorted(phrases.items(), key = lambda kv:(kv[1], kv[0])))
-  config.phrases = sorted_phrases
+  config.phrases = dict(sorted(phrases.items(), key = lambda kv:(kv[1], kv[0])))
 
 # init audio player & bear
 audio = AudioPlayer()
