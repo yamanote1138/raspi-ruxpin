@@ -78,6 +78,7 @@ class Bear:
 
   def __talkMonitor(self):
     while self.isTalking:
+      print(self.isTalking)
       if( self.audio.mouthValue != lastMouthEvent ):
         lastMouthEvent = self.audio.mouthValue
         lastMouthEventTime = time.time()
