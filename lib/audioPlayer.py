@@ -66,4 +66,4 @@ class AudioPlayer:
       bear.mouth.to = 'open'
       self.prevAudiovalue = val
 
-    print(self.mouthValue)
+    print("val:{}, prevAudiovalue:{}, delta:{}, mouthValue:{}\n".format(val, self.prevAudiovalue, delta, self.mouthValue))
