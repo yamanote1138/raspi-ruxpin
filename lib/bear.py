@@ -84,6 +84,7 @@ class Bear:
 
   def __talkMonitor(self):
     lastMouthEvent = 0
+    lastMouthEventTime = 0
     while self.isRunning:
       while self.isTalking:
         print(self.isTalking)
