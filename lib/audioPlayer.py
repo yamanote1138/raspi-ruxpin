@@ -76,5 +76,3 @@ class AudioPlayer:
       self.mouthValue = 1
 
     self.prevAudiovalue = val
-
-    print("val:{}, prevAudiovalue:{}, delta:{}, mouthValue:{}\n".format(val, self.prevAudiovalue, delta, self.mouthValue))
