@@ -64,29 +64,29 @@ class Bear:
 
   def __updateEyes(self):
     while self.isRunning:
-      while self.isPuppet:
+      if self.isPuppet:
         if self.eyes.to == 'open' and self.eyes.state != 'open':
             self.eyes.open()
         elif self.eyes.to =='closed' and self.eyes.state != 'closed':
             self.eyes.close()
+      else:
         time.sleep(.1)
-      time.sleep(.1)
 
   def __updateMouth(self):
     while self.isRunning:
-      while self.isPuppet:
+      if self.isPuppet:
         if self.mouth.to == 'open' and self.mouth.state != 'open':
             self.mouth.open()
         elif self.mouth.to =='closed' and self.mouth.state != 'closed':
             self.mouth.close()
+      else:
         time.sleep(.1)
-      time.sleep(.1)
 
   def __talkMonitor(self):
     lastMouthEvent = 0
     lastMouthEventTime = 0
     while self.isRunning:
-      while self.isTalking:
+      if self.isTalking:
         if( self.audio.mouthValue != lastMouthEvent ):
           lastMouthEvent = self.audio.mouthValue
           lastMouthEventTime = time.time()
@@ -98,7 +98,8 @@ class Bear:
         else:
           if( time.time() - lastMouthEventTime > 0.4 ):
             self.mouth.setDirection('stall')
-      time.sleep(.1)
+      else:
+        time.sleep(.1)
 
   def update(self, data):
     if 'eyes' in data['bear']: self.eyes.to=data['bear']['eyes']['to']

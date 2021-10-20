@@ -62,8 +62,7 @@ class Servo:
 
   def open(self, duration=None):
     self.stop()
-    GPIO.output( self.dir_pin, GPIO.HIGH )
-    GPIO.output( self.cdir_pin, GPIO.LOW )
+    self.setDirection('open')
     self.__move(duration)
     self.state = 'open'
     self.to = ''
@@ -71,8 +70,7 @@ class Servo:
 
   def close(self, duration=None):
     self.stop()
-    GPIO.output( self.dir_pin, GPIO.LOW )
-    GPIO.output( self.cdir_pin, GPIO.HIGH )
+    self.setDirection('closed')
     self.__move(duration)
     self.state = 'closed'
     self.to = ''
