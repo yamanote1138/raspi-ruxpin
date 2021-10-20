@@ -132,7 +132,7 @@ class Bear:
 
     txtPipe = subprocess.Popen(["echo","\"{}\"".format(text)],stdout=subprocess.PIPE)
 
-    subprocess.run([
+    subprocess.call([
       "text2wave",
       "-o","speech.wav",
       "-f","22050"
