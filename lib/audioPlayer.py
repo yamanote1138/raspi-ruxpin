@@ -8,6 +8,7 @@ import numpy as np
 import wave
 import os
 import subprocess
+import logging
 
 class AudioPlayer:
 
@@ -62,7 +63,7 @@ class AudioPlayer:
           
         data = wavfile.readframes(chunk)
     except:
-      print("some kinda audio failure")
+      logging.exception('')
       data = None
       
     os.system( '/etc/init.d/alsa-utils restart' )
