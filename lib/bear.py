@@ -126,12 +126,17 @@ class Bear:
 
   def say(self, text):
     # Sometimes the beginning of audio can get cut off. Insert silence.
-    # os.system( "espeak \",...\" 2>/dev/null" )
-    # time.sleep( 0.5 )
-
-    txtPipe = subprocess.Popen(["echo",'"{}"'.format(text)],stdout=subprocess.PIPE)
-    subprocess.check_output(("text2wave","-o","speech.wav","-f","22050"), stdin=txtPipe.stdout)
-    txtPipe.wait()
-
+    os.system( "espeak \",...\" 2>/dev/null" )
+    time.sleep( 0.5 )
+    # TODO: make speech params configurable
+    subprocess.call([
+      "espeak", 
+      "-w","speech.wav",
+      "-s","125", 
+      "-v","en+m3",
+      "-p","25",
+      "-a","150", 
+      text
+    ])
     self.audio.play("speech.wav")
 
