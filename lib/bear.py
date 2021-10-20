@@ -87,7 +87,6 @@ class Bear:
     lastMouthEventTime = 0
     while self.isRunning:
       while self.isTalking:
-        self.mouth.pwm.start(self.mouth.speed)
         if( self.audio.mouthValue != lastMouthEvent ):
           lastMouthEvent = self.audio.mouthValue
           lastMouthEventTime = time.time()
@@ -99,7 +98,7 @@ class Bear:
         else:
           if( time.time() - lastMouthEventTime > 0.4 ):
             self.mouth.setDirection('stall')
-      time.sleep(.1)
+      # time.sleep(.1)
 
   def update(self, data):
     if 'eyes' in data['bear']: self.eyes.to=data['bear']['eyes']['to']
@@ -118,6 +117,7 @@ class Bear:
   def play(self, filename):
     self.isPuppet = False
     self.isTalking = True
+    self.mouth.pwm.start(self.mouth.speed)
     self.audio.play("public/sounds/"+filename+".wav")
     self.mouth.stop()
     self.isTalking = False
