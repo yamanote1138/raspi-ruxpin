@@ -30,6 +30,9 @@ class AudioPlayer:
       print("alsaaudio not installed, unable to set volume")
 
   def play(self,fileName, bear):
+
+    print("playing file: {}".format(fileName))
+
     # Initialise matrix
     matrix=[0,0,0,0,0,0,0,0]
 
