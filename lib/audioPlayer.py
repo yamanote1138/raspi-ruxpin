@@ -1,19 +1,25 @@
-#!/usr/bin/env python
-
-try:
-  import alsaaudio as aa
-except ImportError:
-  aa = None
+import alsaaudio as aa
 import audioop
-import pyaudio
+from time import sleep
+import struct
+import math
+import array
+import numpy as np
 import wave
+import os
+import subprocess
 
 class AudioPlayer:
+
   def __init__(self):
+    subprocess.Popen('amixer cset numid=1 100%' ,shell=True, stdout=subprocess.PIPE ) # Set PA mixer volume to 100%
+    subprocess.Popen('amixer cset numid=2 2' ,shell=True, stdout=subprocess.PIPE ) # Set right mixer to be "right" (2)
+    subprocess.Popen('amixer cset numid=3 1' ,shell=True, stdout=subprocess.PIPE ) # Set left mixer to be "left" (1)
+    subprocess.Popen('amixer cset numid=4 1' ,shell=True, stdout=subprocess.PIPE ) # Set DAC self.output to be "Direct" (2... or 1 for "Mixed" if you prefer)
     self.prevAudiovalue = 0
     self.mouthValue = 0
     self.setVolume(100)
-
+    
   def setVolume(self, volume=75):
     if aa is not None:
       mixer = aa.Mixer('PCM')
@@ -23,54 +29,49 @@ class AudioPlayer:
     else:
       print("alsaaudio not installed, unable to set volume")
 
-  def play(self,filename, bear):
-    # Set chunk size of 1024 samples per data frame
-    chunk = 1024  
+  def play(self,fileName, bear):
+    # Initialise matrix
+    matrix=[0,0,0,0,0,0,0,0]
 
-    # Create an interface to PortAudio
-    p = pyaudio.PyAudio()
+    # Set up audio
+    wavfile = wave.open(fileName,'r')
+    chunk = 1024
+    output = aa.PCM(aa.PCM_PLAYBACK, aa.PCM_NORMAL)
+    output.setchannels(1)
+    output.setrate(22050)
+    output.setformat(aa.PCM_FORMAT_S16_LE)
+    output.setperiodsize(chunk)
 
-    # Open the sound file 
-    wf = wave.open(filename, 'rb')
+    data = wavfile.readframes(chunk)
+    try:
+      while data!='':
+        output.write(data)
+        # Split channel data and find maximum volume   
+        channel_l=audioop.tomono(data, 2, 1.0, 0.0)
+        channel_r=audioop.tomono(data, 2, 0.0, 1.0)
+        max_vol_factor =5000
+        max_l = audioop.max(channel_l,2)/max_vol_factor
+        max_r = audioop.max(channel_r,2)/max_vol_factor
 
-    # Open a .Stream object to write the WAV file to
-    # 'output = True' indicates that the sound will be played rather than recorded
-    stream = p.open(
-      format = p.get_format_from_width(wf.getsampwidth()),
-      channels = wf.getnchannels(),
-      rate = wf.getframerate(),
-      output = True
-    )
+        for i in range (1,8):
+          self.generateMouthSignal((1<<max_r)-1)
+          
+        data = wavfile.readframes(chunk)
+    except:
+      data = None
+      
+    os.system( '/etc/init.d/alsa-utils restart' )
+    sleep( .25 )
 
-    # Read data in chunks
-    data = wf.readframes(chunk)
-
-    # Play the sound by writing the audio data to the stream
-    while data != '':
-      stream.write(data)
-      data = wf.readframes(chunk)
-      rms = audioop.rms(data, 2)
-      self.generateMouthSignal(rms, bear)
-
-    # Close and terminate the stream
-    stream.close()
-    p.terminate()
-
-  def generateMouthSignal(self,val, bear):
-    #normalize value (anything less than 50 is essentially silence)
-    if val<=100: val = 0
-
-    delta = val - self.prevAudiovalue
-    
-    #if delta is positive, volume is increasing, open mouth
-    if( delta > 0 ):
-      self.mouthValue = 1
-      bear.mouth.open(.2)
-    #if delta is negative, volume is decreasing, close mouth
-    elif( delta < 0 ):
+  def generateMouthSignal(self,val):
+    delta = val - self.prevAudiovalue 
+    if( delta < -2 or val == 0 ):
       self.mouthValue = 0
       bear.mouth.close(.2)
-    
+    elif( delta > 0 ):
+      self.mouthValue = 1
+      bear.mouth.open(.2)
+
     self.prevAudiovalue = val
 
     print("val:{}, prevAudiovalue:{}, delta:{}, mouthValue:{}\n".format(val, self.prevAudiovalue, delta, self.mouthValue))
