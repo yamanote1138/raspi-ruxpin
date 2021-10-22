@@ -1,12 +1,12 @@
 [pins]
-pwma = 18
-ain1 = 24
-ain2 = 23
-pwmb = 17
-bin1 = 22
-bin2 = 27
+pwma = 21
+ain2 = 20
+ain1 = 16
+bin1 = 7
+bin2 = 8
+pwmb = 25
 [settings]
 eyes_speed = 100
-eyes_duration = .3
+eyes_duration = .4
 mouth_speed = 100
-mouth_duration = .3
+mouth_duration = .4
