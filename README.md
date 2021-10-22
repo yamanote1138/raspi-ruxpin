@@ -13,7 +13,7 @@ So, on that note, I've ported and rebuilt the project for use with a Raspberry P
 
 ## What You'll Need
 - Teddy Ruxpin
-- RaspberryPi 3 (probably works on earlier versions, but unverified)
+- RaspberryPi 3 or 4 (probably works on earlier versions, but unverified)
 - Breadboard
 - jumpers
 - Sparkfun TB6612FNG H-Bridge Breakout
@@ -51,12 +51,16 @@ cd raspi-ruxpin
 
 ## Install System Dependencies
 ```sh
-sudo apt-get install python-setuptools python-dev python-alsaaudio python-pyaudio python-numpy python-bottle libttspico-utils
+sudo apt-get install espeak
+sudo apt-get install python3-alsaaudio
+sudo apt-get install python3-pip
 ```
-note: the following additional dependencies appear to be pre-installed (at least on Raspbian Buster)
-`alsa-utils`
-`build-essential`
-`python-configparser`
+
+## Install Python Modules
+```sh
+sudo pip3 install aiohttp
+sudo pip3 install python-socketio
+```
 
 ## Configuration
 make a copy of the default config and name it `main.cfg`
@@ -65,21 +69,20 @@ cp config/main.cfg.default config/main.cfg
 ```
 
 using whatver editor tickles your fancy, set the GPIO pins to whatever you'd like
-NOTE: the default config maps to the GPIO pins as wired in the attached fritzing diagram
+NOTE: the default config maps to the GPIO pins as wired in the provided fritzing diagram
 
 ## Operation
 To start the application, run this script:
 
 ```sh
-sudo python main.py
+sudo python3 main.py
 ```
 
 Assuming your RasPi is connected to WIFI or ethernet, you should see a message that looks similar to this:
 
 ```sh
 ---------
-RASPI RUXPIN IS ONLINE!
-In your browser, go to http://[ipaddress]:8080
+RasPi Ruxpin is ONLINE @ http://[ipaddress]:8080
 ---------
 ```
 

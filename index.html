@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>RasPi Ruxpin</title>
+    <link rel="shortcut icon" type="image/png" href="/public/img/favicon.png"/>
+
+    <meta name="description" content="Make the bear talk">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+    <script src="https://use.fontawesome.com/12a0b300c5.js"></script>
+
+    <style type="text/css">
+      area:focus{
+        border: none;
+        outline-style: none; 
+        -moz-outline-style:none;  
+      }
+    </style>
+  </head>
+  <body style="background-image: url(public/img/bg_naughty.png)">
+    <div class="container">
+      <a href="/"><img src="/public/img/naughty_ruxpin.png" class="img-responsive"></a>
+      <form class="form-inline">
+        <div class="well form-group">
+          <h4>Mode</h4>
+          <div class="btn-group btn-toggle"> 
+            <button id="btnPuppet" class="btn btn-info active">PUPPET</button>
+            <button id="btnParrot" class="btn btn-default">PARROT</button>
+          </div>
+        </div>
+      </form>
+      <div id="divPuppet">
+        <map name="mapBear">
+          <area id="areaEyeState" shape="rect" coords="0,0,200,100" alt="change eye state" />
+          <area id="areaMouthState" shape="rect" coords="0,100,200,200" alt="change mouth state" />
+        </map>
+        <img id="imgBear" src="/public/img/teddy_eomc.png" class="img-responsive center-block" usemap="#mapBear">
+        <form class="form-inline">
+          <div class="well form-group">
+            <label for="e" class="col-sm-2 control-label">Eyes</label>
+            <div class="col-sm-10">
+              <select id="selEyeState" class="form-control">
+                <option value="open">open</option>
+                <option value="closed">closed</option>
+              </select>
+            </div>
+            <label for="m" class="col-sm-2 control-label">Mouth</label>
+            <div class="col-sm-10">
+              <select id="selMouthState" class="form-control">
+                <option value="open">open</option>
+                <option value="closed">closed</option>
+              </select>
+            </div>
+            <button id="btnUpdateBear" class="btn btn-info"><i class="fa fa-play-circle" aria-hidden="true"></i></button>
+          </div>
+        </form>
+      </div>
+      <div id="divParrot" style="display: none;">
+        <form class="form-inline">
+          <div class="well form-group">
+            <div class="input-group">
+              <select id="selFilename" class="form-control">
+                <option value="">Select a pre-recorded sound file</option>
+              </select>
+              <span class="input-group-btn">
+                <button id="btnPlay" class="btn btn-info"><i class="fa fa-play-circle" aria-hidden="true"></i></button>
+              </span>
+            </div>
+          </div>
+        </form>
+        <form class="form-inline">
+          <div class="well form-group">
+            <div class="input-group">
+              <input id="txtPhrase" name="speech" class="form-control" placeholder="Type anything here and the bear will say it... I mean anything!">
+              <span class="input-group-btn">
+                <button id="btnSpeak" class="btn btn-info"><i class="fa fa-bullhorn" aria-hidden="true"></i></button>
+              </span>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.min.js"></script>
+    <script src="/public/js/ui.js"></script>
+  </body>
+</html>

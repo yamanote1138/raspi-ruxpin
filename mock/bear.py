@@ -1,18 +1,14 @@
 #!/usr/bin/env python
-import os, logging, random, subprocess, time
+import logging
 
 from time import sleep
-from lib.servo import Servo
 from threading import Thread
-from lib.audioPlayer import AudioPlayer
+from mock.servo import Servo
 
 class Bear:
   def __init__(self, config):
-    self.isRunning = True
+    self.isRunning = False
     self.isTalking = False
-
-    # attach audio player
-    self.audio = AudioPlayer()
 
     # add list of supported phrases
     self.phrases = config.phrases
@@ -40,7 +36,6 @@ class Bear:
     self.eyes.open()
     self.mouth.close()
     self.talkThread = Thread(target=self.__talkMonitor)
-    self.blinkThread = Thread(target=self.__blinkMonitor)
     logging.debug("bear constructor finished")
 
   def __del__(self):
@@ -49,7 +44,6 @@ class Bear:
   def activate(self):
     self.isRunning = True
     self.talkThread.start()
-    self.blinkThread.start()
     logging.debug("bear instance activated")
 
   def deactivate(self):
@@ -58,34 +52,7 @@ class Bear:
     logging.debug("bear instance deactivated")
 
   def __talkMonitor(self):
-    lastMouthEvent = 0
-    lastMouthEventTime = 0
-    while self.isRunning:
-      if self.isTalking:
-        if( self.audio.mouthValue != lastMouthEvent ):
-          lastMouthEvent = self.audio.mouthValue
-          lastMouthEventTime = time.time()
-
-          if( self.audio.mouthValue == 1 ):
-            self.mouth.setDirection('opening')
-          else:
-            self.mouth.setDirection('closing')
-        else:
-          if( time.time() - lastMouthEventTime > 0.4 ):
-            self.mouth.setDirection('brake')
-        sleep(.02)
-      else:
-        sleep(.1)
-
-  def __blinkMonitor(self):
-    while self.isRunning:
-      if self.isTalking:
-        sleep(random.randint(1,3))
-        self.eyes.close()
-        sleep(.2)
-        self.eyes.open()
-      else:
-        sleep(.1)
+    sleep(.1)
 
   def update(self, data):
     if self.isTalking:
@@ -98,28 +65,14 @@ class Bear:
         if data['mouth'] == 'open' and self.mouth.state != 'open': self.mouth.open()
         elif data['mouth'] == 'closed' and self.mouth.state != 'closed': self.mouth.close()
 
+      logging.debug("updated bear")
+      logging.debug(data)
+      sleep(1)
+
   def play(self, filename):
-    self.isTalking = True
-    self.mouth.setDirection('brake')
-    self.mouth.pwm.start(self.mouth.speed)
-    if filename == 'espeak':
-      self.audio.play("espeak.wav")
-    else:
-      self.audio.play("public/sounds/"+filename+".wav")
-    self.isTalking = False
-    self.mouth.stop()
+   logging.debug('playing: "{}"'.format(filename))   
+   sleep(2)
 
   def say(self, text):
-    # TODO: make speech params configurable
-    subprocess.run([
-      "espeak", 
-      "-w","espeak.wav",
-      "-s","125", 
-      "-v","en+m3",
-      "-p","25",
-      "-a","175", 
-      text
-    ])
-    logging.debug('espeak ran')
-    self.play("espeak")
-
+   logging.debug('saying: "{}"'.format(text))
+   self.play("espeak")

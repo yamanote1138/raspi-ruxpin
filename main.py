@@ -1,13 +1,18 @@
 #!/usr/bin/python
 
-import sys, ConfigParser, json, os, signal, time
+import configparser, json, logging, platform, signal, sys
 
-from lib.audioPlayer import AudioPlayer
-from lib.bear import Bear
-from lib.webFramework import WebFramework
+if platform.system() != 'Darwin':
+  from lib.bear import Bear
+else:
+  from mock.bear import Bear
+
+from lib.webServer import WebServer
+
+logging.basicConfig(level=logging.DEBUG)
 
 # read main config file
-config = ConfigParser.RawConfigParser()
+config = configparser.RawConfigParser()
 config.read('config/main.cfg')
 
 # read phrases config file
@@ -16,12 +21,12 @@ with open('config/phrases.json', 'r') as f:
   # sort phrases alphabetically by key
   config.phrases = dict(sorted(phrases.items(), key = lambda kv:(kv[1], kv[0])))
 
-# init audio player & bear
-audio = AudioPlayer()
-bear = Bear(config, audio)
+# init bear
+bear = Bear(config)
 
 # properly handle SIGINT (ctrl-c)
 def sigint_handler(signal, frame):    
+  ws.app.shutdown()
   bear.deactivate()
   sys.exit(0)
 signal.signal(signal.SIGINT, sigint_handler)
@@ -29,8 +34,8 @@ signal.signal(signal.SIGINT, sigint_handler)
 # init web framework
 try:
   bear.activate()
-  web = WebFramework(bear)
-  web.start()
+  ws = WebServer(bear)
+  ws.start()
 except KeyboardInterrupt:
   bear.deactivate()
   sys.exit(0)
