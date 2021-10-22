@@ -14,4 +14,4 @@ So, on that note, I've ported and rebuilt the project for use with a Raspberry P
 
 ## Documentation
 
-Detailed instructions for [hardware setup](wiki/Hardware-Setup), [software installation](wiki/Software-Installation), [operation](wiki/Operation), and [troubleshooting](wiki/Troubleshooting) are available in the [Wiki](wiki)
+Detailed instructions for [hardware setup](https://github.com/yamanote1138/raspi-ruxpin/wiki/Hardware-Setup), [software installation](https://github.com/yamanote1138/raspi-ruxpin/wiki/Software-Installation), [operation](https://github.com/yamanote1138/raspi-ruxpin/wiki/Operation), and [troubleshooting](https://github.com/yamanote1138/raspi-ruxpin/wiki/Troubleshooting) are available in the [wiki](https://github.com/yamanote1138/raspi-ruxpin/wiki/
