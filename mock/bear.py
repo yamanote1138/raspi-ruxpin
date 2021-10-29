@@ -32,6 +32,12 @@ class Bear:
       label='mouth'
     )
 
+    self.character = {
+      'name': config.get('character', 'name'),
+      'prefix': config.get('character', 'prefix')
+    }
+    logging.debug('character is:{}\nprefix is:{}'.format(self.character['name'], self.character['prefix']))
+
     #set starting motor positions
     self.eyes.open()
     self.mouth.close()

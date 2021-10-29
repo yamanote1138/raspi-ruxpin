@@ -10,3 +10,6 @@ eyes_speed = 100
 eyes_duration = .4
 mouth_speed = 100
 mouth_duration = .4
+[character]
+name = teddy
+prefix = t

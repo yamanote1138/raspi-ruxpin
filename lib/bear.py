@@ -36,12 +36,18 @@ class Bear:
       label='mouth'
     )
 
+    self.character = {
+      'name': config.get('character', 'name'),
+      'prefix': config.get('character', 'prefix')
+    }
+    logging.debug('character is:{}\nprefix is:{}'.format(self.character['name'], self.character['prefix']))
+
     #set starting motor positions
     self.eyes.open()
     self.mouth.close()
     self.talkThread = Thread(target=self.__talkMonitor)
     self.blinkThread = Thread(target=self.__blinkMonitor)
-    logging.debug("bear constructor finished")
+    logging.debug("bear ccconstructor finished")
 
   def __del__(self):
     logging.debug("bear deconstructor finished")

@@ -10,6 +10,7 @@ else:
 from lib.webServer import WebServer
 
 logging.basicConfig(level=logging.DEBUG)
+logging.getLogger('asyncio').setLevel(logging.WARNING)
 
 # read main config file
 config = configparser.RawConfigParser()

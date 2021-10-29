@@ -3,7 +3,6 @@ from logging import raiseExceptions
 from time import sleep
 import logging
 import RPi.GPIO as GPIO
-import time
 
 class Servo:
   

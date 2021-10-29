@@ -1,0 +1,24 @@
+body{
+  background-image: url(/public/img/bg_naughty.png)
+}
+
+area:focus{
+  border: none;
+  outline-style: none; 
+  -moz-outline-style:none;  
+}
+
+.form-switch.form-switch-md {
+  padding-left: 4.5em;
+  height: 2.5em;
+}
+
+.form-switch.form-switch-md .form-check-input {
+  margin-left: -4.5em;
+  height: 2em;
+  width: 4em;
+}
+
+.form-switch.form-switch-md .form-check-label {
+  padding-top: 0.5em;
+}

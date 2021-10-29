@@ -7,26 +7,33 @@ let bear = {
   mouth: 'closed'
 };
 
-let btnPuppet = document.getElementById('btnPuppet');
-let btnParrot = document.getElementById('btnParrot');
-let divPuppet = document.getElementById('divPuppet');
-let divParrot = document.getElementById('divParrot');
+let btnPuppetMode = document.getElementById('btnPuppetMode');
+let btnSpeakMode = document.getElementById('btnSpeakMode');
+let divPuppetMode = document.getElementById('divPuppetMode');
+let divSpeakMode = document.getElementById('divSpeakMode');
+
+let btnConnected = document.getElementById('btnConnected');
+let btnDisconnected = document.getElementById('btnDisconnected');
 
 let imgBear = document.getElementById('imgBear');
 let areaEyeState = document.getElementById('areaEyeState');
 let areaMouthState = document.getElementById('areaMouthState');
-let selEyeState = document.getElementById('selEyeState');
-let selMouthState = document.getElementById('selMouthState');
-let btnUpdateBear = document.getElementById('btnUpdateBear');
+let chkEyes = document.getElementById('chkEyes');
+let chkMouth = document.getElementById('chkMouth');
+let chkBoth = document.getElementById('chkBoth');
 let txtPhrase = document.getElementById('txtPhrase');
 let btnSpeak = document.getElementById('btnSpeak');
 let selFilename = document.getElementById('selFilename');
 let btnPlay = document.getElementById('btnPlay');
+let spnSpeakIcon = document.getElementById('spnSpeakIcon');
+let spnPlayIcon = document.getElementById('spnPlayIcon');
 
 let updateUI = function(){
   imgBear.src = '/public/img/teddy_e'+bear.eyes.charAt(0)+'m'+bear.mouth.charAt(0)+'.png';
-  selEyeState.value = bear.eyes;
-  selMouthState.value = bear.mouth;
+
+  chkEyes.checked = bear.eyes == 'open';
+  chkMouth.checked = bear.mouth == 'open';
+  chkBoth.checked = (bear.eyes == 'open' && bear.mouth == 'open');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -34,20 +41,20 @@ document.addEventListener('DOMContentLoaded', function() {
   socket.emit('fetch_phrases');
 }, false);
 
-btnPuppet.addEventListener('click', function(e){
+btnPuppetMode.addEventListener('click', function(e){
   e.preventDefault();
-  divPuppet.style.display = 'block';
-  divParrot.style.display = 'none';
-  btnPuppet.className='btn btn-info active';
-  btnParrot.className='btn btn-default';
+  divPuppetMode.style.display = 'block';
+  divSpeakMode.style.display = 'none';
+  btnPuppetMode.className='btn btn-primary';
+  btnSpeakMode.className='btn btn-outline-secondary';
 }, false);
 
-btnParrot.addEventListener('click', function(e){
+btnSpeakMode.addEventListener('click', function(e){
   e.preventDefault();
-  divPuppet.style.display = 'none';
-  divParrot.style.display = 'block';
-  btnPuppet.className='btn btn-default';
-  btnParrot.className='btn btn-info active';
+  divPuppetMode.style.display = 'none';
+  divSpeakMode.style.display = 'block';
+  btnPuppetMode.className='btn btn-outline-secondary';
+  btnSpeakMode.className='btn btn-primary';
 }, false);
 
 areaEyeState.addEventListener('click', function(e){
@@ -57,18 +64,31 @@ areaEyeState.addEventListener('click', function(e){
 }, false);
 
 areaMouthState.addEventListener('click', function(e){
-  e.preventDefault();
   let data = { mouth: (bear.mouth=='open') ? 'closed' : 'open' };
   socket.emit('update_bear', data);
 }, false);
 
-btnUpdateBear.addEventListener('click', function(e){
-  e.preventDefault();
-  let data = {
-    eyes: selEyeState.value,
-    mouth: selMouthState.value
-  };
+let updateBear = function(e, data){
   socket.emit('update_bear', data);
+}
+
+chkEyes.addEventListener('click', function(e){
+  updateBear(e, {
+    eyes: chkEyes.checked ? 'open' : 'closed'
+  });
+}, false);
+
+chkMouth.addEventListener('click', function(e){
+  updateBear(e, {
+    mouth: chkMouth.checked ? 'open' : 'closed'
+  });
+}, false);
+
+chkBoth.addEventListener('click', function(e){
+  updateBear(e, {
+    eyes: chkBoth.checked ? 'open' : 'closed',
+    mouth: chkBoth.checked ? 'open' : 'closed'
+  });
 }, false);
 
 let disableInputs = function(isEnabled){
@@ -78,25 +98,42 @@ let disableInputs = function(isEnabled){
   btnPlay.disabled = isEnabled;
 }
 
+let sendSpeak = function(){
+  disableInputs(true);
+  spnSpeakIcon.className="spinner-border spinner-border-sm";
+  socket.emit('speak', txtPhrase.value);
+}
+
 txtPhrase.addEventListener('keyup', function(e) {
   e.preventDefault();
-  if(e.key === 'Enter'){
-    disableInputs(true);
-    socket.emit('speak', txtPhrase.value);
-  }
+  if(e.key === 'Enter') sendSpeak();
 }, false);
 
 btnSpeak.addEventListener('click', function(e){
   e.preventDefault();
-  disableInputs(true);
-  socket.emit('speak', txtPhrase.value);
+  sendSpeak();
 }, false);
 
 btnPlay.addEventListener('click', function(e){
   e.preventDefault();
   disableInputs(true);
+  spnPlayIcon.className="spinner-border spinner-border-sm";
   socket.emit('play', selFilename.value);
 }, false);
+
+
+// respond to changes in connection
+socket.on('connect', () => {
+  btnConnectionStatus.className='btn btn-success';
+  btnConnectionStatus.innerHTML = 'CONNECTED!';
+  console.log(`${socket.id} connected`);
+});
+
+socket.on('disconnect', () => {
+  btnConnectionStatus.className='btn btn-danger';
+  btnConnectionStatus.innerHTML = 'DISCONNECTED :(';
+  console.log('socket disconnected');
+});
 
 // when phrases are loaded, populate dropdown
 socket.on('phrases_fetched', function (data){
@@ -112,8 +149,16 @@ socket.on('bear_updated', function (data){
   updateUI();
 });
 
-// when either of the audio methods has finished
+// when bear has finished speaking text
 socket.on('speaking_done', function (data){
-  // graft update data onto bear object
+  console.log('speaking done');
+  spnSpeakIcon.className="fa fa-bullhorn";
+  disableInputs(false);
+});
+
+// when bear has finished playing audio file
+socket.on('playing_done', function (data){
+  console.log('playing done');
+  spnPlayIcon.className="fa fa-play-circle";
   disableInputs(false);
 });

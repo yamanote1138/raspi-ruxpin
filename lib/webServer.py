@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 from aiohttp import web
-from time import sleep
-import logging, socket, socketio, time
+import jinja2
+import aiohttp_jinja2
+import os, socket, socketio
 
 class WebServer:
   def __init__(self,bear):
@@ -15,16 +16,18 @@ class WebServer:
     ## Creates a new Aiohttp Web Application
     app = web.Application()
 
-    # Binds our Socket.IO server to our Web App
-    ## instance
+    aiohttp_jinja2.setup(
+      app, loader=jinja2.FileSystemLoader(os.path.join(os.getcwd(), "templates"))
+    )
+
+    # bind socketio server to web app instance
     sio.attach(app)
 
-    ## we can define aiohttp endpoints just as we normally
-    ## would with no change
+    @aiohttp_jinja2.template("index.html")
     async def index(request):
-      with open('index.html') as f:
-        return web.Response(text=f.read(), content_type='text/html')
+      return {'character':bear.character}
 
+    # respond to client events
     @sio.on('update_bear')
     async def update_bear(sid, data):
       bear.update(data)
@@ -38,17 +41,16 @@ class WebServer:
     @sio.on('play')
     async def play(sid, filename):
       if(filename != ""): bear.play(filename)
-      await sio.emit('speaking_done')
+      await sio.emit('playing_done')
 
     @sio.on('fetch_phrases')
     async def fetch_phrases(sid):
       await sio.emit('phrases_fetched', bear.phrases)
 
-    ## We bind our aiohttp endpoint to our app
-    ## router
+    # bind aiohttp endpoint to app router
     app.router.add_get('/', index)
 
-    ## add static file route
+    # add route for static files
     app.router.add_static('/public', 'public')
 
     self.app = app
