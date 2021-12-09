@@ -5,6 +5,9 @@ ain1 = 16
 bin1 = 7
 bin2 = 8
 pwmb = 25
+[audio]
+mixer = PCM
+start_volume = 100
 [settings]
 eyes_speed = 100
 eyes_duration = .4

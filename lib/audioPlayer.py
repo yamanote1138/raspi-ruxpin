@@ -7,17 +7,19 @@ import logging
 
 class AudioPlayer:
 
-  def __init__(self):
+  def __init__(self, config):
     self.prevAudiovalue = 0
     self.mouthValue = 0
     self.isPlaying = False
-    self.setVolume(100)
+    self.mixer = config.get('audio', 'mixer')
+    self.start_volume = config.getint('audio', 'start_volume')
+    self.setVolume(self.start_volume)
     self.playData = None
     
   def setVolume(self, volume=75):
     if aa is not None:
-      # todo: make this line more resilient to various raspian versions by checking aa.mixers first
-      mixer = aa.Mixer('Headphone')
+      # note: the sound output mixer needs to be set in config
+      mixer = aa.Mixer(self.mixer)
       mixer.setvolume(volume)
     else:
       logging.error("alsaaudio not installed, unable to set volume")

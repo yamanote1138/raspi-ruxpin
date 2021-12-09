@@ -3,7 +3,7 @@ from time import sleep
 
 class AudioPlayer:
 
-  def __init__(self):
+  def __init__(self, config):
     self.prevAudiovalue = 0
     self.mouthValue = 0
     self.setVolume(100)

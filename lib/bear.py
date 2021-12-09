@@ -12,7 +12,7 @@ class Bear:
     self.isTalking = False
 
     # attach audio player
-    self.audio = AudioPlayer()
+    self.audio = AudioPlayer(config)
 
     # add list of supported phrases
     self.phrases = config.phrases
