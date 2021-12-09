@@ -43,6 +43,11 @@ class WebServer:
       if(filename != ""): bear.play(filename)
       await sio.emit('playing_done')
 
+    @sio.on('set_volume')
+    async def volume(sid, level):
+      if(level > 10 and level < 90): bear.audio.setVolume(level)
+      await sio.emit('volume_set')
+
     @sio.on('fetch_phrases')
     async def fetch_phrases(sid):
       await sio.emit('phrases_fetched', bear.phrases)

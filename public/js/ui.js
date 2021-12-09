@@ -21,6 +21,8 @@ let areaMouthState = document.getElementById('areaMouthState');
 let chkEyes = document.getElementById('chkEyes');
 let chkMouth = document.getElementById('chkMouth');
 let chkBoth = document.getElementById('chkBoth');
+let txtVolume = document.getElementById('txtVolume');
+let btnVolume = document.getElementById('btnVolume');
 let txtPhrase = document.getElementById('txtPhrase');
 let btnSpeak = document.getElementById('btnSpeak');
 let selFilename = document.getElementById('selFilename');
@@ -90,6 +92,11 @@ chkBoth.addEventListener('click', function(e){
     mouth: chkBoth.checked ? 'open' : 'closed'
   });
 }, false);
+
+btnVolume.addEventListener('click', function(e){
+  e.preventDefault();
+  socket.emit('set_volume', parseInt(txtVolume.value));
+});
 
 let disableInputs = function(isEnabled){
   txtPhrase.disabled = isEnabled;
@@ -161,4 +168,8 @@ socket.on('playing_done', function (data){
   console.log('playing done');
   spnPlayIcon.className="fa fa-play-circle";
   disableInputs(false);
+});
+
+socket.on('volume_set', function (data){
+  console.log('volume set');
 });
