@@ -1,14 +1,18 @@
 #!/usr/bin/env python
-import logging
+import logging, subprocess
 
 from time import sleep
 from threading import Thread
 from mock.servo import Servo
+from mock.audioPlayer import AudioPlayer
 
 class Bear:
   def __init__(self, config):
     self.isRunning = False
     self.isTalking = False
+
+    # attach audio player
+    self.audio = AudioPlayer(config)
 
     # add list of supported phrases
     self.phrases = config.phrases
@@ -76,9 +80,12 @@ class Bear:
       sleep(1)
 
   def play(self, filename):
-   logging.debug('playing: "{}"'.format(filename))   
-   sleep(2)
+    logging.debug('playing: "{}"'.format(filename));
+    self.audio.play("public/sounds/"+filename+".wav");    
 
   def say(self, text):
-   logging.debug('saying: "{}"'.format(text))
-   self.play("espeak")
+    logging.debug('saying: "{}"'.format(text))
+    subprocess.run([
+      "say", 
+      text
+    ]);

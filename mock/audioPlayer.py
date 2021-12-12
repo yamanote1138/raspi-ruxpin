@@ -1,4 +1,4 @@
-import logging
+import logging, subprocess
 from time import sleep
 
 class AudioPlayer:
@@ -8,9 +8,19 @@ class AudioPlayer:
     self.mouthValue = 0
     self.setVolume(100)
     
-  def setVolume(self, volume=75):
-    logging.debug("volume set at {}").format(volume)
+  def setVolume(self, volume=70):
+    normalizedVolume = volume/10;
+    cmd = "set Volume {}".format(normalizedVolume)
+    subprocess.run([
+      'osascript',
+      '-e',
+      cmd
+    ]);
+    logging.debug("volume set at {}".format(volume))
 
   def play(self,fileName):
     logging.debug("playing file: {}".format(fileName))
-    sleep(2)
+    subprocess.run([
+      'afplay', 
+      fileName
+    ]);

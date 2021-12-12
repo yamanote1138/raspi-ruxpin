@@ -45,8 +45,8 @@ class WebServer:
 
     @sio.on('set_volume')
     async def volume(sid, level):
-      if(level > 10 and level < 90): bear.audio.setVolume(level)
-      await sio.emit('volume_set')
+      if(level >= 0 and level <= 100): bear.audio.setVolume(level)
+      await sio.emit('volume_set', level)
 
     @sio.on('fetch_phrases')
     async def fetch_phrases(sid):

@@ -11,15 +11,16 @@ var app = new Vue({
   el: '#app',
   data: {
     mode: 'puppet',
-    speaking: false,
     bear: {
       eyes: false,
       mouth: false
     },
     volume: 70,
     speaking: false,
+    playing: false,
     phrases: {},
-    filename: ''
+    filename: '',
+    phrase:''
   },
   computed: {
     bearimg: {
@@ -48,27 +49,42 @@ var app = new Vue({
     },
     phrases_fetched: function(data){
       this.phrases = data;
+    },
+    volume_set: function(level){
+      console.log(`volume set to ${level}`);
+    },
+    playing_done: function(){
+      this.playing = false;
+      console.log('done playing');
+    },
+    speaking_done: function(){
+      this.speaking = false;
+      console.log('done speaking');
     }
   },
   methods: {
     setMode: function(mode){
       this.mode = mode;
     },
-    toggleEyes: function(){
-      this.bear.eyes = !this.bear.eyes;
-      this.updateBear();
-    },
-    toggleMouth: function(){
-      this.bear.mouth = !this.bear.mouth;
+    toggleFeature: function(feature){
+      this.bear[feature] = !this.bear[feature];
       this.updateBear();
     },
     updateBear: function(){
       this.$socket.client.emit('update_bear', this.bear);
     },
+    setVolume: function(){
+      this.$socket.client.emit('set_volume', parseInt(this.volume));
+    },
     play: function(){
-      if(this.filename!==''){
-        this.$socket.client.emit('play', this.filename);
-      }
+      if(this.filename=='') return;
+      this.playing = true;
+      this.$socket.client.emit('play', this.filename);
+    },
+    speak: function(){
+      if(this.phrase=='') return;
+      this.speaking = true;
+      this.$socket.client.emit('speak', this.phrase);
     }
   }
 });
