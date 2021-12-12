@@ -2,27 +2,11 @@
 
 const socket = io(window.location.href);
 
-let bear = {
-  eyes: 'open',
-  mouth: 'closed'
-};
 
-let btnPuppetMode = document.getElementById('btnPuppetMode');
-let btnSpeakMode = document.getElementById('btnSpeakMode');
-let divPuppetMode = document.getElementById('divPuppetMode');
-let divSpeakMode = document.getElementById('divSpeakMode');
 
-let btnConnected = document.getElementById('btnConnected');
-let btnDisconnected = document.getElementById('btnDisconnected');
-
-let imgBear = document.getElementById('imgBear');
-let areaEyeState = document.getElementById('areaEyeState');
-let areaMouthState = document.getElementById('areaMouthState');
-let chkEyes = document.getElementById('chkEyes');
-let chkMouth = document.getElementById('chkMouth');
-let chkBoth = document.getElementById('chkBoth');
 let txtVolume = document.getElementById('txtVolume');
 let btnVolume = document.getElementById('btnVolume');
+
 let txtPhrase = document.getElementById('txtPhrase');
 let btnSpeak = document.getElementById('btnSpeak');
 let selFilename = document.getElementById('selFilename');
@@ -43,55 +27,6 @@ document.addEventListener('DOMContentLoaded', function() {
   socket.emit('fetch_phrases');
 }, false);
 
-btnPuppetMode.addEventListener('click', function(e){
-  e.preventDefault();
-  divPuppetMode.style.display = 'block';
-  divSpeakMode.style.display = 'none';
-  btnPuppetMode.className='btn btn-primary';
-  btnSpeakMode.className='btn btn-outline-secondary';
-}, false);
-
-btnSpeakMode.addEventListener('click', function(e){
-  e.preventDefault();
-  divPuppetMode.style.display = 'none';
-  divSpeakMode.style.display = 'block';
-  btnPuppetMode.className='btn btn-outline-secondary';
-  btnSpeakMode.className='btn btn-primary';
-}, false);
-
-areaEyeState.addEventListener('click', function(e){
-  e.preventDefault();
-  let data = { eyes: (bear.eyes=='open') ? 'closed' : 'open' };
-  socket.emit('update_bear', data);
-}, false);
-
-areaMouthState.addEventListener('click', function(e){
-  let data = { mouth: (bear.mouth=='open') ? 'closed' : 'open' };
-  socket.emit('update_bear', data);
-}, false);
-
-let updateBear = function(e, data){
-  socket.emit('update_bear', data);
-}
-
-chkEyes.addEventListener('click', function(e){
-  updateBear(e, {
-    eyes: chkEyes.checked ? 'open' : 'closed'
-  });
-}, false);
-
-chkMouth.addEventListener('click', function(e){
-  updateBear(e, {
-    mouth: chkMouth.checked ? 'open' : 'closed'
-  });
-}, false);
-
-chkBoth.addEventListener('click', function(e){
-  updateBear(e, {
-    eyes: chkBoth.checked ? 'open' : 'closed',
-    mouth: chkBoth.checked ? 'open' : 'closed'
-  });
-}, false);
 
 btnVolume.addEventListener('click', function(e){
   e.preventDefault();
@@ -129,18 +64,6 @@ btnPlay.addEventListener('click', function(e){
 }, false);
 
 
-// respond to changes in connection
-socket.on('connect', () => {
-  btnConnectionStatus.className='btn btn-success';
-  btnConnectionStatus.innerHTML = 'CONNECTED!';
-  console.log(`${socket.id} connected`);
-});
-
-socket.on('disconnect', () => {
-  btnConnectionStatus.className='btn btn-danger';
-  btnConnectionStatus.innerHTML = 'DISCONNECTED :(';
-  console.log('socket disconnected');
-});
 
 // when phrases are loaded, populate dropdown
 socket.on('phrases_fetched', function (data){
@@ -149,12 +72,6 @@ socket.on('phrases_fetched', function (data){
   }
 });
 
-// if bear status is updated on server, change image accordingly
-socket.on('bear_updated', function (data){
-  // graft update data onto bear object
-  Object.assign(bear, data);
-  updateUI();
-});
 
 // when bear has finished speaking text
 socket.on('speaking_done', function (data){

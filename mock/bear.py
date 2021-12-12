@@ -65,11 +65,11 @@ class Bear:
       logging.error('cannot update bear while it is talking')
     else:
       if 'eyes' in data:
-        if data['eyes'] == 'open' and self.eyes.state != 'open': self.eyes.open()
-        elif data['eyes'] == 'closed' and self.eyes.state != 'closed': self.eyes.close()
+        if data['eyes'] == True and self.eyes.state != 'open': self.eyes.open()
+        elif data['eyes'] == False and self.eyes.state != 'closed': self.eyes.close()
       if 'mouth' in data:
-        if data['mouth'] == 'open' and self.mouth.state != 'open': self.mouth.open()
-        elif data['mouth'] == 'closed' and self.mouth.state != 'closed': self.mouth.close()
+        if data['mouth'] == True and self.mouth.state != 'open': self.mouth.open()
+        elif data['mouth'] == False and self.mouth.state != 'closed': self.mouth.close()
 
       logging.debug("updated bear")
       logging.debug(data)

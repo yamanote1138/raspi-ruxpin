@@ -14,57 +14,57 @@
     <script src="https://use.fontawesome.com/12a0b300c5.js"></script>
   </head>
   <body>
-    <div class="container">
+    <div id="app" class="container">
       <a href="/"><img src="/public/img/header_{{ character.prefix }}.png" class="img-fluid mx-auto d-block"></a>
       <div class="card mb-3">
         <div class="card-body">
-          <div class="row mb-3">
-            <legend class="col-form-label col-3 pt-0">Mode</legend>
-            <div class="btn-group btn-toggle col-5"> 
-              <button id="btnPuppetMode" class="btn btn-primary">PUPPET</button>
-              <button id="btnSpeakMode" class="btn btn-outline-secondary">SPEAK</button>
-            </div>
-          </div>
           <div class="row">
             <legend class="col-form-label col-3 pt-0">Status</legend>
             <div class="col-5">
-              <a id="btnConnectionStatus" role="status" class="btn btn-danger">Disconnected</a>
+              <h1><span class="badge badge-lg" v-bind:class="this.$socket.connected ? 'bg-success' : 'bg-danger'">{%raw%}{{ this.$socket.connected ? 'connected' : 'disconnected' }}{%endraw%}</span></h1>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <legend class="col-form-label col-3 pt-0">Mode</legend>
+            <div class="btn-group btn-toggle col-5"> 
+              <button @click="setMode('puppet')" class="btn" v-bind:class="mode=='puppet' ? 'btn-primary': 'btn-outline-secondary'">PUPPET</button>
+              <button @click="setMode('speak')" class="btn" v-bind:class="mode=='speak' ? 'btn-primary': 'btn-outline-secondary'">SPEAK</button>
             </div>
           </div>
         </div>
       </div>
-      <div id="divPuppetMode" class="card">
+      <div v-if="mode=='puppet'" class="card">
         <div class="row mb-3 card-body">
           <div class="col-6">
             <map name="mapBear">
-              <area id="areaEyeState" shape="rect" coords="0,0,200,100" alt="change eye state" />
-              <area id="areaMouthState" shape="rect" coords="0,100,200,200" alt="change mouth state" />
+              <area shape="rect" coords="0,0,200,100" alt="toggle eye state" @click="toggleEyes()" />
+              <area shape="rect" coords="0,100,200,200" alt="toggle mouth state" @click="toggleMouth()" />
             </map>
-            <img id="imgBear" src="/public/img/teddy_eomc.png" class="img-fluid mx-auto d-block" usemap="#mapBear">  
+            <img v-bind:src="bearimg" class="img-fluid mx-auto d-block" usemap="#mapBear">  
           </div>
           <div class="col-6">
             <div class="row mb-3">
               <legend class="col-form-label col-6 pt-0">Eyes</legend>
               <div class="form-check form-switch form-switch-md col-6">
-                <input class="form-check-input" type="checkbox" id="chkEyes" checked="checked">
+                <input class="form-check-input" type="checkbox" v-model="bear.eyes" @change="updateBear()" />
               </div>
             </div>
             <div class="row mb-3">
               <legend class="col-form-label col-6 pt-0">Mouth</legend>
               <div class="form-check form-switch form-switch-md col-6">
-                <input class="form-check-input" type="checkbox" id="chkMouth">
+                <input class="form-check-input" type="checkbox" v-model="bear.mouth" @change="updateBear()" />
               </div>
             </div>
             <div class="row mb-3">
               <legend class="col-form-label col-6 pt-0">Both</legend>
               <div class="form-check form-switch form-switch-md col-6">
-                <input class="form-check-input" type="checkbox" id="chkBoth">
+                <input class="form-check-input" type="checkbox" v-model="both" @change="updateBear()" />
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div id="divSpeakMode" class="card" style="display: none;">
+      <div v-if="mode=='speak'" id="divSpeakMode" class="card">
         <div class="card-body">
           <div class="row mb-3">
             <legend class="col-form-label col-3 pt-0">Volume</legend>
@@ -79,15 +79,15 @@
               </div>
             </div>
           </div>
-        </div>
           <div class="row mb-3">
             <div class="col-12">
               <div class="input-group">
-                <select id="selFilename" class="form-control">
+                <select v-model="filename" class="form-control">
                   <option value="">Select a pre-recorded sound file</option>
+                  <option v-for="(value, key) in phrases" v-bind:value="key">{%raw%}{{ value }}{%endraw%}</option>
                 </select>
                 <span class="input-group-btn">
-                  <button id="btnPlay" class="btn btn-primary">
+                  <button class="btn btn-primary" @click="play">
                     <span id="spnPlayIcon" class="fa fa-play-circle" role="status" aria-hidden="true"></span>
                   </button>
                 </span>
@@ -110,7 +110,6 @@
       </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.min.js"></script>
-    <script src="/public/js/ui.js"></script>
+    <script src="/public/js/app.js" type="module"></script>
   </body>
 </html>
