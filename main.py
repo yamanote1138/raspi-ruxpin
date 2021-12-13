@@ -1,12 +1,7 @@
 #!/usr/bin/python
 
-import configparser, json, logging, platform, signal, sys
-
-if platform.system() != 'Darwin':
-  from lib.bear import Bear
-else:
-  from mock.bear import Bear
-
+import configparser, json, logging, signal, sys
+from lib.bear import Bear
 from lib.webServer import WebServer
 
 logging.basicConfig(level=logging.DEBUG)

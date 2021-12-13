@@ -1,9 +1,10 @@
 #!/usr/bin/env python
-import os, logging, random, subprocess, time
+import logging, random, subprocess, time
 
 from time import sleep
-from lib.servo import Servo
 from threading import Thread
+
+from lib.servo import Servo
 from lib.audioPlayer import AudioPlayer
 
 class Bear:
@@ -47,7 +48,7 @@ class Bear:
     self.mouth.close()
     self.talkThread = Thread(target=self.__talkMonitor)
     self.blinkThread = Thread(target=self.__blinkMonitor)
-    logging.debug("bear ccconstructor finished")
+    logging.debug("bear constructor finished")
 
   def __del__(self):
     logging.debug("bear deconstructor finished")
@@ -128,4 +129,3 @@ class Bear:
     ])
     logging.debug('espeak ran')
     self.play("espeak")
-

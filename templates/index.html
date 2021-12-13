@@ -69,19 +69,19 @@
           <div class="row mb-3">
             <legend class="col-form-label col-3 pt-0">Volume ({%raw%}{{volume}}{%endraw%})</legend>
             <div class="col-9">
-              <input type="range" class="form-range" min="0" max="100" step="10" v-model="volume" @change="setVolume" :disabled="playing || speaking" />
+              <input type="range" class="form-range" min="0" max="100" step="10" v-model="volume" @change="setVolume" :disabled="isBusy" />
             </div>
           </div>
           <div class="row mb-3">
             <div class="col-12">
               <div class="input-group">
-                <select v-model="filename" class="form-control" :disabled="playing || speaking">
+                <select v-model="filename" class="form-control" :disabled="isBusy">
                   <option value="">Select a pre-recorded sound file</option>
                   <option v-for="(value, key) in phrases" v-bind:value="key">{%raw%}{{ value }}{%endraw%}</option>
                 </select>
                 <span class="input-group-btn">
-                  <button class="btn btn-primary" @click="play" :disabled="playing || speaking">
-                    <span v-bind:class="playing ? 'spinner-border spinner-border-sm' : 'fa fa-play-circle'" role="status" aria-hidden="true"></span>
+                  <button class="btn btn-primary" @click="play" :disabled="isBusy">
+                    <span v-bind:class="isPlaying ? 'spinner-border spinner-border-sm' : 'fa fa-play-circle'" role="status" aria-hidden="true"></span>
                   </button>
                 </span>
               </div>
@@ -90,10 +90,10 @@
           <div class="row">
             <div class="col-12">
               <div class="input-group">
-                <input class="form-control" placeholder="Type anything here and the bear will say it..." v-model="phrase" :disabled="playing || speaking" v-on:keyup.enter="speak" />
+                <input class="form-control" placeholder="Type anything here and the bear will say it..." v-model="phrase" :disabled="isBusy" v-on:keyup.enter="speak" />
                 <span class="input-group-btn">
-                  <button class="btn btn-primary" @click="speak" :disabled="playing || speaking">
-                    <span v-bind:class="speaking ? 'spinner-border spinner-border-sm' : 'fa fa-bullhorn'" role="status" aria-hidden="true"></span>
+                  <button class="btn btn-primary" @click="speak" :disabled="isBusy">
+                    <span v-bind:class="isSpeaking ? 'spinner-border spinner-border-sm' : 'fa fa-bullhorn'" role="status" aria-hidden="true"></span>
                   </button>
                 </span>
               </div>

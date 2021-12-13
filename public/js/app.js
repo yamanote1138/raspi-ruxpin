@@ -1,7 +1,7 @@
 'use strict';
 
 import Vue from 'https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.esm.browser.min.js';
-import { io } from 'https://cdn.jsdelivr.net/npm/socket.io-client@4.4.0/dist/socket.io.esm.min.js';
+import io from 'https://cdn.jsdelivr.net/npm/socket.io-client@4.4.0/dist/socket.io.esm.min.js';
 import VueSocketIOExt from 'https://cdn.jsdelivr.net/npm/vue-socket.io-extended@4.2.0/dist/vue-socket.io-ext.esm.js';
 
 const socket = io(window.location.href);
@@ -11,13 +11,13 @@ var app = new Vue({
   el: '#app',
   data: {
     mode: 'puppet',
+    isPlaying: false,
+    isSpeaking: false,
     bear: {
       eyes: false,
       mouth: false
     },
     volume: 70,
-    speaking: false,
-    playing: false,
     phrases: {},
     filename: '',
     phrase:''
@@ -38,6 +38,11 @@ var app = new Vue({
         this.bear.eyes = isOpen;
         this.bear.mouth = isOpen;
       }
+    },
+    isBusy: {
+      get: function() {
+        return this.isPlaying || this.isSpeaking;
+      }
     }
   },
   sockets:{
@@ -54,11 +59,11 @@ var app = new Vue({
       console.log(`volume set to ${level}`);
     },
     playing_done: function(){
-      this.playing = false;
+      this.isPlaying = false;
       console.log('done playing');
     },
     speaking_done: function(){
-      this.speaking = false;
+      this.isSpeaking = false;
       console.log('done speaking');
     }
   },
@@ -78,12 +83,12 @@ var app = new Vue({
     },
     play: function(){
       if(this.filename=='') return;
-      this.playing = true;
+      this.isPlaying = true;
       this.$socket.client.emit('play', this.filename);
     },
     speak: function(){
       if(this.phrase=='') return;
-      this.speaking = true;
+      this.isSpeaking = true;
       this.$socket.client.emit('speak', this.phrase);
     }
   }
