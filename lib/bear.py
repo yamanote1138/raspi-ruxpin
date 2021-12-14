@@ -52,11 +52,11 @@ class Bear:
     logging.debug("bear deconstructor finished")
 
   def activate(self):
+    logging.info("activating bear, please wait...")
     self.isRunning = True
 
-    #set starting motor positions
+    # the bear is awake, open its eyes :)
     self.eyes.open()
-    self.mouth.close()
 
     self.talkThread.start()
     self.blinkThread.start()
@@ -66,7 +66,7 @@ class Bear:
     self.isRunning = False
     self.isTalking = False
 
-    #set resting motor positions
+    # time to put the bear to sleep, close its eyes and mouth
     self.eyes.close()
     self.mouth.close()
 
