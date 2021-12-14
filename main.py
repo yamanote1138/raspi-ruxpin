@@ -1,10 +1,19 @@
 #!/usr/bin/python
 
-import configparser, json, logging, signal, sys
+import argparse, configparser, json, logging, signal, sys
 from lib.bear import Bear
 from lib.webServer import WebServer
 
-logging.basicConfig(level=logging.DEBUG)
+parser = argparse.ArgumentParser()
+parser.add_argument(
+  '-log',
+  '--loglevel',
+  default='info',
+  help='Provide logging level. Example --loglevel debug, default=warning'
+)
+args = parser.parse_args()
+
+logging.basicConfig(level=args.loglevel.upper() )
 logging.getLogger('asyncio').setLevel(logging.WARNING)
 
 # read main config file
@@ -21,20 +30,18 @@ with open('config/phrases.json', 'r') as f:
 bear = Bear(config)
 
 # properly handle SIGINT (ctrl-c)
-def sigint_handler(signal, frame):    
-  ws.app.shutdown()
-  bear.deactivate()
-  sys.exit(0)
-signal.signal(signal.SIGINT, sigint_handler)
+def signal_handler(signal, frame):    
+  raise KeyboardInterrupt
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 # init web framework
+ws = WebServer(bear)
 try:
   bear.activate()
-  ws = WebServer(bear)
   ws.start()
 except KeyboardInterrupt:
+  ws.app.shutdown()
   bear.deactivate()
-  sys.exit(0)
-
-bear.deactivate()
-sys.exit(1)
+  sys.exit(1)

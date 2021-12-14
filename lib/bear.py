@@ -41,13 +41,11 @@ class Bear:
       'name': config.get('character', 'name'),
       'prefix': config.get('character', 'prefix')
     }
-    logging.debug('character is:{}\nprefix is:{}'.format(self.character['name'], self.character['prefix']))
+    logging.debug('character is:{}'.format(self.character['name']));
+    logging.debug('prefix is:{}'.format(self.character['prefix']));
 
-    #set starting motor positions
-    self.eyes.open()
-    self.mouth.close()
-    self.talkThread = Thread(target=self.__talkMonitor)
-    self.blinkThread = Thread(target=self.__blinkMonitor)
+    self.talkThread = Thread(target=self.__talkMonitor, daemon=True)
+    self.blinkThread = Thread(target=self.__blinkMonitor, daemon=True)
     logging.debug("bear constructor finished")
 
   def __del__(self):
@@ -55,6 +53,11 @@ class Bear:
 
   def activate(self):
     self.isRunning = True
+
+    #set starting motor positions
+    self.eyes.open()
+    self.mouth.close()
+
     self.talkThread.start()
     self.blinkThread.start()
     logging.debug("bear instance activated")
@@ -62,6 +65,11 @@ class Bear:
   def deactivate(self):
     self.isRunning = False
     self.isTalking = False
+
+    #set resting motor positions
+    self.eyes.close()
+    self.mouth.close()
+
     logging.debug("bear instance deactivated")
 
   def __talkMonitor(self):

@@ -14,7 +14,7 @@ var app = new Vue({
     isPlaying: false,
     isSpeaking: false,
     bear: {
-      eyes: false,
+      eyes: true,
       mouth: false
     },
     volume: 70,
