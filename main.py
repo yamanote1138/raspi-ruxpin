@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
 import argparse, configparser, json, logging, signal, sys
+
+from attr import NOTHING
 from lib.bear import Bear
 from lib.webServer import WebServer
 
@@ -26,24 +28,24 @@ with open('config/phrases.json', 'r') as f:
   # sort phrases alphabetically by key
   config.phrases = dict(sorted(phrases.items(), key = lambda kv:(kv[1], kv[0])))
 
-# properly handle SIGINT (ctrl-c)
-def signal_handler(signal, frame):
-  logging.debug('inside signal handler')
-  raise KeyboardInterrupt
-
 # init bear
 bear = Bear(config)
 
 # init web framework
 ws = WebServer(bear)
 
+# properly handle SIGINT (ctrl-c)
+def signal_handler(signal, frame):
+  raise KeyboardInterrupt
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
 try:
-  signal.signal(signal.SIGINT, signal_handler)
-  signal.signal(signal.SIGTERM, signal_handler)
   bear.activate()
   ws.start()
 except KeyboardInterrupt:
-  print('keyboard interrupt')
+  pass
 finally:
   bear.deactivate()
   sys.exit(0)
