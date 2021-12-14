@@ -26,24 +26,26 @@ with open('config/phrases.json', 'r') as f:
   # sort phrases alphabetically by key
   config.phrases = dict(sorted(phrases.items(), key = lambda kv:(kv[1], kv[0])))
 
-# properly handle SIGINT (ctrl-c)
-def signal_handler(signal, frame):    
-  logging.debug('inside signal handler')
-  raise KeyboardInterrupt
-
-signal.signal(signal.SIGINT, signal_handler)
-signal.signal(signal.SIGTERM, signal_handler)
+# # properly handle SIGINT (ctrl-c)
+# def signal_handler(signal, frame):    
+#   logging.debug('inside signal handler')
+#   raise KeyboardInterrupt
 
 # init bear
 bear = Bear(config)
 
 # init web framework
 ws = WebServer(bear)
-try:
-  bear.activate()
-  ws.start()
-except KeyboardInterrupt:
-  logging.debug('inside keyboard interrupt handler')
-  ws.app.shutdown()
-  bear.deactivate()
-  sys.exit(1)
+# try:
+#   signal.signal(signal.SIGINT, signal_handler)
+#   signal.signal(signal.SIGTERM, signal_handler)
+
+bear.activate()
+ws.start()
+
+# except KeyboardInterrupt:
+#   print('keyboard interrupt')
+# finally:
+#   await ws.app.shutdown()
+bear.deactivate()
+sys.exit(0)

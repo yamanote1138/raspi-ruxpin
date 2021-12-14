@@ -91,6 +91,7 @@ class Bear:
         sleep(.02)
       else:
         sleep(.1)
+    return
 
   def __blinkMonitor(self):
     while self.isRunning:
@@ -101,6 +102,7 @@ class Bear:
         self.eyes.open()
       else:
         sleep(.1)
+    return
 
   def update(self, data):
     if self.isTalking:
