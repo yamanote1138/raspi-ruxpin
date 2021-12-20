@@ -51,6 +51,7 @@ class AudioPlayer:
       try:
         while data!='' and data is not None and data != b'':
           output.write(data)
+          logging.debug(data)
 
           try:
             # check data segment to ensure it is a complete frame
