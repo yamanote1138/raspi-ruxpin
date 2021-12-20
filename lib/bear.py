@@ -126,6 +126,8 @@ class Bear:
         self.audio.play("public/sounds/"+filename+".wav")
     except:
       logging.exception("an error occurred while the bear was trying to talk")
+      self.mouth.stop()
+      self.eyes.stop()
     finally:
       self.isTalking = False
       self.mouth.stop()
