@@ -25,8 +25,8 @@ class AudioPlayer:
       subprocess.run(['osascript', '-e', cmd]);
     elif aa is not None:
       # note: the sound output mixer needs to be set in config
-      mixer = aa.Mixer(self.mixer)
-      mixer.setvolume(volume)
+      mx = aa.Mixer(self.mixer)
+      mx.setvolume(volume)
     else:
       logging.error("alsaaudio not installed, unable to set volume")
 
@@ -41,7 +41,6 @@ class AudioPlayer:
       chunk = 1024
       output = aa.PCM(aa.PCM_PLAYBACK, aa.PCM_NORMAL)
       output.setchannels(1)
-      # output.setrate(16000)
       output.setrate(22050)
       output.setformat(aa.PCM_FORMAT_S16_LE)
       output.setperiodsize(chunk)

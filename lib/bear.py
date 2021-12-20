@@ -119,12 +119,16 @@ class Bear:
     self.isTalking = True
     self.mouth.setDirection('brake')
     self.mouth.pwm.start(self.mouth.speed)
-    if filename == 'espeak':
-      self.audio.play("espeak.wav")
-    else:
-      self.audio.play("public/sounds/"+filename+".wav")
-    self.isTalking = False
-    self.mouth.stop()
+    try:
+      if filename == 'espeak':
+        self.audio.play("espeak.wav")
+      else:
+        self.audio.play("public/sounds/"+filename+".wav")
+    except:
+      logging.exception("an error occurred while the bear was trying to talk")
+    finally:
+      self.isTalking = False
+      self.mouth.stop()
 
   def say(self, text):
     # TODO: make speech params configurable
