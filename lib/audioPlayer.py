@@ -50,8 +50,8 @@ class AudioPlayer:
       max_vol_factor =5000
       try:
         while data!='' and data is not None and data != b'':
+          logging.debug("[%b]".format(data))
           output.write(data)
-          logging.debug(data)
 
           try:
             # check data segment to ensure it is a complete frame

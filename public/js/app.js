@@ -49,6 +49,10 @@ var app = new Vue({
     connect: function(){
       this.$socket.client.emit('fetch_phrases');
     },
+    disconnect: function(){
+      this.isPlaying = false;
+      this.isSpeaking = false;
+    },
     bear_updated: function(val){
       console.log('bear updated');
     },
