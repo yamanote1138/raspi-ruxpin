@@ -27,6 +27,7 @@ class AudioPlayer:
       # note: the sound output mixer needs to be set in config
       mx = aa.Mixer(self.mixer)
       mx.setvolume(volume)
+      del mx
     else:
       logging.error("alsaaudio not installed, unable to set volume")
 
