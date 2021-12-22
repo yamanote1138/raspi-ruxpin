@@ -41,8 +41,8 @@ class Bear:
       'name': config.get('character', 'name'),
       'prefix': config.get('character', 'prefix')
     }
-    logging.debug('character is:{}'.format(self.character['name']));
-    logging.debug('prefix is:{}'.format(self.character['prefix']));
+    logging.debug(f"character is:{self.character['name']}");
+    logging.debug(f"prefix is:{self.character['prefix']}");
 
     self.talkThread = Thread(target=self.__talkMonitor, daemon=True)
     self.blinkThread = Thread(target=self.__blinkMonitor, daemon=True)
@@ -123,7 +123,7 @@ class Bear:
       if filename == 'espeak':
         self.audio.play("espeak.wav")
       else:
-        self.audio.play("public/sounds/"+filename+".wav")
+        self.audio.play(f"public/sounds/{filename}.wav")
     except:
       logging.exception("an error occurred while the bear was trying to talk")
       self.mouth.stop()

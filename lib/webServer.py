@@ -63,7 +63,7 @@ class WebServer:
   def start(self):
     print( "-------- ʕ•ᴥ•ʔ ---------")
     print( " RasPi Ruxpin is ONLINE ")
-    print( "http://{}:8080".format(str(self.ip)))
+    print( f"http://{str(self.ip)}:8080")
     print( "--------------------------")
     print( "press ctrl-C to stop (might take a couple tries)")
     web.run_app(self.app, print=None, access_log=None)

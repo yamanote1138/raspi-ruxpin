@@ -10,29 +10,24 @@ class AudioPlayer:
   def __init__(self, config):
     self.prevAudiovalue = 0
     self.mouthValue = 0
-    self.isPlaying = False
     self.mixer = config.get('audio', 'mixer')
     self.start_volume = config.getint('audio', 'start_volume')
     self.setVolume(self.start_volume)
-    self.playData = None
     
   def setVolume(self, volume=75):
     # different implementation if running on a mac (facilitates local development)
+    logging.debug(f"setting volume to {volume}%");
     if platform.system() == 'Darwin':
-      normalizedVolume = (volume*7)/100;
-      logging.debug("set volume to {}%".format(volume));
-      cmd = "set Volume {}".format(normalizedVolume)
-      subprocess.run(['osascript', '-e', cmd]);
+      subprocess.run(['osascript', '-e', f"set Volume {(volume*7)/100}"]);
     elif aa is not None:
       # note: the sound output mixer needs to be set in config
       mx = aa.Mixer(self.mixer)
       mx.setvolume(volume)
-      del mx
     else:
       logging.error("alsaaudio not installed, unable to set volume")
 
   def play(self,fileName):
-    logging.info("playing file: {}".format(fileName))
+    logging.info(f"playing file: {fileName}")
     if platform.system() == 'Darwin':
       # alternate implementation if running on a mac (facilitates local development)
       # note: this does not engage mouth motor code at all, just plays the sound file
@@ -50,7 +45,7 @@ class AudioPlayer:
       max_vol_factor =5000
       try:
         while data!='' and data is not None and data != b'':
-          logging.debug("[{}]\n\n".format(data))
+          logging.debug(f"[{data}]\n\n")
           output.write(data)
 
           try:

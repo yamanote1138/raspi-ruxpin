@@ -44,12 +44,12 @@ class Servo:
     # initialize PWM
     self.pwm = GPIO.PWM(self.pwm_pin, pwm_freq)
 
-    logging.debug("servo \"{}\" initialized".format(self.label))
+    logging.debug(f"servo '{self.label}' initialized")
 
   def __del__(self):
     self.pwm.stop()
     GPIO.cleanup()
-    logging.debug("servo \"{}\" deleted".format(self.label))
+    logging.debug(f"servo '{self.label}' deleted")
 
   def __move(self, duration=None):
     # stop any current movement
@@ -71,14 +71,14 @@ class Servo:
     self.setDirection('opening')
     self.__move(duration)
     self.state = 'open'
-    logging.debug("{} servo opened".format(self.label))
+    logging.debug(f"servo '{self.label}' opened")
 
   def close(self, duration=None):
     self.stop()
     self.setDirection('closing')
     self.__move(duration)
     self.state = 'closed'
-    logging.debug("{} servo closed".format(self.label))
+    logging.debug(f"servo '{self.label}' closed")
 
   def setDirection(self, direction):
     if direction is None: raise Exception('direction not specified')
