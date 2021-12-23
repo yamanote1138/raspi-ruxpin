@@ -121,9 +121,9 @@ class Bear:
     self.mouth.pwm.start(self.mouth.speed)
     try:
       if filename == 'espeak':
-        self.audio.play("espeak.wav")
+        self.audio.play("sounds/espeak.wav")
       else:
-        self.audio.play(f"public/sounds/{filename}.wav")
+        self.audio.play(f"sounds/{filename}.wav")
     except:
       logging.exception("an error occurred while the bear was trying to talk")
       self.mouth.stop()
@@ -136,7 +136,7 @@ class Bear:
     # TODO: make speech params configurable
     subprocess.run([
       "espeak", 
-      "-w","espeak.wav",
+      "-w","sounds/espeak.wav",
       "-s","125", 
       "-v","en+m3",
       "-p","25",
