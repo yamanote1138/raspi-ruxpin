@@ -1,8 +1,10 @@
-#!/usr/bin/python
+import argparse
+import configparser
+import json
+import logging
+import signal
+import sys
 
-import argparse, configparser, json, logging, signal, sys
-
-from attr import NOTHING
 from lib.bear import Bear
 from lib.webServer import WebServer
 
@@ -41,7 +43,7 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
-try:  
+try:
   bear.activate()
   ws.start()
 except KeyboardInterrupt:

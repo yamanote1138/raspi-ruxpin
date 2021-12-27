@@ -1,16 +1,24 @@
-#!/usr/bin/env python
-import logging, random, subprocess, time
+import logging
+from os import times
+import random
+import subprocess
+import time
 
 from time import sleep
 from threading import Thread
+from lib.direction import Direction
+from lib.state import State
 
 from lib.servo import Servo
-from lib.audioPlayer import AudioPlayer
+from lib.audio_player import AudioPlayer
+from lib.pin_set import PinSet
 
 class Bear:
+  """[summary]
+  """
   def __init__(self, config):
-    self.isRunning = True
-    self.isTalking = False
+    self.is_running = True
+    self.is_talking = False
 
     # attach audio player
     self.audio = AudioPlayer(config)
@@ -19,106 +27,118 @@ class Bear:
     self.phrases = config.phrases
 
     # bind mouth and eye servos based on pins defined in config
-    self.eyes = Servo(
-      pwm_pin=config.getint('pins', 'pwma'),
-      dir_pin=config.getint('pins', 'ain1'),
-      cdir_pin=config.getint('pins', 'ain2'),
-      duration=config.getfloat('settings', 'eyes_duration'),
-      speed=config.getint('settings', 'eyes_speed'),
-      label='eyes'
-    )
-
-    self.mouth = Servo(
-      pwm_pin=config.getint('pins', 'pwmb'),
-      dir_pin=config.getint('pins', 'bin1'),
-      cdir_pin=config.getint('pins', 'bin2'),
-      duration=config.getfloat('settings', 'mouth_duration'),
-      speed=config.getint('settings', 'mouth_speed'),
-      label='mouth'
-    )
+    self.servos = {
+      "eyes": Servo(
+        PinSet(
+          config.getint('pins', 'pwma'),
+          config.getint('pins', 'ain1'),
+          config.getint('pins', 'ain2')
+        ),
+        duration=config.getfloat('settings', 'eyes_duration'),
+        speed=config.getint('settings', 'eyes_speed'),
+        label='eyes'
+      ),
+      "mouth": Servo(
+        PinSet(
+          config.getint('pins', 'pwmb'),
+          config.getint('pins', 'bin1'),
+          config.getint('pins', 'bin2')
+        ),
+        duration=config.getfloat('settings', 'mouth_duration'),
+        speed=config.getint('settings', 'mouth_speed'),
+        label='mouth'
+      )
+    }
 
     self.character = {
       'name': config.get('character', 'name'),
       'prefix': config.get('character', 'prefix')
     }
-    logging.debug(f"character is:{self.character['name']}");
-    logging.debug(f"prefix is:{self.character['prefix']}");
+    logging.debug("character is: %s", self.character['name'])
+    logging.debug("prefix is: %s", self.character['prefix'])
 
-    self.talkThread = Thread(target=self.__talkMonitor, daemon=True)
-    self.blinkThread = Thread(target=self.__blinkMonitor, daemon=True)
+    self.talk_thread = Thread(target=self. __talk_monitor, daemon=True)
+    self.blink_thread = Thread(target=self. __blink_monitor, daemon=True)
     logging.debug("bear constructor finished")
 
   def __del__(self):
     logging.debug("bear deconstructor finished")
 
   def activate(self):
+    """open bear's eyes and setup talking and blinking threads"""
     logging.info("activating bear, please wait...")
-    self.isRunning = True
+    self.is_running = True
 
-    # the bear is awake, open its eyes :)
-    self.eyes.open()
+    self.servos["eyes"].open()
 
-    self.talkThread.start()
-    self.blinkThread.start()
+    self.talk_thread.start()
+    self.blink_thread.start()
     logging.debug("bear instance activated")
 
   def deactivate(self):
-    self.isRunning = False
-    self.isTalking = False
+    """put the bear to sleep: close eyes and mouth"""
+    logging.info("deactivating bear, please wait...")
 
-    # time to put the bear to sleep, close its eyes and mouth
-    self.eyes.close()
-    self.mouth.close()
+    self.is_running = False
+    self.is_talking = False
+
+    self.servos["eyes"].close()
+    self.servos["mouth"].close()
 
     logging.debug("bear instance deactivated")
 
-  def __talkMonitor(self):
-    lastMouthEvent = 0
-    lastMouthEventTime = 0
-    while self.isRunning:
-      if self.isTalking:
-        if( self.audio.mouthValue != lastMouthEvent ):
-          lastMouthEvent = self.audio.mouthValue
-          lastMouthEventTime = time.time()
-
-          if( self.audio.mouthValue == 1 ):
-            self.mouth.setDirection('opening')
-          else:
-            self.mouth.setDirection('closing')
+  def __talk_monitor(self):
+    """move mouth when audio file is playing"""
+    previous_direction = Direction.BRAKE
+    timestamp = 0
+    while self.is_running:
+      if self.is_talking:
+        if self.audio.mouth_direction != previous_direction:
+          previous_direction = self.audio.mouth_direction
+          timestamp = time.time()
+          self.servos["mouth"].set_direction(self.audio.mouth_direction)
         else:
-          if( time.time() - lastMouthEventTime > 0.4 ):
-            self.mouth.setDirection('brake')
+          if time.time() - timestamp > 0.4:
+            self.servos["mouth"].set_direction(Direction.BRAKE)
         sleep(.02)
       else:
         sleep(.1)
-    return
 
-  def __blinkMonitor(self):
-    while self.isRunning:
-      if self.isTalking:
+  def __blink_monitor(self):
+    """randomly blink eyes while bear is talking"""
+    while self.is_running:
+      if self.is_talking:
         sleep(random.randint(1,3))
-        self.eyes.close()
+        self.servos["eyes"].close()
         sleep(.2)
-        self.eyes.open()
+        self.servos["eyes"].open()
       else:
         sleep(.1)
-    return
 
-  def update(self, data):
-    if self.isTalking:
+  def update(self, data: dict):
+    """update position of eyes and/or mouth
+
+    Args:
+        data dict: position settings
+    """
+    if self.is_talking:
       logging.error('cannot update bear while it is talking')
     else:
-      if 'eyes' in data:
-        if data['eyes'] == True and self.eyes.state != 'open': self.eyes.open()
-        elif data['eyes'] == False and self.eyes.state != 'closed': self.eyes.close()
-      if 'mouth' in data:
-        if data['mouth'] == True and self.mouth.state != 'open': self.mouth.open()
-        elif data['mouth'] == False and self.mouth.state != 'closed': self.mouth.close()
+      for key in data:
+        if data[key] == State.OPEN.value and self.servos[key].state != State.OPEN:
+          self.servos[key].open()
+        elif data[key] == State.CLOSED.value and self.servos[key].state != State.CLOSED:
+          self.servos[key].close()
 
   def play(self, filename):
-    self.isTalking = True
-    self.mouth.setDirection('brake')
-    self.mouth.pwm.start(self.mouth.speed)
+    """play a sound file with corresponding mouth movements and blinking
+
+    Args:
+        filename (str, required): path to wave file to play
+    """
+    self.is_talking = True
+    self.servos["mouth"].set_direction(Direction.BRAKE)
+    self.servos["mouth"].pwm.start(self.servos["mouth"].speed)
     try:
       if filename == 'espeak':
         self.audio.play("sounds/espeak.wav")
@@ -126,22 +146,29 @@ class Bear:
         self.audio.play(f"sounds/{filename}.wav")
     except:
       logging.exception("an error occurred while the bear was trying to talk")
-      self.mouth.stop()
-      self.eyes.stop()
+      self.servos["mouth"].stop()
+      self.servos["eyes"].stop()
     finally:
-      self.isTalking = False
-      self.mouth.stop()
+      self.is_talking = False
+      self.servos["mouth"].stop()
 
   def say(self, text):
-    # TODO: make speech params configurable
-    subprocess.run([
-      "espeak", 
-      "-w","sounds/espeak.wav",
-      "-s","125", 
-      "-v","en+m3",
-      "-p","25",
-      "-a","175", 
-      text
-    ])
+    """[summary]
+
+    Args:
+        text ([type]): [description]
+    """
+    subprocess.run(
+      [
+        "espeak",
+        "-w","sounds/espeak.wav",
+        "-s","125",
+        "-v","en+m3",
+        "-p","25",
+        "-a","175",
+        text
+      ],
+      check=True
+    )
     logging.debug('espeak ran')
     self.play("espeak")
