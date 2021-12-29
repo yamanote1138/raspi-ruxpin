@@ -87,7 +87,7 @@ class AudioPlayer:
           logging.exception('')
       sleep( .25 )
 
-def __get_mouth_direction(self, val, prev_val):
+def __get_mouth_direction(val, prev_val):
   """[summary]
 
   Args:
