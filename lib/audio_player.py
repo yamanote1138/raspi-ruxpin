@@ -36,7 +36,7 @@ class AudioPlayer:
       subprocess.run(['osascript', '-e', f"set Volume {(volume*7)/100}"], check=True)
     elif aa is not None:
       # note: the sound output mixer needs to be set in config
-      aa.Mixer(self.__mixer).set_volume(volume)
+      aa.Mixer(self.__mixer).setVolume(volume)
     else:
       logging.error("alsaaudio not installed, unable to set volume")
 
