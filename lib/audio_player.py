@@ -79,7 +79,7 @@ class AudioPlayer:
 
             for i in range (1,8):
               val = (1<<max_r)-1
-              self.mouth_direction = __get_mouth_direction(val, prev_val)
+              self.mouth_direction = self.__get_mouth_direction(val, prev_val)
               prev_val = val
 
           data = wavfile.readframes(chunk)
@@ -87,13 +87,13 @@ class AudioPlayer:
           logging.exception('')
       sleep( .25 )
 
-def __get_mouth_direction(val, prev_val):
-  """[summary]
+  def __get_mouth_direction(self, val, prev_val):
+    """[summary]
 
-  Args:
-    val ([type]): [description]
-  """
-  delta = val - prev_val
-  if delta < 0 or val == 0:
-    return Direction.CLOSING
-  return Direction.OPENING
+    Args:
+      val ([type]): [description]
+    """
+    delta = val - prev_val
+    if delta < 0 or val == 0:
+      return Direction.CLOSING
+    return Direction.OPENING
