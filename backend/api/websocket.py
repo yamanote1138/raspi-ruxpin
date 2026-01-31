@@ -1,0 +1,409 @@
+"""WebSocket endpoint for real-time communication.
+
+This module provides WebSocket support for the bear control interface,
+handling bidirectional communication between the frontend and backend.
+"""
+
+import asyncio
+import logging
+from typing import Any, Literal
+
+from fastapi import WebSocket, WebSocketDisconnect
+from pydantic import BaseModel, Field, ValidationError
+
+from backend.core.enums import State
+from backend.services.bear_service import BearService
+
+logger = logging.getLogger(__name__)
+
+
+# Message models
+class UpdateBearMessage(BaseModel):
+    """Message to update bear positions."""
+
+    type: Literal["update_bear"] = "update_bear"
+    eyes: State | None = None
+    mouth: State | None = None
+
+
+class SpeakMessage(BaseModel):
+    """Message to speak text."""
+
+    type: Literal["speak"] = "speak"
+    text: str = Field(..., min_length=1, max_length=500)
+
+
+class PlayMessage(BaseModel):
+    """Message to play audio."""
+
+    type: Literal["play"] = "play"
+    sound: str = Field(..., min_length=1)
+
+
+class SetVolumeMessage(BaseModel):
+    """Message to set volume."""
+
+    type: Literal["set_volume"] = "set_volume"
+    level: int = Field(..., ge=0, le=100)
+
+
+class FetchPhrasesMessage(BaseModel):
+    """Message to fetch available phrases."""
+
+    type: Literal["fetch_phrases"] = "fetch_phrases"
+
+
+class SetBlinkEnabledMessage(BaseModel):
+    """Message to enable/disable eye blinking."""
+
+    type: Literal["set_blink_enabled"] = "set_blink_enabled"
+    enabled: bool = Field(..., description="Enable or disable blinking")
+
+
+# Response models
+class BearStateResponse(BaseModel):
+    """Bear state response."""
+
+    type: Literal["bear_state"] = "bear_state"
+    data: dict[str, Any]
+
+
+class PhrasesResponse(BaseModel):
+    """Phrases response."""
+
+    type: Literal["phrases"] = "phrases"
+    data: dict[str, str]
+
+
+class ErrorResponse(BaseModel):
+    """Error response."""
+
+    type: Literal["error"] = "error"
+    message: str
+
+
+class SuccessResponse(BaseModel):
+    """Success response."""
+
+    type: Literal["success"] = "success"
+    message: str
+
+
+class ConnectionManager:
+    """Manages WebSocket connections.
+
+    This class handles multiple WebSocket connections and provides
+    methods for broadcasting messages to all connected clients.
+
+    Attributes:
+        active_connections: List of active WebSocket connections
+    """
+
+    def __init__(self) -> None:
+        """Initialize connection manager."""
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket) -> None:
+        """Accept and register a new WebSocket connection.
+
+        Args:
+            websocket: WebSocket connection to register
+        """
+        await websocket.accept()
+        self.active_connections.append(websocket)
+        logger.info(f"WebSocket connected. Total connections: {len(self.active_connections)}")
+
+    def disconnect(self, websocket: WebSocket) -> None:
+        """Unregister a WebSocket connection.
+
+        Args:
+            websocket: WebSocket connection to remove
+        """
+        self.active_connections.remove(websocket)
+        logger.info(f"WebSocket disconnected. Total connections: {len(self.active_connections)}")
+
+    async def send_personal(self, message: dict[str, Any], websocket: WebSocket) -> None:
+        """Send a message to a specific client.
+
+        Args:
+            message: Message to send
+            websocket: Target WebSocket connection
+        """
+        try:
+            await websocket.send_json(message)
+        except Exception as e:
+            logger.error(f"Error sending personal message: {e}")
+
+    async def broadcast(self, message: dict[str, Any]) -> None:
+        """Broadcast a message to all connected clients.
+
+        Args:
+            message: Message to broadcast
+        """
+        disconnected = []
+
+        for connection in self.active_connections:
+            try:
+                await connection.send_json(message)
+            except Exception as e:
+                logger.error(f"Error broadcasting to connection: {e}")
+                disconnected.append(connection)
+
+        # Remove disconnected clients
+        for connection in disconnected:
+            self.disconnect(connection)
+
+
+# Global connection manager
+manager = ConnectionManager()
+
+# State broadcast task
+_broadcast_task: asyncio.Task[None] | None = None
+
+
+async def state_broadcast_loop(bear_service: BearService) -> None:
+    """Periodically broadcast bear state to all connected clients.
+
+    This runs at 10Hz to provide smooth visual updates of mouth movements.
+    """
+    try:
+        while True:
+            if manager.active_connections:
+                state = bear_service.get_state()
+                response = BearStateResponse(data=state)
+                await manager.broadcast(response.model_dump())
+
+            await asyncio.sleep(0.1)  # 10Hz update rate
+    except asyncio.CancelledError:
+        logger.info("State broadcast loop cancelled")
+        raise
+    except Exception as e:
+        logger.error(f"State broadcast loop error: {e}")
+
+
+async def handle_update_bear(
+    message: UpdateBearMessage, bear_service: BearService, websocket: WebSocket
+) -> None:
+    """Handle update_bear message.
+
+    Args:
+        message: Update bear message
+        bear_service: Bear service instance
+        websocket: WebSocket connection
+    """
+    try:
+        state = await bear_service.update_positions(
+            eyes_position=message.eyes,
+            mouth_position=message.mouth,
+        )
+
+        response = BearStateResponse(data=state)
+        await manager.broadcast(response.model_dump())
+    except Exception as e:
+        error = ErrorResponse(message=str(e))
+        await manager.send_personal(error.model_dump(), websocket)
+
+
+async def handle_speak(
+    message: SpeakMessage, bear_service: BearService, websocket: WebSocket
+) -> None:
+    """Handle speak message.
+
+    Args:
+        message: Speak message
+        bear_service: Bear service instance
+        websocket: WebSocket connection
+    """
+    try:
+        # Notify all clients that bear is busy
+        busy_state = bear_service.get_state()
+        busy_state["is_busy"] = True
+        response = BearStateResponse(data=busy_state)
+        await manager.broadcast(response.model_dump())
+
+        # Speak (this will block until complete)
+        await bear_service.speak(message.text)
+
+        # Notify all clients of new state
+        final_state = bear_service.get_state()
+        response = BearStateResponse(data=final_state)
+        await manager.broadcast(response.model_dump())
+    except Exception as e:
+        error = ErrorResponse(message=str(e))
+        await manager.send_personal(error.model_dump(), websocket)
+
+        # Reset busy state on error
+        state = bear_service.get_state()
+        response = BearStateResponse(data=state)
+        await manager.broadcast(response.model_dump())
+
+
+async def handle_play(
+    message: PlayMessage, bear_service: BearService, websocket: WebSocket
+) -> None:
+    """Handle play message.
+
+    Args:
+        message: Play message
+        bear_service: Bear service instance
+        websocket: WebSocket connection
+    """
+    try:
+        # Notify all clients that bear is busy
+        busy_state = bear_service.get_state()
+        busy_state["is_busy"] = True
+        response = BearStateResponse(data=busy_state)
+        await manager.broadcast(response.model_dump())
+
+        # Play audio (this will block until complete)
+        await bear_service.play_audio(message.sound)
+
+        # Notify all clients of new state
+        final_state = bear_service.get_state()
+        response = BearStateResponse(data=final_state)
+        await manager.broadcast(response.model_dump())
+    except Exception as e:
+        error = ErrorResponse(message=str(e))
+        await manager.send_personal(error.model_dump(), websocket)
+
+        # Reset busy state on error
+        state = bear_service.get_state()
+        response = BearStateResponse(data=state)
+        await manager.broadcast(response.model_dump())
+
+
+async def handle_set_volume(
+    message: SetVolumeMessage, bear_service: BearService, websocket: WebSocket
+) -> None:
+    """Handle set_volume message.
+
+    Args:
+        message: Set volume message
+        bear_service: Bear service instance
+        websocket: WebSocket connection
+    """
+    try:
+        await bear_service.set_volume(message.level)
+
+        state = bear_service.get_state()
+        response = BearStateResponse(data=state)
+        await manager.broadcast(response.model_dump())
+    except Exception as e:
+        error = ErrorResponse(message=str(e))
+        await manager.send_personal(error.model_dump(), websocket)
+
+
+async def handle_fetch_phrases(
+    message: FetchPhrasesMessage, bear_service: BearService, websocket: WebSocket
+) -> None:
+    """Handle fetch_phrases message.
+
+    Args:
+        message: Fetch phrases message
+        bear_service: Bear service instance
+        websocket: WebSocket connection
+    """
+    try:
+        phrases = bear_service.get_phrases()
+        response = PhrasesResponse(data=phrases)
+        await manager.send_personal(response.model_dump(), websocket)
+    except Exception as e:
+        error = ErrorResponse(message=str(e))
+        await manager.send_personal(error.model_dump(), websocket)
+
+
+async def handle_set_blink_enabled(
+    message: SetBlinkEnabledMessage, bear_service: BearService, websocket: WebSocket
+) -> None:
+    """Handle set_blink_enabled message.
+
+    Args:
+        message: Set blink enabled message
+        bear_service: Bear service instance
+        websocket: WebSocket connection
+    """
+    try:
+        bear_service.set_blink_enabled(message.enabled)
+
+        state = bear_service.get_state()
+        response = BearStateResponse(data=state)
+        await manager.broadcast(response.model_dump())
+    except Exception as e:
+        error = ErrorResponse(message=str(e))
+        await manager.send_personal(error.model_dump(), websocket)
+
+
+async def websocket_endpoint(websocket: WebSocket, bear_service: BearService) -> None:
+    """WebSocket endpoint for bear control.
+
+    Args:
+        websocket: WebSocket connection
+        bear_service: Bear service instance
+    """
+    global _broadcast_task
+
+    await manager.connect(websocket)
+
+    # Start state broadcast task if this is the first connection
+    if len(manager.active_connections) == 1 and (_broadcast_task is None or _broadcast_task.done()):
+        _broadcast_task = asyncio.create_task(state_broadcast_loop(bear_service))
+        logger.info("Started state broadcast loop")
+
+    try:
+        # Send initial state
+        state = bear_service.get_state()
+        response = BearStateResponse(data=state)
+        await manager.send_personal(response.model_dump(), websocket)
+
+        # Message handling loop
+        while True:
+            data = await websocket.receive_json()
+
+            # Route message based on type
+            message_type = data.get("type")
+
+            if message_type == "update_bear":
+                msg = UpdateBearMessage(**data)
+                await handle_update_bear(msg, bear_service, websocket)
+
+            elif message_type == "speak":
+                msg = SpeakMessage(**data)
+                await handle_speak(msg, bear_service, websocket)
+
+            elif message_type == "play":
+                msg = PlayMessage(**data)
+                await handle_play(msg, bear_service, websocket)
+
+            elif message_type == "set_volume":
+                msg = SetVolumeMessage(**data)
+                await handle_set_volume(msg, bear_service, websocket)
+
+            elif message_type == "fetch_phrases":
+                msg = FetchPhrasesMessage(**data)
+                await handle_fetch_phrases(msg, bear_service, websocket)
+
+            elif message_type == "set_blink_enabled":
+                msg = SetBlinkEnabledMessage(**data)
+                await handle_set_blink_enabled(msg, bear_service, websocket)
+
+            else:
+                error = ErrorResponse(message=f"Unknown message type: {message_type}")
+                await manager.send_personal(error.model_dump(), websocket)
+
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+    except ValidationError as e:
+        error = ErrorResponse(message=f"Invalid message: {e}")
+        await manager.send_personal(error.model_dump(), websocket)
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
+        manager.disconnect(websocket)
+    finally:
+        # Stop broadcast task if this was the last connection
+        if len(manager.active_connections) == 0 and _broadcast_task and not _broadcast_task.done():
+            _broadcast_task.cancel()
+            try:
+                await _broadcast_task
+            except asyncio.CancelledError:
+                pass
+            logger.info("Stopped state broadcast loop")
