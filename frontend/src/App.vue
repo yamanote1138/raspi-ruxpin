@@ -8,14 +8,16 @@
             <div class="row align-items-center">
               <div class="col">
                 <h1 class="mb-0">
-                  <img src="/img/header_t.png" alt="Raspi" height="40" />
+                  <img :src="headerImage" alt="Raspi" height="40" />
                 </h1>
               </div>
               <div class="col-auto">
                 <StatusBar
                   :is-connected="isConnected"
                   :current-mode="currentMode"
+                  :character="bearState.character"
                   @set-mode="setMode"
+                  @set-character="setCharacter"
                 />
               </div>
             </div>
@@ -98,12 +100,14 @@ const {
   errorMessage,
   isBusy,
   bearImage,
+  headerImage,
   updateBear,
   speak,
   play,
   setVolume,
   setMode,
   setBlinkEnabled,
+  setCharacter,
 } = useBear()
 
 // Toggle functions for clicking bear image in puppet mode
@@ -122,23 +126,30 @@ const toggleMouth = () => {
 // Preload all bear images to prevent stuttering
 onMounted(() => {
   const positions = [0, 25, 50, 75, 100]
+  const characters = ['teddy', 'grubby']
   const imagePromises: Promise<void>[] = []
 
-  positions.forEach(eyePos => {
-    positions.forEach(mouthPos => {
-      const img = new Image()
-      const promise = new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve()
-        img.onerror = () => reject()
+  characters.forEach(character => {
+    positions.forEach(eyePos => {
+      positions.forEach(mouthPos => {
+        const img = new Image()
+        const promise = new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve()
+          img.onerror = () => {
+            // Grubby images may not exist yet, ignore errors
+            console.debug(`Image not found: ${character}_e${eyePos}m${mouthPos}.png`)
+            resolve()
+          }
+        })
+        img.src = `/img/${character}_e${eyePos}m${mouthPos}.png`
+        imagePromises.push(promise)
       })
-      img.src = `/img/teddy_e${eyePos}m${mouthPos}.png`
-      imagePromises.push(promise)
     })
   })
 
   // Wait for all images to load
   Promise.all(imagePromises).then(() => {
-    console.log('All bear images preloaded (25 images)')
+    console.log('All bear images preloaded (50 images: 25 teddy + 25 grubby)')
   }).catch(err => {
     console.warn('Some bear images failed to preload:', err)
   })

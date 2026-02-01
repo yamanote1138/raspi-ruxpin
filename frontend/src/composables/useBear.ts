@@ -25,6 +25,7 @@ export interface BearComposable {
   // Computed
   isBusy: ComputedRef<boolean>
   bearImage: ComputedRef<string>
+  headerImage: ComputedRef<string>
 
   // Actions
   updateBear: (eyes?: State, mouth?: State) => void
@@ -33,6 +34,7 @@ export interface BearComposable {
   setVolume: (level: number) => void
   fetchPhrases: () => void
   setMode: (mode: Mode) => void
+  setCharacter: (character: string) => void
 }
 
 /**
@@ -51,6 +53,7 @@ export function useBear(): BearComposable {
     is_busy: false,
     volume: 100,
     blink_enabled: false,
+    character: 'teddy',
   })
 
   // UI state
@@ -76,7 +79,13 @@ export function useBear(): BearComposable {
   const bearImage = computed(() => {
     const eyePos = getPositionLabel(bearState.value.eyes_position)
     const mouthPos = getPositionLabel(bearState.value.mouth_position)
-    return `/img/teddy_e${eyePos}m${mouthPos}.png`
+    const char = bearState.value.character || 'teddy'
+    return `/img/${char}_e${eyePos}m${mouthPos}.png`
+  })
+
+  const headerImage = computed(() => {
+    const char = bearState.value.character || 'teddy'
+    return `/img/header_${char === 'teddy' ? 't' : 'g'}.png`
   })
 
   /**
@@ -186,6 +195,18 @@ export function useBear(): BearComposable {
   }
 
   /**
+   * Set character (teddy or grubby)
+   */
+  const setCharacter = (character: string) => {
+    const message = {
+      type: 'set_character',
+      character,
+    }
+
+    ws.send(message)
+  }
+
+  /**
    * Handle incoming WebSocket messages
    */
   const handleMessage = (data: WebSocketMessage) => {
@@ -202,6 +223,7 @@ export function useBear(): BearComposable {
           is_busy: stateMsg.data.is_busy,
           volume: stateMsg.data.volume,
           blink_enabled: stateMsg.data.blink_enabled ?? true,
+          character: stateMsg.data.character ?? 'teddy',
         }
         break
 
@@ -282,6 +304,7 @@ export function useBear(): BearComposable {
     // Computed
     isBusy,
     bearImage,
+    headerImage,
 
     // Actions
     updateBear,
@@ -291,5 +314,6 @@ export function useBear(): BearComposable {
     fetchPhrases,
     setMode,
     setBlinkEnabled,
+    setCharacter,
   }
 }

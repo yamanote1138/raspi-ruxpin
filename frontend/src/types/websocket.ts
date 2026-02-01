@@ -11,6 +11,7 @@ export enum MessageType {
   SET_VOLUME = 'set_volume',
   FETCH_PHRASES = 'fetch_phrases',
   SET_BLINK_ENABLED = 'set_blink_enabled',
+  SET_CHARACTER = 'set_character',
   SET_LOG_LEVEL = 'set_log_level',
   GET_GPIO_STATUS = 'get_gpio_status',
   BEAR_STATE = 'bear_state',
@@ -52,6 +53,11 @@ export interface SetBlinkEnabledMessage {
   enabled: boolean
 }
 
+export interface SetCharacterMessage {
+  type: MessageType.SET_CHARACTER
+  character: string
+}
+
 export interface SetLogLevelMessage {
   type: MessageType.SET_LOG_LEVEL
   level: 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL'
@@ -82,6 +88,7 @@ export interface BearStateMessage {
     is_busy: boolean
     volume: number
     blink_enabled: boolean
+    character: string
   }
 }
 

@@ -30,6 +30,28 @@
         System
       </button>
     </div>
+
+    <!-- Character Toggle -->
+    <div class="btn-group" role="group">
+      <button
+        type="button"
+        class="btn btn-sm mode-btn"
+        :class="character === 'teddy' ? 'btn-success' : 'btn-light'"
+        @click="$emit('set-character', 'teddy')"
+        :disabled="!isConnected"
+      >
+        Teddy
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm mode-btn"
+        :class="character === 'grubby' ? 'btn-success' : 'btn-light'"
+        @click="$emit('set-character', 'grubby')"
+        :disabled="!isConnected"
+      >
+        Grubby
+      </button>
+    </div>
   </div>
 </template>
 
@@ -39,10 +61,12 @@ import { Mode } from '@/types/bear'
 defineProps<{
   isConnected: boolean
   currentMode: Mode
+  character: string
 }>()
 
 defineEmits<{
   'set-mode': [mode: Mode]
+  'set-character': [character: string]
 }>()
 </script>
 

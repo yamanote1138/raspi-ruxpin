@@ -62,6 +62,13 @@ class SetBlinkEnabledMessage(BaseModel):
     enabled: bool = Field(..., description="Enable or disable blinking")
 
 
+class SetCharacterMessage(BaseModel):
+    """Message to set character."""
+
+    type: Literal["set_character"] = "set_character"
+    character: str = Field(..., min_length=1, description="Character name (teddy or grubby)")
+
+
 class SetLogLevelMessage(BaseModel):
     """Message to set logging level."""
 
@@ -407,6 +414,27 @@ async def handle_set_blink_enabled(
         await manager.send_personal(error.model_dump(), websocket)
 
 
+async def handle_set_character(
+    message: SetCharacterMessage, bear_service: BearService, websocket: WebSocket
+) -> None:
+    """Handle set_character message.
+
+    Args:
+        message: Set character message
+        bear_service: Bear service instance
+        websocket: WebSocket connection
+    """
+    try:
+        bear_service.set_character(message.character)
+
+        state = bear_service.get_state()
+        response = BearStateResponse(data=state)
+        await manager.broadcast(response.model_dump())
+    except Exception as e:
+        error = ErrorResponse(message=str(e))
+        await manager.send_personal(error.model_dump(), websocket)
+
+
 async def handle_set_log_level(message: SetLogLevelMessage, websocket: WebSocket) -> None:
     """Handle set_log_level message.
 
@@ -507,6 +535,10 @@ async def websocket_endpoint(websocket: WebSocket, bear_service: BearService) ->
             elif message_type == "set_blink_enabled":
                 msg = SetBlinkEnabledMessage(**data)
                 await handle_set_blink_enabled(msg, bear_service, websocket)
+
+            elif message_type == "set_character":
+                msg = SetCharacterMessage(**data)
+                await handle_set_character(msg, bear_service, websocket)
 
             elif message_type == "set_log_level":
                 msg = SetLogLevelMessage(**data)

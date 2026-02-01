@@ -24,6 +24,7 @@ export interface BearState extends BearPosition {
   is_busy: boolean
   volume: number
   blink_enabled: boolean
+  character: string // 'teddy' or 'grubby'
 }
 
 export interface CharacterInfo {

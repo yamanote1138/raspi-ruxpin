@@ -91,6 +91,7 @@ class BearService:
         self.phrases: dict[str, str] = {}
         self.is_busy = False
         self.blink_enabled = False  # Eye blinking disabled by default
+        self.character = "teddy"  # Default character
         self._talk_task: asyncio.Task[None] | None = None
         self._blink_task: asyncio.Task[None] | None = None
         self._shutdown = False
@@ -362,6 +363,19 @@ class BearService:
         self.blink_enabled = enabled
         logger.info(f"Eye blinking {'enabled' if enabled else 'disabled'}")
 
+    def set_character(self, character: str) -> None:
+        """Set the active character.
+
+        Args:
+            character: Character name (teddy or grubby)
+        """
+        if character not in ["teddy", "grubby"]:
+            logger.warning(f"Unknown character: {character}, defaulting to teddy")
+            character = "teddy"
+
+        self.character = character
+        logger.info(f"Character set to {character}")
+
     def get_phrases(self) -> dict[str, str]:
         """Get available phrases.
 
@@ -384,4 +398,5 @@ class BearService:
             "is_busy": self.is_busy,
             "volume": self.audio_player.volume,
             "blink_enabled": self.blink_enabled,
+            "character": self.character,
         }
