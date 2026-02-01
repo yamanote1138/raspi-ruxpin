@@ -1,8 +1,8 @@
 # Raspi Ruxpin 2.0 - Next Steps
 
-## Current Status: ✅ READY FOR TESTING
+## Current Status: ✅ DEPLOYMENT READY - AWAITING HARDWARE TESTING
 
-Both backend and frontend are running successfully!
+Development environment complete. Deployment scripts and documentation ready. Next step is hardware testing on Raspberry Pi at workbench.
 
 ## What's Running Right Now
 
@@ -172,23 +172,32 @@ cd frontend && npm run lint
 
 ## What's Next?
 
-### Immediate
+### Completed ✅
 1. ✅ Setup complete
 2. ✅ Backend running
 3. ✅ Frontend running
-4. ⏳ **Browser testing** ← YOU ARE HERE
+4. ✅ Browser testing
+5. ✅ Deployment scripts created
+6. ✅ Service configuration complete
+7. ✅ Troubleshooting guide written
+8. ✅ Platform-specific configs added
 
-### Optional (Phase 8)
-- Write unit tests
-- Write integration tests
-- Set up GitHub Actions CI
-- Achieve >80% code coverage
+### Phase 8 (Testing) - SKIPPED
+- ~~Write unit tests~~
+- ~~Write integration tests~~
+- ~~Set up GitHub Actions CI~~ (Skipped by choice)
+- ~~Achieve >80% code coverage~~
 
-### Optional (Phase 9)
-- Create systemd service
-- Write deployment scripts
-- Test on Raspberry Pi hardware
-- Update hardware documentation
+### Next: Hardware Testing (Phase 9)
+**Status**: ⏳ ON HOLD - Waiting for workbench access
+
+When at workbench with hardware:
+- Deploy to Raspberry Pi using scripts/deploy.sh
+- Test actual servo movements (eyes & mouth)
+- Verify GPIO pin configurations
+- Test audio output on Pi hardware
+- Validate mouth sync with real servos
+- Update hardware documentation if needed
 
 ### Production Deployment
 1. Build frontend:

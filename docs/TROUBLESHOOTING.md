@@ -683,7 +683,7 @@ sudo usermod -a -G gpio,audio pi
 
 ### Useful Links
 
-- [Main README](README.md)
+- [Main README](../README.md)
 - [Quick Start Guide](QUICKSTART.md)
 - [GitHub Repository](https://github.com/yourusername/raspi-ruxpin)
 

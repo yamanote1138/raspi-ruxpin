@@ -217,26 +217,27 @@ python -m backend.main
 - ✅ Type checking (mypy, vue-tsc)
 - ✅ Configuration loading
 
-### Pending (Phase 8)
-- ⏳ Unit tests for servo, audio, config
-- ⏳ Integration tests for API and WebSocket
-- ⏳ pytest with asyncio support
-- ⏳ Coverage reports
-- ⏳ GitHub Actions CI
+### Phase 8 - SKIPPED
+- ❌ Unit tests (skipped)
+- ❌ Integration tests (skipped)
+- ❌ pytest with asyncio support (skipped)
+- ❌ Coverage reports (skipped)
+- ❌ GitHub Actions CI (skipped by choice)
 
 ## Deployment Status
 
 ### Completed
 - ✅ Project structure
 - ✅ Development environment
-- ✅ Documentation (README)
+- ✅ Documentation (README, QUICKSTART)
+- ✅ systemd service file (raspi-ruxpin.service)
+- ✅ Deployment script (scripts/deploy.sh)
+- ✅ Service setup script (scripts/setup-service.sh)
+- ✅ Troubleshooting guide (TROUBLESHOOTING.md)
+- ✅ Platform-specific configs (.env.example.mac, .env.example.pi)
 
 ### Pending (Phase 9)
-- ⏳ systemd service file
-- ⏳ Deployment script
-- ⏳ Hardware setup guide
-- ⏳ Troubleshooting guide
-- ⏳ Pi hardware testing
+- ⏳ Pi hardware testing (waiting for workbench access)
 
 ## Next Steps
 
@@ -265,30 +266,27 @@ python -m backend.main
    - Test speak mode TTS
    - Try phrase playback
 
-4. **Phase 8: Testing** (Optional but Recommended)
-   - Write unit tests for core components
-   - Write integration tests for API
-   - Set up CI pipeline
-   - Achieve >80% coverage
+4. **Phase 8: Testing** - SKIPPED
+   - Automated tests not needed for this project
 
-5. **Phase 9: Deployment** (When Ready for Pi)
-   - Create systemd service
-   - Write deployment script
-   - Test on actual hardware
-   - Document hardware setup
+5. **Phase 9: Hardware Testing** (When at Workbench)
+   - Deploy to Raspberry Pi using scripts/deploy.sh
+   - Test on actual hardware (servos, audio, GPIO)
+   - Validate configurations
 
 ## Success Criteria Checklist
 
 - ✅ All code has type hints (Python) or TypeScript types
-- ✅ Backend passes mypy (will check after install)
-- ⏳ Test coverage >80% (Phase 8)
-- ✅ Frontend builds without errors (will check after install)
+- ✅ Backend passes mypy
+- ❌ Test coverage >80% (skipped)
+- ✅ Frontend builds without errors
 - ✅ Vite dev server with hot reload
 - ✅ WebSocket communication is stable
-- ⏳ Servo control works on Pi (Phase 9)
-- ⏳ Audio playback with mouth sync (Phase 9)
+- ✅ Deployment scripts ready
+- ⏳ Servo control works on Pi (waiting for hardware access)
+- ⏳ Audio playback with mouth sync (waiting for hardware access)
 - ✅ Configuration via env vars + YAML
-- ⏳ Deployment to Pi successful (Phase 9)
+- ⏳ Deployment to Pi successful (waiting for hardware access)
 
 ## File Statistics
 
@@ -363,11 +361,9 @@ Successfully completed Phases 1-7 of the modernization plan:
 - ✅ Complete API with WebSocket
 - ✅ Frontend with Vue 3 + TypeScript
 - ✅ All core components and features
+- ✅ Deployment automation (Phase 9)
+- ✅ Comprehensive documentation
 
-Ready for:
-1. Dependency installation
-2. Development testing
-3. Optional: Phase 8 (testing)
-4. Optional: Phase 9 (deployment)
+Phase 8 (automated testing/CI) - SKIPPED by choice
 
-The system is fully functional for Mac development and ready for Pi deployment!
+**Current Status**: Ready for hardware testing when at workbench. All deployment scripts and documentation are complete. The system is fully functional for Mac development and ready for Pi deployment!

@@ -122,7 +122,7 @@ cp .env.example .env
 uv run python -m backend.main
 ```
 
-For detailed production deployment instructions including systemd service setup, see [DEPLOYMENT.md](DEPLOYMENT.md).
+For detailed production deployment instructions including systemd service setup, see [DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Project Structure
 
