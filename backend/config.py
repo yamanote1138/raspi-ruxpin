@@ -106,6 +106,7 @@ class TTSSettings(BaseSettings):
     engine: str = Field(default="espeak", description="TTS engine to use")
     voice: str = Field(default="en+m3", description="Voice to use for TTS")
     speed: int = Field(default=125, ge=80, le=500, description="Speaking speed (words per minute)")
+    pitch: int = Field(default=50, ge=0, le=99, description="Voice pitch (0-99)")
     output_dir: Path = Field(
         default=Path("sounds/tts"), description="Directory for generated TTS files"
     )

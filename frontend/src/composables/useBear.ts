@@ -2,7 +2,7 @@
  * Bear state management composable
  */
 
-import { ref, computed, onMounted, type Ref, type ComputedRef } from 'vue'
+import { ref, computed, watch, onMounted, type Ref, type ComputedRef } from 'vue'
 import { useWebSocket } from './useWebSocket'
 import { State, Mode, type BearState } from '@/types/bear'
 import type {
@@ -46,9 +46,11 @@ export function useBear(): BearComposable {
   const bearState = ref<BearState>({
     eyes: State.UNKNOWN,
     mouth: State.UNKNOWN,
+    eyes_position: 0,
+    mouth_position: 0,
     is_busy: false,
     volume: 100,
-    blink_enabled: true,
+    blink_enabled: false,
   })
 
   // UI state
@@ -59,10 +61,22 @@ export function useBear(): BearComposable {
   // Computed properties
   const isBusy = computed(() => bearState.value.is_busy)
 
+  /**
+   * Map position percentage to nearest of 5 discrete states
+   */
+  const getPositionLabel = (position: number): number => {
+    // Map to nearest: 0, 25, 50, 75, 100
+    if (position <= 12) return 0
+    if (position <= 37) return 25
+    if (position <= 62) return 50
+    if (position <= 87) return 75
+    return 100
+  }
+
   const bearImage = computed(() => {
     const eyes = bearState.value.eyes === State.OPEN ? 'eo' : 'ec'
-    const mouth = bearState.value.mouth === State.OPEN ? 'mo' : 'mc'
-    return `/img/teddy_${eyes}${mouth}.png`
+    const mouthPos = getPositionLabel(bearState.value.mouth_position)
+    return `/img/teddy_${eyes}m${mouthPos}.png`
   })
 
   /**
@@ -183,6 +197,8 @@ export function useBear(): BearComposable {
         bearState.value = {
           eyes: stateMsg.data.eyes,
           mouth: stateMsg.data.mouth,
+          eyes_position: stateMsg.data.eyes_position ?? 0,
+          mouth_position: stateMsg.data.mouth_position ?? 0,
           is_busy: stateMsg.data.is_busy,
           volume: stateMsg.data.volume,
           blink_enabled: stateMsg.data.blink_enabled ?? true,
@@ -213,22 +229,46 @@ export function useBear(): BearComposable {
   }
 
   /**
+   * Preload all bear images to prevent flickering
+   */
+  const preloadImages = () => {
+    const eyeStates = ['eo', 'ec']
+    const mouthPositions = [0, 25, 50, 75, 100]
+
+    eyeStates.forEach(eyes => {
+      mouthPositions.forEach(mouth => {
+        const img = new Image()
+        img.src = `/img/teddy_${eyes}m${mouth}.png`
+      })
+    })
+
+    console.log('Preloaded 5-state bear images')
+  }
+
+  /**
    * Initialize WebSocket connection and event handlers
    */
   onMounted(() => {
+    // Preload all bear images immediately
+    preloadImages()
+
     // Connect to WebSocket
     ws.connect()
 
     // Register message handler
     ws.on('message', handleMessage)
 
-    // Fetch phrases once connected
-    const checkConnection = setInterval(() => {
-      if (ws.isConnected.value) {
-        fetchPhrases()
-        clearInterval(checkConnection)
-      }
-    }, 100)
+    // Watch connection state and fetch phrases when connected
+    watch(
+      () => ws.isConnected.value,
+      (connected) => {
+        if (connected) {
+          console.log('WebSocket connected, fetching phrases...')
+          fetchPhrases()
+        }
+      },
+      { immediate: true }
+    )
   })
 
   return {

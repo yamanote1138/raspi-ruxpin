@@ -26,6 +26,7 @@ export function useWebSocket(url: string = '/ws'): WebSocketComposable {
   let reconnectAttempts = 0
   const maxReconnectDelay = 5000
   const baseReconnectDelay = 1000
+  let shouldReconnect = true // Track if we should auto-reconnect
 
   /**
    * Connect to WebSocket server
@@ -34,6 +35,9 @@ export function useWebSocket(url: string = '/ws'): WebSocketComposable {
     if (socket.value && socket.value.readyState !== WebSocket.CLOSED) {
       return
     }
+
+    // Enable auto-reconnect
+    shouldReconnect = true
 
     // Build WebSocket URL
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
@@ -73,8 +77,8 @@ export function useWebSocket(url: string = '/ws'): WebSocketComposable {
       isConnected.value = false
       socket.value = null
 
-      // Attempt to reconnect with exponential backoff
-      if (!event.wasClean) {
+      // Always attempt to reconnect unless explicitly disconnected
+      if (shouldReconnect) {
         const delay = Math.min(
           baseReconnectDelay * Math.pow(2, reconnectAttempts),
           maxReconnectDelay
@@ -98,6 +102,9 @@ export function useWebSocket(url: string = '/ws'): WebSocketComposable {
    * Disconnect from WebSocket server
    */
   const disconnect = () => {
+    // Disable auto-reconnect
+    shouldReconnect = false
+
     if (reconnectTimeout) {
       clearTimeout(reconnectTimeout)
       reconnectTimeout = null

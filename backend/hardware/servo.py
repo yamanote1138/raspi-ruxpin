@@ -64,6 +64,7 @@ class Servo:
         self.default_duration = default_duration
         self.gpio_manager = gpio_manager
         self.state = State.UNKNOWN
+        self.position_percent = 0  # 0 = fully closed, 100 = fully open
         self.pwm = None
         self._lock = asyncio.Lock()
 
@@ -136,15 +137,31 @@ class Servo:
                 await self._set_direction(direction)
                 await asyncio.to_thread(self.pwm.start, 50)
 
-                # Run for specified duration
-                await asyncio.sleep(duration)
+                # Animate position during movement
+                start_position = self.position_percent
+                target_position = 100 if direction == Direction.OPENING else 0
+                start_time = asyncio.get_event_loop().time()
+
+                # Update position in small increments during movement
+                update_interval = 0.05  # 20Hz updates
+                while True:
+                    elapsed = asyncio.get_event_loop().time() - start_time
+                    if elapsed >= duration:
+                        self.position_percent = target_position
+                        break
+
+                    # Linear interpolation of position
+                    progress = elapsed / duration
+                    self.position_percent = int(start_position + (target_position - start_position) * progress)
+
+                    await asyncio.sleep(update_interval)
 
                 # Stop and brake
                 await asyncio.to_thread(self.pwm.stop)
                 await self._set_direction(Direction.BRAKE)
 
                 logger.debug(
-                    f"Servo '{self.name}' moved {direction.value} for {duration}s"
+                    f"Servo '{self.name}' moved {direction.value} for {duration}s to {self.position_percent}%"
                 )
             except Exception as e:
                 # Ensure we brake on error
@@ -168,7 +185,8 @@ class Servo:
         duration = duration or self.default_duration
         await self._move(Direction.OPENING, duration)
         self.state = State.OPEN
-        logger.info(f"Servo '{self.name}' opened")
+        self.position_percent = 100
+        logger.info(f"Servo '{self.name}' opened to 100%")
 
     async def close(self, duration: float | None = None) -> None:
         """Close the servo (move to closed position).
@@ -182,7 +200,8 @@ class Servo:
         duration = duration or self.default_duration
         await self._move(Direction.CLOSING, duration)
         self.state = State.CLOSED
-        logger.info(f"Servo '{self.name}' closed")
+        self.position_percent = 0
+        logger.info(f"Servo '{self.name}' closed to 0%")
 
     async def set_position(self, position: State, duration: float | None = None) -> None:
         """Set servo to specific position.
@@ -200,6 +219,96 @@ class Servo:
             await self.close(duration)
         else:
             raise ServoError(f"Invalid position: {position}")
+
+    async def set_position_percent(self, target_percent: int, duration: float = 0.05) -> None:
+        """Set servo to specific percentage position (0-100).
+
+        Args:
+            target_percent: Target position as percentage (0=closed, 100=open)
+            duration: Movement duration in seconds (default 0.05 for quick response)
+
+        Raises:
+            ServoError: If position is invalid or movement fails
+        """
+        if not (0 <= target_percent <= 100):
+            raise ServoError(f"Position must be between 0 and 100, got {target_percent}")
+
+        if not self.pwm:
+            raise ServoError(f"Servo '{self.name}' not initialized")
+
+        current = self.position_percent
+
+        # Skip if already close to target (within 8% to reduce jitter)
+        if abs(current - target_percent) < 8:
+            return
+
+        # Determine direction
+        if target_percent > current:
+            direction = Direction.OPENING
+            move_duration = duration * (target_percent - current) / 100
+        else:
+            direction = Direction.CLOSING
+            move_duration = duration * (current - target_percent) / 100
+
+        # Move to target position
+        await self._move_to_percent(direction, target_percent, move_duration)
+
+    async def _move_to_percent(self, direction: Direction, target_percent: int, duration: float) -> None:
+        """Move servo to specific percentage.
+
+        Args:
+            direction: Direction to move
+            target_percent: Target position percentage
+            duration: Movement duration
+        """
+        if duration < 0.01:
+            duration = 0.01  # Minimum duration
+
+        async with self._lock:
+            try:
+                # Set direction and start PWM
+                await self._set_direction(direction)
+                await asyncio.to_thread(self.pwm.start, 50)
+
+                # Animate position during movement
+                start_position = self.position_percent
+                start_time = asyncio.get_event_loop().time()
+
+                # Update position in small increments
+                update_interval = 0.05  # 20Hz updates for smooth animation
+                while True:
+                    elapsed = asyncio.get_event_loop().time() - start_time
+                    if elapsed >= duration:
+                        self.position_percent = target_percent
+                        break
+
+                    # Linear interpolation
+                    progress = elapsed / duration
+                    self.position_percent = int(start_position + (target_percent - start_position) * progress)
+
+                    await asyncio.sleep(update_interval)
+
+                # Stop and brake
+                await asyncio.to_thread(self.pwm.stop)
+                await self._set_direction(Direction.BRAKE)
+
+                # Update state
+                if target_percent == 0:
+                    self.state = State.CLOSED
+                elif target_percent == 100:
+                    self.state = State.OPEN
+                else:
+                    self.state = State.UNKNOWN
+
+            except Exception as e:
+                # Ensure we brake on error
+                if self.pwm:
+                    try:
+                        await asyncio.to_thread(self.pwm.stop)
+                        await self._set_direction(Direction.BRAKE)
+                    except Exception:
+                        pass
+                raise ServoError(f"Servo '{self.name}' movement failed: {e}") from e
 
     async def cleanup(self) -> None:
         """Clean up servo resources.
@@ -219,5 +328,6 @@ class Servo:
         """String representation."""
         return (
             f"Servo(name={self.name!r}, state={self.state.value}, "
+            f"position={self.position_percent}%, "
             f"speed={self.speed}Hz, duration={self.default_duration}s)"
         )

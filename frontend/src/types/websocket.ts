@@ -54,8 +54,11 @@ export interface BearStateMessage {
   data: {
     eyes: State
     mouth: State
+    eyes_position: number
+    mouth_position: number
     is_busy: boolean
     volume: number
+    blink_enabled: boolean
   }
 }
 

@@ -55,6 +55,7 @@ frontend/.vite/
 
 # TTS generated files
 sounds/tts/*.wav
+sounds/tts/*.aiff
 sounds/espeak.wav
 speech.wav
 
@@ -68,3 +69,13 @@ htmlcov/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Piper TTS (download on Pi, not needed for Mac dev)
+models/
+piper/
+*.tar.gz
+
+# Test files
+test.wav
+test2.wav
+test*.wav

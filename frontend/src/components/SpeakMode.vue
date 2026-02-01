@@ -35,9 +35,10 @@
                 placeholder="Type something for the bear to say..."
                 :disabled="isBusy"
                 maxlength="500"
+                @keydown.enter="handleKeyDown"
               ></textarea>
               <div class="form-text">
-                {{ ttsText.length }} / 500 characters
+                {{ ttsText.length }} / 500 characters (Shift+Enter for new line)
               </div>
             </div>
 
@@ -178,6 +179,15 @@ const quickPhrases = computed(() => {
 const handleVolumeChange = (event: Event) => {
   const target = event.target as HTMLInputElement
   emit('set-volume', parseInt(target.value))
+}
+
+const handleKeyDown = (event: KeyboardEvent) => {
+  // If Enter is pressed without Shift, submit the form
+  if (!event.shiftKey) {
+    event.preventDefault()
+    handleSpeak()
+  }
+  // If Shift+Enter, allow default behavior (new line)
 }
 
 const handleSpeak = async () => {

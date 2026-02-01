@@ -90,7 +90,7 @@ class BearService:
         # State
         self.phrases: dict[str, str] = {}
         self.is_busy = False
-        self.blink_enabled = True  # Eye blinking enabled by default
+        self.blink_enabled = False  # Eye blinking disabled by default
         self._talk_task: asyncio.Task[None] | None = None
         self._blink_task: asyncio.Task[None] | None = None
         self._shutdown = False
@@ -177,26 +177,24 @@ class BearService:
             logger.error(f"Failed to load phrases: {e}")
 
     async def _talk_monitor(self) -> None:
-        """Monitor audio amplitude and sync mouth movement (50Hz).
+        """Monitor audio amplitude and sync mouth movement proportionally.
 
-        This task runs continuously, checking audio amplitude at 50Hz
-        and opening/closing the mouth based on the threshold.
+        This task runs continuously, checking audio amplitude and setting
+        mouth position proportionally to the sound level for natural animation.
         """
         logger.info("Talk monitor started")
 
         try:
             while not self._shutdown:
                 if self.is_busy:
-                    # Check if mouth should be open based on amplitude
-                    should_open = self.audio_player.is_mouth_open_threshold()
+                    # Get proportional mouth position based on amplitude
+                    target_position = self.audio_player.get_mouth_position()
 
-                    if should_open and self.mouth.state != State.OPEN:
-                        await self.mouth.open()
-                    elif not should_open and self.mouth.state != State.CLOSED:
-                        await self.mouth.close()
+                    # Update mouth position (75ms movement for smooth animation)
+                    await self.mouth.set_position_percent(target_position, duration=0.075)
 
-                # 50Hz update rate
-                await asyncio.sleep(0.02)
+                # 25Hz update rate (slower for smoother animation)
+                await asyncio.sleep(0.04)
         except asyncio.CancelledError:
             logger.info("Talk monitor cancelled")
             raise
@@ -251,11 +249,15 @@ class BearService:
             raise RaspiRuxpinError("Bear is busy")
 
         try:
+            # Use slower duration for manual movements to show smooth animation
+            # 0.5s gives 10 position updates at 20Hz, creating visible animation
+            manual_duration = 0.5
+
             if eyes_position is not None:
-                await self.eyes.set_position(eyes_position)
+                await self.eyes.set_position(eyes_position, manual_duration)
 
             if mouth_position is not None:
-                await self.mouth.set_position(mouth_position)
+                await self.mouth.set_position(mouth_position, manual_duration)
 
             logger.info(f"Positions updated: eyes={eyes_position}, mouth={mouth_position}")
 
@@ -368,6 +370,8 @@ class BearService:
         return {
             "eyes": self.eyes.state.value,
             "mouth": self.mouth.state.value,
+            "eyes_position": self.eyes.position_percent,
+            "mouth_position": self.mouth.position_percent,
             "is_busy": self.is_busy,
             "volume": self.audio_player.volume,
             "blink_enabled": self.blink_enabled,

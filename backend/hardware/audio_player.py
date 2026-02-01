@@ -16,6 +16,13 @@ import wave
 
 from backend.core.exceptions import AudioError
 
+# Optional piper import (only available on Pi with [hardware] dependencies)
+try:
+    from piper import PiperVoice
+    PIPER_AVAILABLE = True
+except ImportError:
+    PIPER_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -47,6 +54,7 @@ class AudioPlayer:
         tts_engine: str = "espeak",
         tts_voice: str = "en+m3",
         tts_speed: int = 125,
+        tts_pitch: int = 50,
         start_volume: int = 100,
     ) -> None:
         """Initialize audio player.
@@ -59,6 +67,7 @@ class AudioPlayer:
             tts_engine: TTS engine name
             tts_voice: TTS voice
             tts_speed: TTS speaking speed
+            tts_pitch: TTS voice pitch (0-99)
             start_volume: Initial volume level
         """
         self.sample_rate = sample_rate
@@ -68,6 +77,7 @@ class AudioPlayer:
         self.tts_engine = tts_engine
         self.tts_voice = tts_voice
         self.tts_speed = tts_speed
+        self.tts_pitch = tts_pitch
 
         self._current_amplitude = 0
         self._amplitude_lock = asyncio.Lock()
@@ -143,6 +153,24 @@ class AudioPlayer:
         Raises:
             AudioError: If TTS generation fails
         """
+        if self.tts_engine == "piper":
+            return await self._generate_tts_piper(text, output_file)
+        else:
+            return await self._generate_tts_espeak(text, output_file)
+
+    async def _generate_tts_piper(self, text: str, output_file: Path | None = None) -> Path:
+        """Generate TTS using Piper CLI (neural TTS).
+
+        Args:
+            text: Text to synthesize
+            output_file: Optional output file path
+
+        Returns:
+            Path to generated audio file
+
+        Raises:
+            AudioError: If TTS generation fails
+        """
         if not output_file:
             # Generate unique filename
             safe_text = "".join(c if c.isalnum() else "_" for c in text[:30])
@@ -152,29 +180,141 @@ class AudioPlayer:
         output_file.parent.mkdir(parents=True, exist_ok=True)
 
         try:
-            # Generate TTS using espeak
+            # Piper model path (tts_voice contains the model path)
+            model_path = Path(self.tts_voice)
+            if not model_path.exists():
+                raise AudioError(f"Piper model not found: {model_path}")
+
+            # Find piper binary (look in models/piper/ or system PATH)
+            piper_bin = None
+            piper_paths = [
+                Path("models/piper/piper"),
+                Path("/usr/local/bin/piper"),
+                Path("/opt/homebrew/bin/piper"),
+            ]
+            for path in piper_paths:
+                if path.exists():
+                    piper_bin = path
+                    break
+
+            if not piper_bin:
+                raise AudioError("Piper binary not found. Download from: https://github.com/rhasspy/piper/releases")
+
+            # Call piper CLI as subprocess
             process = await asyncio.create_subprocess_exec(
-                self.tts_engine,
-                "-v",
-                self.tts_voice,
-                "-s",
-                str(self.tts_speed),
-                "-w",
-                str(output_file),
-                text,
-                stdout=asyncio.subprocess.DEVNULL,
+                str(piper_bin),
+                "--model", str(model_path),
+                "--output_file", str(output_file),
+                stdin=asyncio.subprocess.PIPE,
+                stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
 
-            _, stderr = await process.communicate()
+            # Send text to stdin
+            stdout, stderr = await process.communicate(input=text.encode())
 
             if process.returncode != 0:
-                raise AudioError(f"espeak failed: {stderr.decode()}")
+                error_msg = stderr.decode() if stderr else "Unknown error"
+                raise AudioError(f"Piper CLI failed: {error_msg}")
+
+            logger.info(f"Generated TTS with Piper: {output_file}")
+            return output_file
+        except FileNotFoundError:
+            raise AudioError("Piper binary not found") from None
+        except Exception as e:
+            raise AudioError(f"Piper TTS generation failed: {e}") from e
+
+    async def _generate_tts_espeak(self, text: str, output_file: Path | None = None) -> Path:
+        """Generate TTS using espeak (Linux) or say (macOS).
+
+        Args:
+            text: Text to synthesize
+            output_file: Optional output file path
+
+        Returns:
+            Path to generated audio file
+
+        Raises:
+            AudioError: If TTS generation fails
+        """
+        if not output_file:
+            # Generate unique filename
+            safe_text = "".join(c if c.isalnum() else "_" for c in text[:30])
+            output_file = self.tts_output_dir / f"{safe_text}.wav"
+
+        # Ensure output directory exists
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+
+        try:
+            if self._platform == "Darwin":
+                # macOS: Use built-in 'say' command with high-quality voices
+                # Available voices: Fred (male), Samantha (female), Alex (default male)
+                voice = "Fred"  # Natural male voice
+
+                # Generate TTS using macOS 'say'
+                # Output as AIFF first (say's native format)
+                aiff_file = output_file.with_suffix('.aiff')
+
+                process = await asyncio.create_subprocess_exec(
+                    "say",
+                    "-v", voice,
+                    "-o", str(aiff_file),
+                    text,
+                    stdout=asyncio.subprocess.DEVNULL,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+
+                _, stderr = await process.communicate()
+
+                if process.returncode != 0:
+                    raise AudioError(f"say failed: {stderr.decode()}")
+
+                # Convert AIFF to 16kHz WAV using afconvert (built-in macOS tool)
+                convert_process = await asyncio.create_subprocess_exec(
+                    "afconvert",
+                    "-f", "WAVE",
+                    "-d", "LEI16",  # 16-bit signed int
+                    "-r", "16000",  # Resample to 16kHz
+                    str(aiff_file),
+                    str(output_file),
+                    stdout=asyncio.subprocess.DEVNULL,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                _, convert_stderr = await convert_process.communicate()
+
+                if convert_process.returncode != 0:
+                    raise AudioError(f"Audio conversion failed: {convert_stderr.decode()}")
+
+                # Clean up temporary AIFF file
+                aiff_file.unlink(missing_ok=True)
+
+            else:
+                # Linux: Use espeak
+                process = await asyncio.create_subprocess_exec(
+                    self.tts_engine,
+                    "-v",
+                    self.tts_voice,
+                    "-s",
+                    str(self.tts_speed),
+                    "-p",
+                    str(self.tts_pitch),
+                    "-w",
+                    str(output_file),
+                    text,
+                    stdout=asyncio.subprocess.DEVNULL,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+
+                _, stderr = await process.communicate()
+
+                if process.returncode != 0:
+                    raise AudioError(f"espeak failed: {stderr.decode()}")
 
             logger.info(f"Generated TTS: {output_file}")
             return output_file
-        except FileNotFoundError:
-            raise AudioError(f"TTS engine '{self.tts_engine}' not found") from None
+        except FileNotFoundError as e:
+            engine = "say" if self._platform == "Darwin" else self.tts_engine
+            raise AudioError(f"TTS engine '{engine}' not found") from None
         except Exception as e:
             raise AudioError(f"TTS generation failed: {e}") from e
 
@@ -343,3 +483,23 @@ class AudioPlayer:
             True if amplitude is above threshold
         """
         return self._current_amplitude > self.amplitude_threshold
+
+    def get_mouth_position(self, max_amplitude: int = 3000) -> int:
+        """Get mouth position as percentage based on current amplitude.
+
+        Args:
+            max_amplitude: Maximum expected amplitude value (default 3000)
+
+        Returns:
+            Mouth position as percentage (0-100)
+        """
+        if self._current_amplitude < 100:
+            return 0
+
+        # Map amplitude to 0-100% with some scaling
+        # Use square root for more natural response (quieter sounds open mouth less)
+        normalized = min(self._current_amplitude / max_amplitude, 1.0)
+        scaled = normalized ** 0.5  # Square root for better curve
+        position = int(scaled * 100)
+
+        return min(max(position, 0), 100)

@@ -7,10 +7,10 @@
         <!-- Bear Image -->
         <div class="bear-container position-relative d-inline-block">
           <img
+            :key="bearImage"
             :src="bearImage"
             alt="Bear"
             class="bear-image img-fluid"
-            :class="{ 'opacity-50': isBusy }"
             usemap="#bearmap"
           />
 
@@ -31,13 +31,6 @@
               style="cursor: pointer"
             />
           </map>
-
-          <!-- Busy overlay -->
-          <div v-if="isBusy" class="busy-overlay">
-            <div class="spinner-border text-light" role="status">
-              <span class="visually-hidden">Working...</span>
-            </div>
-          </div>
         </div>
 
         <!-- Status Badges -->
@@ -105,20 +98,14 @@ const mouthBadgeClass = computed(() =>
 }
 
 .bear-image {
-  transition: opacity 0.3s ease;
-}
-
-.busy-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 0.25rem;
+  transition: none !important; /* Disable ALL transitions */
+  animation: none !important; /* Disable ALL animations */
+  image-rendering: pixelated; /* Prevent anti-aliasing blur */
+  backface-visibility: hidden; /* Prevent rendering artifacts */
+  transform: translateZ(0); /* Force GPU acceleration */
+  -webkit-font-smoothing: antialiased; /* Better rendering on webkit */
+  opacity: 1 !important; /* Force full opacity always */
+  filter: none !important; /* Remove any filters */
 }
 
 area {
