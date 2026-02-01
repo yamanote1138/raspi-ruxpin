@@ -22,7 +22,25 @@ UPDATE_MODE=false
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
+
+# Helper functions
+log_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+log_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+log_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
 
 # Parse arguments
 if [[ "$1" == "--update" ]]; then
@@ -61,13 +79,14 @@ else
 
     # Check if .env exists
     if [[ -f .env ]]; then
-        echo -e "${YELLOW}.env file already exists. Skipping...${NC}"
+        log_warning ".env file already exists. Skipping..."
     else
-        echo "Creating .env from example..."
-        cp .env.example .env
-        echo -e "${YELLOW}IMPORTANT: Edit .env and set HARDWARE__USE_MOCK_GPIO=false${NC}"
-        echo -e "${YELLOW}           and configure your GPIO pins.${NC}"
-        read -p "Press Enter to edit .env now, or Ctrl+C to exit and edit later..."
+        log_info "Creating .env from Raspberry Pi template..."
+        cp .env.example.pi .env
+        log_success ".env file created"
+        log_warning "IMPORTANT: Verify GPIO pin numbers match your wiring!"
+        echo ""
+        read -p "Press Enter to review .env now, or Ctrl+C to skip..."
         nano .env
     fi
 
@@ -127,6 +146,30 @@ npm run build
 
 cd ..
 
+# Check GPIO permissions
+echo ""
+log_info "Checking GPIO permissions..."
+if groups | grep -q gpio; then
+    log_success "User is in gpio group"
+else
+    log_warning "User is not in gpio group"
+    log_info "Adding user to gpio group..."
+    sudo usermod -a -G gpio $USER
+    log_success "User added to gpio group"
+    log_warning "You need to log out and back in for group changes to take effect"
+fi
+
+# Test audio
+echo ""
+log_info "Testing audio setup..."
+if aplay -l >/dev/null 2>&1; then
+    log_success "Audio devices found"
+    echo "Available audio devices:"
+    aplay -l | grep "card"
+else
+    log_warning "No audio devices found or aplay failed"
+fi
+
 # Setup systemd service
 if [ "$UPDATE_MODE" = false ]; then
     echo ""
@@ -163,26 +206,38 @@ echo "Checking service status..."
 sudo systemctl status raspi-ruxpin --no-pager || true
 
 echo ""
-echo -e "${GREEN}=== Deployment Complete! ===${NC}"
+echo "======================================"
+echo "  Deployment Complete!"
+echo "======================================"
 echo ""
-echo "Service status:"
-echo "  sudo systemctl status raspi-ruxpin"
+log_success "Raspi Ruxpin service is running!"
+echo ""
+echo "Service commands:"
+echo "  Status:  ${GREEN}sudo systemctl status raspi-ruxpin${NC}"
+echo "  Stop:    ${GREEN}sudo systemctl stop raspi-ruxpin${NC}"
+echo "  Start:   ${GREEN}sudo systemctl start raspi-ruxpin${NC}"
+echo "  Restart: ${GREEN}sudo systemctl restart raspi-ruxpin${NC}"
 echo ""
 echo "View logs:"
-echo "  sudo journalctl -u raspi-ruxpin -f"
+echo "  ${GREEN}sudo journalctl -u raspi-ruxpin -f${NC}"
 echo ""
 echo "Access the web interface:"
-echo "  http://$(hostname -I | awk '{print $1}'):8080"
+echo "  ${BLUE}http://$(hostname -I | awk '{print $1}'):8080${NC}"
 echo ""
 
 if [ "$UPDATE_MODE" = false ]; then
-    echo -e "${YELLOW}Note: If you see errors, check your .env configuration:${NC}"
-    echo "  nano .env"
+    log_warning "Configuration notes:"
+    echo "  - GPIO pin numbers: Edit .env to match your wiring"
+    echo "  - Add phrases: config/phrases.json"
+    echo "  - Add sounds: sounds/ directory"
     echo ""
-    echo "Make sure to set:"
-    echo "  HARDWARE__USE_MOCK_GPIO=false"
-    echo "  (and configure your GPIO pins)"
-    echo ""
+
+    # Check if group change requires logout
+    if ! groups | grep -q gpio; then
+        log_warning "Group changes detected - please log out and back in"
+    fi
 fi
 
-echo "Enjoy your Raspi Ruxpin!"
+log_success "Deployment script finished!"
+echo ""
+echo "Enjoy your Raspi Ruxpin! 🐻"

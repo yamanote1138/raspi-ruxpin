@@ -36,25 +36,43 @@ This will:
 
 ### Manual Setup
 
+**On macOS:**
 ```bash
 # 1. Create virtual environment
 uv venv
 
-# 2. Create .env file
-cp .env.example .env
+# 2. Create .env file from Mac template
+cp .env.example.mac .env
 
-# 3. For Mac development, add this to .env:
-echo "HARDWARE__USE_MOCK_GPIO=true" >> .env
-
-# 4. Install Python dependencies
+# 3. Install Python dependencies
 uv pip install -e ".[dev]"
 
-# 5. Install frontend dependencies
+# 4. Install frontend dependencies
 cd frontend
 npm install
 cd ..
 
-# 6. Create TTS directory
+# 5. Create TTS directory
+mkdir -p sounds/tts
+```
+
+**On Raspberry Pi:**
+```bash
+# 1. Create virtual environment
+uv venv
+
+# 2. Create .env file from Pi template
+cp .env.example.pi .env
+
+# 3. Install Python dependencies with hardware support
+uv pip install -e ".[hardware]"
+
+# 4. Install frontend dependencies
+cd frontend
+npm install
+cd ..
+
+# 5. Create TTS directory
 mkdir -p sounds/tts
 ```
 
@@ -164,12 +182,10 @@ When running on Pi with real GPIO:
    sudo apt-get install espeak alsa-utils python3-dev
    ```
 
-3. Configure GPIO pins in `.env`:
+3. Create Pi-specific `.env` file:
    ```bash
-   HARDWARE__USE_MOCK_GPIO=false
-   HARDWARE__EYES_PWM=21
-   HARDWARE__MOUTH_PWM=25
-   # ... etc
+   cp .env.example.pi .env
+   # Verify pin numbers match your wiring!
    ```
 
 4. Wire up servos according to hardware guide
@@ -265,7 +281,7 @@ Add breakpoints in VS Code or use print statements. Console logs appear in:
 ## Next Steps
 
 1. **Customize Configuration**
-   - Edit `.env` for your setup
+   - Edit `.env` for your setup (use `.env.example.mac` or `.env.example.pi` as starting point)
    - Add custom phrases to `config/phrases.json`
    - Add custom sounds to `sounds/` directory
 

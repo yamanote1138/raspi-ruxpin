@@ -1,18 +1,23 @@
 [Unit]
 Description=Raspi Ruxpin Animatronic Control System
 Documentation=https://github.com/yourusername/raspi-ruxpin
-After=network-online.target
+After=network-online.target sound.target
 Wants=network-online.target
 
 [Service]
 Type=simple
 User=pi
 Group=pi
+# Grant access to GPIO and audio devices
+SupplementaryGroups=gpio audio
+
+# Project directory
 WorkingDirectory=/home/pi/raspi-ruxpin
 
-# Virtual environment Python binary
+# Virtual environment configuration
 Environment="PATH=/home/pi/raspi-ruxpin/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 Environment="VIRTUAL_ENV=/home/pi/raspi-ruxpin/.venv"
+Environment="PYTHONUNBUFFERED=1"
 
 # Load environment variables from .env file
 EnvironmentFile=/home/pi/raspi-ruxpin/.env
@@ -20,13 +25,23 @@ EnvironmentFile=/home/pi/raspi-ruxpin/.env
 # Start the application
 ExecStart=/home/pi/raspi-ruxpin/.venv/bin/python -m backend.main
 
-# Restart policy
+# Graceful shutdown
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# Restart policy - always restart on failure
 Restart=always
 RestartSec=10
+StartLimitBurst=5
+StartLimitIntervalSec=600
 
-# Security hardening (optional, may need adjustment based on your setup)
-NoNewPrivileges=true
+# Security hardening
+# Note: Removed NoNewPrivileges as it may interfere with GPIO access
 PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/pi/raspi-ruxpin/sounds/tts
 
 # Logging
 StandardOutput=journal
