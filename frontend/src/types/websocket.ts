@@ -11,10 +11,12 @@ export enum MessageType {
   SET_VOLUME = 'set_volume',
   FETCH_PHRASES = 'fetch_phrases',
   SET_BLINK_ENABLED = 'set_blink_enabled',
+  SET_LOG_LEVEL = 'set_log_level',
   BEAR_STATE = 'bear_state',
   PHRASES = 'phrases',
   ERROR = 'error',
   SUCCESS = 'success',
+  LOG = 'log',
 }
 
 // Outgoing messages
@@ -48,7 +50,22 @@ export interface SetBlinkEnabledMessage {
   enabled: boolean
 }
 
+export interface SetLogLevelMessage {
+  type: MessageType.SET_LOG_LEVEL
+  level: 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL'
+}
+
 // Incoming messages
+export interface LogMessage {
+  timestamp: number
+  level: string
+  logger: string
+  message: string
+  module: string
+  function: string
+  line: number
+  exception?: string
+}
 export interface BearStateMessage {
   type: MessageType.BEAR_STATE
   data: {
@@ -77,10 +94,16 @@ export interface SuccessMessage {
   message: string
 }
 
+export interface LogMessageResponse {
+  type: MessageType.LOG
+  data: LogMessage
+}
+
 export type WebSocketMessage =
   | BearStateMessage
   | PhrasesMessage
   | ErrorMessage
   | SuccessMessage
+  | LogMessageResponse
 
 export type Phrases = Record<string, string>

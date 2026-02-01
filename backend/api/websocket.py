@@ -6,12 +6,14 @@ handling bidirectional communication between the frontend and backend.
 
 import asyncio
 import logging
+import queue
 from typing import Any, Literal
 
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field, ValidationError
 
 from backend.core.enums import State
+from backend.logging_config import log_queue, set_log_level
 from backend.services.bear_service import BearService
 
 logger = logging.getLogger(__name__)
@@ -60,6 +62,15 @@ class SetBlinkEnabledMessage(BaseModel):
     enabled: bool = Field(..., description="Enable or disable blinking")
 
 
+class SetLogLevelMessage(BaseModel):
+    """Message to set logging level."""
+
+    type: Literal["set_log_level"] = "set_log_level"
+    level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(
+        ..., description="Logging level"
+    )
+
+
 # Response models
 class BearStateResponse(BaseModel):
     """Bear state response."""
@@ -87,6 +98,13 @@ class SuccessResponse(BaseModel):
 
     type: Literal["success"] = "success"
     message: str
+
+
+class LogMessageResponse(BaseModel):
+    """Log message response."""
+
+    type: Literal["log"] = "log"
+    data: dict[str, Any]  # Contains: timestamp, level, logger, message, module, function, line
 
 
 class ConnectionManager:
@@ -119,8 +137,11 @@ class ConnectionManager:
         Args:
             websocket: WebSocket connection to remove
         """
-        self.active_connections.remove(websocket)
-        logger.info(f"WebSocket disconnected. Total connections: {len(self.active_connections)}")
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+            logger.info(f"WebSocket disconnected. Total connections: {len(self.active_connections)}")
+        else:
+            logger.debug("Attempted to disconnect websocket that was not in active connections")
 
     async def send_personal(self, message: dict[str, Any], websocket: WebSocket) -> None:
         """Send a message to a specific client.
@@ -157,8 +178,9 @@ class ConnectionManager:
 # Global connection manager
 manager = ConnectionManager()
 
-# State broadcast task
+# Background tasks
 _broadcast_task: asyncio.Task[None] | None = None
+_log_stream_task: asyncio.Task[None] | None = None
 
 
 async def state_broadcast_loop(bear_service: BearService) -> None:
@@ -179,6 +201,31 @@ async def state_broadcast_loop(bear_service: BearService) -> None:
         raise
     except Exception as e:
         logger.error(f"State broadcast loop error: {e}")
+
+
+async def log_stream_loop() -> None:
+    """Stream log messages to all connected clients.
+
+    This continuously monitors the log queue and broadcasts new log entries.
+    """
+    try:
+        while True:
+            if manager.active_connections:
+                try:
+                    # Get log entry from queue (non-blocking)
+                    log_entry = log_queue.get_nowait()
+                    response = LogMessageResponse(data=log_entry)
+                    await manager.broadcast(response.model_dump())
+                except queue.Empty:
+                    # No logs available, wait a bit
+                    await asyncio.sleep(0.05)
+            else:
+                await asyncio.sleep(0.1)
+    except asyncio.CancelledError:
+        logger.debug("Log stream loop cancelled")
+        raise
+    except Exception as e:
+        logger.error(f"Log stream loop error: {e}")
 
 
 async def handle_update_bear(
@@ -333,6 +380,26 @@ async def handle_set_blink_enabled(
         await manager.send_personal(error.model_dump(), websocket)
 
 
+async def handle_set_log_level(
+    message: SetLogLevelMessage, websocket: WebSocket
+) -> None:
+    """Handle set_log_level message.
+
+    Args:
+        message: Set log level message
+        websocket: WebSocket connection
+    """
+    try:
+        set_log_level(message.level)
+        logger.info(f"Log level changed to {message.level} via WebSocket")
+
+        success = SuccessResponse(message=f"Log level set to {message.level}")
+        await manager.send_personal(success.model_dump(), websocket)
+    except Exception as e:
+        error = ErrorResponse(message=str(e))
+        await manager.send_personal(error.model_dump(), websocket)
+
+
 async def websocket_endpoint(websocket: WebSocket, bear_service: BearService) -> None:
     """WebSocket endpoint for bear control.
 
@@ -340,14 +407,21 @@ async def websocket_endpoint(websocket: WebSocket, bear_service: BearService) ->
         websocket: WebSocket connection
         bear_service: Bear service instance
     """
-    global _broadcast_task
+    global _broadcast_task, _log_stream_task
 
     await manager.connect(websocket)
+    logger.info(f"WebSocket connected from {websocket.client.host}:{websocket.client.port}")
 
     # Start state broadcast task if this is the first connection
     if len(manager.active_connections) == 1 and (_broadcast_task is None or _broadcast_task.done()):
         _broadcast_task = asyncio.create_task(state_broadcast_loop(bear_service))
         logger.info("Started state broadcast loop")
+
+    # Start log streaming task if this is the first connection
+    if len(manager.active_connections) == 1 and (_log_stream_task is None or _log_stream_task.done()):
+        _log_stream_task = asyncio.create_task(log_stream_loop())
+        logger.info("Started log stream loop")
+        logger.info("Log streaming is now active - you should see this message in the frontend!")
 
     try:
         # Send initial state
@@ -386,6 +460,10 @@ async def websocket_endpoint(websocket: WebSocket, bear_service: BearService) ->
                 msg = SetBlinkEnabledMessage(**data)
                 await handle_set_blink_enabled(msg, bear_service, websocket)
 
+            elif message_type == "set_log_level":
+                msg = SetLogLevelMessage(**data)
+                await handle_set_log_level(msg, websocket)
+
             else:
                 error = ErrorResponse(message=f"Unknown message type: {message_type}")
                 await manager.send_personal(error.model_dump(), websocket)
@@ -399,11 +477,22 @@ async def websocket_endpoint(websocket: WebSocket, bear_service: BearService) ->
         logger.error(f"WebSocket error: {e}")
         manager.disconnect(websocket)
     finally:
-        # Stop broadcast task if this was the last connection
-        if len(manager.active_connections) == 0 and _broadcast_task and not _broadcast_task.done():
-            _broadcast_task.cancel()
-            try:
-                await _broadcast_task
-            except asyncio.CancelledError:
-                pass
-            logger.info("Stopped state broadcast loop")
+        logger.debug(f"WebSocket disconnected from {websocket.client.host}:{websocket.client.port}")
+
+        # Stop broadcast tasks if this was the last connection
+        if len(manager.active_connections) == 0:
+            if _broadcast_task and not _broadcast_task.done():
+                _broadcast_task.cancel()
+                try:
+                    await _broadcast_task
+                except asyncio.CancelledError:
+                    pass
+                logger.info("Stopped state broadcast loop")
+
+            if _log_stream_task and not _log_stream_task.done():
+                _log_stream_task.cancel()
+                try:
+                    await _log_stream_task
+                except asyncio.CancelledError:
+                    pass
+                logger.info("Stopped log stream loop")

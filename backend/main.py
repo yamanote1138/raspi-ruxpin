@@ -19,16 +19,8 @@ from backend.api.websocket import websocket_endpoint
 from backend.config import get_settings
 from backend.hardware.audio_player import AudioPlayer
 from backend.hardware.gpio_manager import GPIOManager
+from backend.logging_config import setup_logging
 from backend.services.bear_service import BearService
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-    ],
-)
 
 logger = logging.getLogger(__name__)
 
@@ -49,15 +41,19 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         None
     """
     # Startup
-    logger.info("Starting Raspi Ruxpin backend...")
-
     try:
-        # Load settings
+        # Load settings first
         settings = get_settings()
         app.state.settings = settings
 
+        # Initialize logging with appropriate level
+        log_level = "DEBUG" if settings.debug else "INFO"
+        setup_logging(level=log_level, enable_websocket_streaming=True)
+
+        logger.info("Starting Raspi Ruxpin backend...")
         logger.info(f"Environment: {settings.environment}")
         logger.info(f"Debug mode: {settings.debug}")
+        logger.debug(f"Log level: {log_level}")
 
         # Initialize GPIO manager
         gpio_manager = GPIOManager(use_mock=settings.hardware.use_mock_gpio)

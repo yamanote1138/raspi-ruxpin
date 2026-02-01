@@ -15,24 +15,28 @@ export interface WebSocketComposable {
   off: (event: string, callback?: (data: any) => void) => void
 }
 
+// Shared WebSocket instance (singleton)
+let sharedSocket: WebSocket | null = null
+let sharedIsConnected = ref(false)
+let sharedEventHandlers = new Map<string, Set<(data: any) => void>>()
+let reconnectTimeout: number | null = null
+let reconnectAttempts = 0
+const maxReconnectDelay = 5000
+const baseReconnectDelay = 1000
+let shouldReconnect = true
+
 /**
- * Composable for managing WebSocket connection
+ * Composable for managing WebSocket connection (singleton pattern)
  */
 export function useWebSocket(url: string = '/ws'): WebSocketComposable {
-  const socket = ref<WebSocket | null>(null)
-  const isConnected = ref(false)
-  const eventHandlers = new Map<string, Set<(data: any) => void>>()
-  let reconnectTimeout: number | null = null
-  let reconnectAttempts = 0
-  const maxReconnectDelay = 5000
-  const baseReconnectDelay = 1000
-  let shouldReconnect = true // Track if we should auto-reconnect
+  const socket = ref<WebSocket | null>(sharedSocket)
+  const isConnected = sharedIsConnected
 
   /**
    * Connect to WebSocket server
    */
   const connect = () => {
-    if (socket.value && socket.value.readyState !== WebSocket.CLOSED) {
+    if (sharedSocket && sharedSocket.readyState !== WebSocket.CLOSED) {
       return
     }
 
@@ -47,24 +51,33 @@ export function useWebSocket(url: string = '/ws'): WebSocketComposable {
     console.log('Connecting to WebSocket:', wsUrl)
 
     // Create WebSocket connection
-    socket.value = new WebSocket(wsUrl)
+    sharedSocket = new WebSocket(wsUrl)
+    socket.value = sharedSocket
 
     // Connection opened
-    socket.value.onopen = () => {
+    sharedSocket.onopen = () => {
       console.log('WebSocket connected')
-      isConnected.value = true
+      sharedIsConnected.value = true
       reconnectAttempts = 0
     }
 
     // Message received
-    socket.value.onmessage = (event) => {
+    sharedSocket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data)
 
-        // Emit to all registered handlers
-        const handlers = eventHandlers.get('message')
-        if (handlers) {
-          handlers.forEach(callback => callback(data))
+        // Emit to generic 'message' handlers
+        const messageHandlers = sharedEventHandlers.get('message')
+        if (messageHandlers) {
+          messageHandlers.forEach(callback => callback(data))
+        }
+
+        // Route to type-specific handlers
+        if (data.type) {
+          const typeHandlers = sharedEventHandlers.get(data.type)
+          if (typeHandlers) {
+            typeHandlers.forEach(callback => callback(data.data || data))
+          }
         }
       } catch (error) {
         console.error('Failed to parse WebSocket message:', error)
@@ -72,9 +85,10 @@ export function useWebSocket(url: string = '/ws'): WebSocketComposable {
     }
 
     // Connection closed
-    socket.value.onclose = (event) => {
+    sharedSocket.onclose = (event) => {
       console.log('WebSocket disconnected:', event.code, event.reason)
-      isConnected.value = false
+      sharedIsConnected.value = false
+      sharedSocket = null
       socket.value = null
 
       // Always attempt to reconnect unless explicitly disconnected
@@ -93,7 +107,7 @@ export function useWebSocket(url: string = '/ws'): WebSocketComposable {
     }
 
     // Connection error
-    socket.value.onerror = (error) => {
+    sharedSocket.onerror = (error) => {
       console.error('WebSocket error:', error)
     }
   }
@@ -110,10 +124,11 @@ export function useWebSocket(url: string = '/ws'): WebSocketComposable {
       reconnectTimeout = null
     }
 
-    if (socket.value) {
-      socket.value.close()
+    if (sharedSocket) {
+      sharedSocket.close()
+      sharedSocket = null
       socket.value = null
-      isConnected.value = false
+      sharedIsConnected.value = false
     }
   }
 
@@ -121,8 +136,8 @@ export function useWebSocket(url: string = '/ws'): WebSocketComposable {
    * Send a message to the server
    */
   const send = (message: any) => {
-    if (socket.value && isConnected.value) {
-      socket.value.send(JSON.stringify(message))
+    if (sharedSocket && sharedIsConnected.value) {
+      sharedSocket.send(JSON.stringify(message))
     } else {
       console.error('Cannot send message: WebSocket not connected')
     }
@@ -132,10 +147,10 @@ export function useWebSocket(url: string = '/ws'): WebSocketComposable {
    * Register an event listener
    */
   const on = (event: string, callback: (data: any) => void) => {
-    if (!eventHandlers.has(event)) {
-      eventHandlers.set(event, new Set())
+    if (!sharedEventHandlers.has(event)) {
+      sharedEventHandlers.set(event, new Set())
     }
-    eventHandlers.get(event)!.add(callback)
+    sharedEventHandlers.get(event)!.add(callback)
   }
 
   /**
@@ -143,19 +158,17 @@ export function useWebSocket(url: string = '/ws'): WebSocketComposable {
    */
   const off = (event: string, callback?: (data: any) => void) => {
     if (callback) {
-      const handlers = eventHandlers.get(event)
+      const handlers = sharedEventHandlers.get(event)
       if (handlers) {
         handlers.delete(callback)
       }
     } else {
-      eventHandlers.delete(event)
+      sharedEventHandlers.delete(event)
     }
   }
 
-  // Auto-disconnect on unmount
-  onUnmounted(() => {
-    disconnect()
-  })
+  // Note: Don't auto-disconnect on unmount for singleton pattern
+  // The connection should persist across component lifecycle
 
   return {
     socket,

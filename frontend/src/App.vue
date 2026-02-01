@@ -69,7 +69,7 @@
       />
 
       <ConfigMode
-        v-else
+        v-else-if="currentMode === Mode.CONFIG"
         :bear-state="bearState"
         @set-blink-enabled="setBlinkEnabled"
       />
