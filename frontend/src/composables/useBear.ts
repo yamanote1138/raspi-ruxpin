@@ -55,7 +55,7 @@ export function useBear(): BearComposable {
 
   // UI state
   const phrases = ref<Phrases>({})
-  const currentMode = ref<Mode>(Mode.PUPPET)
+  const currentMode = ref<Mode>(Mode.CONTROL)
   const errorMessage = ref<string | null>(null)
 
   // Computed properties

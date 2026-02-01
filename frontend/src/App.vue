@@ -6,8 +6,7 @@
         <div class="row align-items-center">
           <div class="col">
             <h1 class="mb-0">
-              <img src="/img/header_t.png" alt="Raspi" height="40" class="me-2" />
-              Raspi Ruxpin
+              <img src="/img/header_t.png" alt="Raspi" height="40" />
             </h1>
           </div>
           <div class="col-auto">
@@ -43,35 +42,28 @@
             :bear-state="bearState"
             :is-busy="isBusy"
             :bear-image="bearImage"
-            :clickable="currentMode === Mode.PUPPET"
+            :clickable="currentMode === Mode.CONTROL"
             @click-eyes="toggleEyes"
             @click-mouth="toggleMouth"
+            @update-bear="updateBear"
+            @set-blink-enabled="setBlinkEnabled"
+            @set-volume="setVolume"
           />
         </div>
       </div>
 
       <!-- Mode-Specific Content -->
-      <PuppetMode
-        v-if="currentMode === Mode.PUPPET"
-        :bear-state="bearState"
-        :is-busy="isBusy"
-        @update-bear="updateBear"
-      />
-
-      <SpeakMode
-        v-else-if="currentMode === Mode.SPEAK"
+      <ControlMode
+        v-if="currentMode === Mode.CONTROL"
         :bear-state="bearState"
         :is-busy="isBusy"
         :phrases="phrases"
         @speak="speak"
         @play="play"
-        @set-volume="setVolume"
       />
 
       <ConfigMode
         v-else-if="currentMode === Mode.CONFIG"
-        :bear-state="bearState"
-        @set-blink-enabled="setBlinkEnabled"
       />
     </div>
   </div>
@@ -82,8 +74,7 @@ import { Mode, State } from '@/types/bear'
 import { useBear } from '@/composables/useBear'
 import StatusBar from '@/components/StatusBar.vue'
 import BearVisualization from '@/components/BearVisualization.vue'
-import PuppetMode from '@/components/PuppetMode.vue'
-import SpeakMode from '@/components/SpeakMode.vue'
+import ControlMode from '@/components/ControlMode.vue'
 import ConfigMode from '@/components/ConfigMode.vue'
 
 const {

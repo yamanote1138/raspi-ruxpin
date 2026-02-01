@@ -9,8 +9,7 @@ export enum State {
 }
 
 export enum Mode {
-  PUPPET = 'puppet',
-  SPEAK = 'speak',
+  CONTROL = 'control',
   CONFIG = 'config',
 }
 

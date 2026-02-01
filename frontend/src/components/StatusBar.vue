@@ -16,18 +16,10 @@
       <button
         type="button"
         class="btn btn-sm"
-        :class="currentMode === Mode.PUPPET ? 'btn-primary' : 'btn-outline-primary'"
-        @click="$emit('set-mode', Mode.PUPPET)"
+        :class="currentMode === Mode.CONTROL ? 'btn-primary' : 'btn-outline-primary'"
+        @click="$emit('set-mode', Mode.CONTROL)"
       >
-        Puppet
-      </button>
-      <button
-        type="button"
-        class="btn btn-sm"
-        :class="currentMode === Mode.SPEAK ? 'btn-primary' : 'btn-outline-primary'"
-        @click="$emit('set-mode', Mode.SPEAK)"
-      >
-        Speak
+        Control
       </button>
       <button
         type="button"

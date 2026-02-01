@@ -33,32 +33,58 @@
           </map>
         </div>
 
-        <!-- Status Badges -->
-        <div class="mt-3">
-          <span class="badge me-2" :class="eyesBadgeClass">
+        <!-- Status Controls -->
+        <div class="mt-3 d-flex flex-wrap justify-content-center align-items-center gap-2">
+          <button
+            type="button"
+            class="badge status-badge"
+            :class="eyesBadgeClass"
+            :disabled="bearState.is_busy"
+            @click="toggleEyes"
+          >
             Eyes: {{ bearState.eyes }}
-          </span>
-          <span class="badge me-2" :class="mouthBadgeClass">
+          </button>
+
+          <button
+            type="button"
+            class="badge status-badge"
+            :class="mouthBadgeClass"
+            :disabled="bearState.is_busy"
+            @click="toggleMouth"
+          >
             Mouth: {{ bearState.mouth }}
-          </span>
+          </button>
+
+          <button
+            type="button"
+            class="badge status-badge"
+            :class="blinkBadgeClass"
+            :disabled="bearState.is_busy"
+            @click="toggleBlink"
+          >
+            Blink: {{ bearState.blink_enabled ? 'on' : 'off' }}
+          </button>
+
           <span v-if="bearState.is_busy" class="badge bg-warning">
             <span class="spinner-border spinner-border-sm me-1" role="status"></span>
             Busy
           </span>
           <span v-else class="badge bg-success">Idle</span>
-        </div>
 
-        <!-- Additional Info -->
-        <div class="mt-2">
-          <small class="text-muted">
-            Volume: {{ bearState.volume }}%
-            <span v-if="bearState.blink_enabled" class="ms-2">
-              <i class="bi bi-eye"></i> Auto-blink ON
-            </span>
-            <span v-else class="ms-2 text-warning">
-              <i class="bi bi-eye-slash"></i> Auto-blink OFF
-            </span>
-          </small>
+          <select
+            v-model.number="localVolume"
+            class="form-select form-select-sm bg-dark text-light"
+            style="width: auto;"
+            :disabled="bearState.is_busy"
+            @change="handleVolumeChange"
+          >
+            <option :value="0">Vol: 0%</option>
+            <option :value="20">Vol: 20%</option>
+            <option :value="40">Vol: 40%</option>
+            <option :value="60">Vol: 60%</option>
+            <option :value="80">Vol: 80%</option>
+            <option :value="100">Vol: 100%</option>
+          </select>
         </div>
       </div>
     </div>
@@ -66,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { State, type BearState } from '@/types/bear'
 
 const props = defineProps<{
@@ -76,10 +102,20 @@ const props = defineProps<{
   clickable?: boolean
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   'click-eyes': []
   'click-mouth': []
+  'update-bear': [eyes?: State, mouth?: State]
+  'set-blink-enabled': [enabled: boolean]
+  'set-volume': [level: number]
 }>()
+
+const localVolume = ref(props.bearState.volume)
+
+// Watch for volume changes from backend
+watch(() => props.bearState.volume, (newVolume) => {
+  localVolume.value = newVolume
+})
 
 // Badge styling
 const eyesBadgeClass = computed(() =>
@@ -89,6 +125,32 @@ const eyesBadgeClass = computed(() =>
 const mouthBadgeClass = computed(() =>
   props.bearState.mouth === State.OPEN ? 'bg-success' : 'bg-danger'
 )
+
+const blinkBadgeClass = computed(() =>
+  props.bearState.blink_enabled ? 'bg-success' : 'bg-secondary'
+)
+
+// Handlers
+const toggleEyes = () => {
+  if (props.bearState.is_busy) return
+  const newState = props.bearState.eyes === State.OPEN ? State.CLOSED : State.OPEN
+  emit('update-bear', newState, undefined)
+}
+
+const toggleMouth = () => {
+  if (props.bearState.is_busy) return
+  const newState = props.bearState.mouth === State.OPEN ? State.CLOSED : State.OPEN
+  emit('update-bear', undefined, newState)
+}
+
+const toggleBlink = () => {
+  if (props.bearState.is_busy) return
+  emit('set-blink-enabled', !props.bearState.blink_enabled)
+}
+
+const handleVolumeChange = () => {
+  emit('set-volume', localVolume.value)
+}
 </script>
 
 <style scoped>
@@ -110,5 +172,22 @@ const mouthBadgeClass = computed(() =>
 
 area {
   cursor: pointer;
+}
+
+.status-badge {
+  border: none;
+  cursor: pointer;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.875rem;
+  transition: opacity 0.2s;
+}
+
+.status-badge:hover:not(:disabled) {
+  opacity: 0.8;
+}
+
+.status-badge:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 </style>
