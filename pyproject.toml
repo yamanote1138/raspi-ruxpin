@@ -48,9 +48,6 @@ dev = [
     "mypy>=1.8.0",
     "types-pyyaml>=6.0.0",
 ]
-mock = [
-    "Mock.GPIO>=0.1.0",
-]
 
 [project.scripts]
 raspi-ruxpin = "backend.main:main"
@@ -115,7 +112,7 @@ follow_imports = "normal"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = ["RPi.*", "alsaaudio.*", "Mock.*"]
+module = ["RPi.*", "alsaaudio.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

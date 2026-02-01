@@ -47,7 +47,7 @@ cp .env.example .env
 echo "HARDWARE__USE_MOCK_GPIO=true" >> .env
 
 # 4. Install Python dependencies
-uv pip install -e ".[dev,mock]"
+uv pip install -e ".[dev]"
 
 # 5. Install frontend dependencies
 cd frontend
@@ -146,7 +146,7 @@ When running on Mac with mock GPIO:
 - ❌ Actual servo movement (no hardware)
 - ❌ Hardware GPIO pins (mocked)
 
-Check the terminal for Mock.GPIO logs to see what would be sent to hardware.
+Check the terminal for mock GPIO logs to see what would be sent to hardware.
 
 ## On Raspberry Pi (Real Hardware)
 
@@ -184,14 +184,14 @@ When running on Pi with real GPIO:
 ### Backend won't start
 
 **Error:** `ModuleNotFoundError: No module named 'fastapi'`
-- **Solution:** Run `uv pip install -e ".[dev,mock]"`
+- **Solution:** Run `uv pip install -e ".[dev]"`
 
 **Error:** `command not found: uv`
 - **Solution:** Install uv: `curl -LsSf https://astral.sh/uv/install.sh | sh`
 
 **Error:** `GPIO not found`
-- **Solution:** On Mac, install Mock.GPIO: `uv pip install Mock.GPIO`
 - **Solution:** On Pi, install RPi.GPIO: `uv pip install RPi.GPIO`
+- **Note:** Mac development uses built-in mock GPIO (no installation needed)
 
 ### Frontend won't start
 
@@ -260,7 +260,7 @@ cd frontend && npm run lint
 Add breakpoints in VS Code or use print statements. Console logs appear in:
 - Backend logs: Terminal running `python -m backend.main`
 - Frontend logs: Browser Developer Console
-- GPIO logs: Backend terminal (when using Mock.GPIO)
+- GPIO logs: Backend terminal (when using mock GPIO on Mac)
 
 ## Next Steps
 

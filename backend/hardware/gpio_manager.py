@@ -106,10 +106,10 @@ class GPIOManager:
 
         try:
             if use_mock:
-                logger.info("Using Mock.GPIO for development")
-                import Mock.GPIO as GPIO  # type: ignore
+                logger.info("Using mock GPIO for development")
+                from backend.hardware import mock_gpio
 
-                self.gpio = GPIO  # type: ignore
+                self.gpio = mock_gpio  # type: ignore
             else:
                 logger.info("Using RPi.GPIO for production")
                 import RPi.GPIO as GPIO  # type: ignore
