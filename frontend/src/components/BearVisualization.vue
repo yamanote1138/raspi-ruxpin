@@ -162,11 +162,13 @@ const handleVolumeChange = () => {
 <style scoped>
 .bear-container {
   max-width: 400px;
+  width: 100%;
+  height: 400px;
   margin: 0 auto;
-  aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .bear-image {
@@ -178,11 +180,13 @@ const handleVolumeChange = () => {
   -webkit-font-smoothing: antialiased; /* Better rendering on webkit */
   opacity: 1 !important; /* Force full opacity always */
   filter: none !important; /* Remove any filters */
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 area {

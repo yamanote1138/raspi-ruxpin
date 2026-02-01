@@ -82,6 +82,7 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { Mode, State } from '@/types/bear'
 import { useBear } from '@/composables/useBear'
 import StatusBar from '@/components/StatusBar.vue'
@@ -117,6 +118,31 @@ const toggleMouth = () => {
   const newState = bearState.value.mouth === State.OPEN ? State.CLOSED : State.OPEN
   updateBear(undefined, newState)
 }
+
+// Preload all bear images to prevent stuttering
+onMounted(() => {
+  const positions = [0, 25, 50, 75, 100]
+  const imagePromises: Promise<void>[] = []
+
+  positions.forEach(eyePos => {
+    positions.forEach(mouthPos => {
+      const img = new Image()
+      const promise = new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve()
+        img.onerror = () => reject()
+      })
+      img.src = `/img/teddy_e${eyePos}m${mouthPos}.png`
+      imagePromises.push(promise)
+    })
+  })
+
+  // Wait for all images to load
+  Promise.all(imagePromises).then(() => {
+    console.log('All bear images preloaded (25 images)')
+  }).catch(err => {
+    console.warn('Some bear images failed to preload:', err)
+  })
+})
 </script>
 
 <style>
