@@ -1,6 +1,6 @@
 """Hardware models and data structures."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PinSet(BaseModel):
@@ -18,9 +18,8 @@ class PinSet(BaseModel):
 class ServoConfig(BaseModel):
     """Configuration for a single servo motor."""
 
+    model_config = ConfigDict(frozen=True)
+
     pins: PinSet = Field(..., description="GPIO pins for this servo")
     speed: int = Field(default=100, ge=1, le=1000, description="PWM frequency in Hz")
     duration: float = Field(default=0.4, gt=0, le=2.0, description="Default movement duration")
-
-    class Config:
-        frozen = True

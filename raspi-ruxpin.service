@@ -1,0 +1,37 @@
+[Unit]
+Description=Raspi Ruxpin Animatronic Control System
+Documentation=https://github.com/yourusername/raspi-ruxpin
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/raspi-ruxpin
+
+# Virtual environment Python binary
+Environment="PATH=/home/pi/raspi-ruxpin/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="VIRTUAL_ENV=/home/pi/raspi-ruxpin/.venv"
+
+# Load environment variables from .env file
+EnvironmentFile=/home/pi/raspi-ruxpin/.env
+
+# Start the application
+ExecStart=/home/pi/raspi-ruxpin/.venv/bin/python -m backend.main
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Security hardening (optional, may need adjustment based on your setup)
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=raspi-ruxpin
+
+[Install]
+WantedBy=multi-user.target

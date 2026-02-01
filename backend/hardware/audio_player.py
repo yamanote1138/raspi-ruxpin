@@ -19,6 +19,7 @@ from backend.core.exceptions import AudioError
 # Optional piper import (only available on Pi with [hardware] dependencies)
 try:
     from piper import PiperVoice
+
     PIPER_AVAILABLE = True
 except ImportError:
     PIPER_AVAILABLE = False
@@ -198,13 +199,17 @@ class AudioPlayer:
                     break
 
             if not piper_bin:
-                raise AudioError("Piper binary not found. Download from: https://github.com/rhasspy/piper/releases")
+                raise AudioError(
+                    "Piper binary not found. Download from: https://github.com/rhasspy/piper/releases"
+                )
 
             # Call piper CLI as subprocess
             process = await asyncio.create_subprocess_exec(
                 str(piper_bin),
-                "--model", str(model_path),
-                "--output_file", str(output_file),
+                "--model",
+                str(model_path),
+                "--output_file",
+                str(output_file),
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
@@ -253,12 +258,14 @@ class AudioPlayer:
 
                 # Generate TTS using macOS 'say'
                 # Output as AIFF first (say's native format)
-                aiff_file = output_file.with_suffix('.aiff')
+                aiff_file = output_file.with_suffix(".aiff")
 
                 process = await asyncio.create_subprocess_exec(
                     "say",
-                    "-v", voice,
-                    "-o", str(aiff_file),
+                    "-v",
+                    voice,
+                    "-o",
+                    str(aiff_file),
                     text,
                     stdout=asyncio.subprocess.DEVNULL,
                     stderr=asyncio.subprocess.PIPE,
@@ -272,9 +279,12 @@ class AudioPlayer:
                 # Convert AIFF to 16kHz WAV using afconvert (built-in macOS tool)
                 convert_process = await asyncio.create_subprocess_exec(
                     "afconvert",
-                    "-f", "WAVE",
-                    "-d", "LEI16",  # 16-bit signed int
-                    "-r", "16000",  # Resample to 16kHz
+                    "-f",
+                    "WAVE",
+                    "-d",
+                    "LEI16",  # 16-bit signed int
+                    "-r",
+                    "16000",  # Resample to 16kHz
                     str(aiff_file),
                     str(output_file),
                     stdout=asyncio.subprocess.DEVNULL,
@@ -342,9 +352,7 @@ class AudioPlayer:
                 elif sample_width == 2:
                     # 16-bit signed
                     num_samples = len(frames) // 2
-                    amplitudes = [
-                        abs(x) for x in struct.unpack(f"{num_samples}h", frames)
-                    ]
+                    amplitudes = [abs(x) for x in struct.unpack(f"{num_samples}h", frames)]
                 else:
                     raise AudioError(f"Unsupported sample width: {sample_width}")
 
@@ -458,9 +466,7 @@ class AudioPlayer:
         sound_file = self.sounds_dir / f"{sound_name}.wav"
         await self.play_file(sound_file, amplitude_callback)
 
-    async def speak(
-        self, text: str, amplitude_callback: Callable[[], None] | None = None
-    ) -> None:
+    async def speak(self, text: str, amplitude_callback: Callable[[], None] | None = None) -> None:
         """Synthesize and play speech.
 
         Args:
@@ -499,7 +505,7 @@ class AudioPlayer:
         # Map amplitude to 0-100% with some scaling
         # Use square root for more natural response (quieter sounds open mouth less)
         normalized = min(self._current_amplitude / max_amplitude, 1.0)
-        scaled = normalized ** 0.5  # Square root for better curve
+        scaled = normalized**0.5  # Square root for better curve
         position = int(scaled * 100)
 
         return min(max(position, 0), 100)

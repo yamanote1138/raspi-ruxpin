@@ -27,6 +27,7 @@ class WebSocketHandler(logging.Handler):
             # Add exception info if present
             if record.exc_info:
                 import traceback
+
                 log_entry["exception"] = "".join(traceback.format_exception(*record.exc_info))
 
             # Put in queue (non-blocking, drop oldest if full)
@@ -63,8 +64,7 @@ def setup_logging(level: str = "INFO", enable_websocket_streaming: bool = True) 
     console_handler = logging.StreamHandler()
     console_handler.setLevel(log_level)
     console_formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
     console_handler.setFormatter(console_formatter)
     root_logger.addHandler(console_handler)

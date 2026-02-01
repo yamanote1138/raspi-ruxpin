@@ -139,7 +139,9 @@ class ConnectionManager:
         """
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
-            logger.info(f"WebSocket disconnected. Total connections: {len(self.active_connections)}")
+            logger.info(
+                f"WebSocket disconnected. Total connections: {len(self.active_connections)}"
+            )
         else:
             logger.debug("Attempted to disconnect websocket that was not in active connections")
 
@@ -380,9 +382,7 @@ async def handle_set_blink_enabled(
         await manager.send_personal(error.model_dump(), websocket)
 
 
-async def handle_set_log_level(
-    message: SetLogLevelMessage, websocket: WebSocket
-) -> None:
+async def handle_set_log_level(message: SetLogLevelMessage, websocket: WebSocket) -> None:
     """Handle set_log_level message.
 
     Args:
@@ -418,7 +418,9 @@ async def websocket_endpoint(websocket: WebSocket, bear_service: BearService) ->
         logger.info("Started state broadcast loop")
 
     # Start log streaming task if this is the first connection
-    if len(manager.active_connections) == 1 and (_log_stream_task is None or _log_stream_task.done()):
+    if len(manager.active_connections) == 1 and (
+        _log_stream_task is None or _log_stream_task.done()
+    ):
         _log_stream_task = asyncio.create_task(log_stream_loop())
         logger.info("Started log stream loop")
         logger.info("Log streaming is now active - you should see this message in the frontend!")

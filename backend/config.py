@@ -65,16 +65,10 @@ class AudioSettings(BaseSettings):
     )
 
     mixer: str = Field(default="PCM", description="ALSA mixer name (Linux only)")
-    start_volume: int = Field(
-        default=100, ge=0, le=100, description="Initial volume level (0-100)"
-    )
+    start_volume: int = Field(default=100, ge=0, le=100, description="Initial volume level (0-100)")
     sample_rate: int = Field(default=16000, description="Audio sample rate")
-    amplitude_threshold: int = Field(
-        default=500, ge=0, description="Threshold for mouth movement"
-    )
-    sounds_dir: Path = Field(
-        default=Path("sounds"), description="Directory containing sound files"
-    )
+    amplitude_threshold: int = Field(default=500, ge=0, description="Threshold for mouth movement")
+    sounds_dir: Path = Field(default=Path("sounds"), description="Directory containing sound files")
 
     @field_validator("start_volume")
     @classmethod
@@ -133,7 +127,9 @@ class AppSettings(BaseSettings):
     )
 
     # Application settings
-    environment: str = Field(default="development", description="Environment (development/production)")
+    environment: str = Field(
+        default="development", description="Environment (development/production)"
+    )
     debug: bool = Field(default=False, description="Enable debug mode")
     host: str = Field(default="0.0.0.0", description="Server host")
     port: int = Field(default=8080, ge=1, le=65535, description="Server port")
@@ -145,9 +141,7 @@ class AppSettings(BaseSettings):
 
     # Configuration files
     config_dir: Path = Field(default=Path("config"), description="Configuration directory")
-    phrases_file: Path = Field(
-        default=Path("config/phrases.json"), description="Phrases JSON file"
-    )
+    phrases_file: Path = Field(default=Path("config/phrases.json"), description="Phrases JSON file")
     hardware_config_file: Path | None = Field(
         default=None, description="Optional YAML hardware config override"
     )

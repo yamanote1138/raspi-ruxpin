@@ -8,7 +8,7 @@ Modern animatronic bear control system with FastAPI and Vue 3!
 - 🚀 FastAPI backend with WebSocket support
 - 🎨 Vue 3 + TypeScript + Vite frontend
 - 🔧 Async hardware control
-- 📦 Modern dependency management
+- 📦 Modern dependency management with [uv](https://github.com/astral-sh/uv) (10-100x faster than pip!)
 - 🧪 Full type safety
 - 💻 Mac development support (no hardware required!)
 
@@ -20,13 +20,23 @@ This project was originally based on the [version](https://www.hackster.io/chip/
 
 ## Features
 
-- 🎭 **Puppet Mode**: Manually control eyes and mouth
-- 🗣️ **Speak Mode**: Text-to-speech with mouth synchronization
-- 🎵 **Phrase Library**: Pre-recorded audio clips from movies/TV
-- 🔊 **Volume Control**: Adjust system volume on the fly
-- 🌐 **Web Interface**: Modern responsive UI with Bootstrap 5
-- 🔄 **Real-time Updates**: WebSocket communication for instant feedback
-- 🧪 **Mock Hardware**: Develop on Mac without Raspberry Pi
+- 🎮 **Control Mode**: Unified interface for bear control
+  - Interactive bear status panel with clickable controls
+  - Text-to-speech with synchronized mouth movements
+  - Phrase library with pre-recorded audio
+  - Real-time volume control
+  - Auto-blink toggle
+- 📊 **Config Mode**: System monitoring and configuration
+  - Real-time log viewer with level filtering
+  - Bear status monitoring
+  - System settings management
+- 🌐 **Modern Web Interface**: Responsive design with Bootstrap 5
+  - Clean, playful UI with rounded fonts
+  - Mobile-friendly layout
+  - Real-time status updates
+- 🔄 **WebSocket Communication**: Instant bi-directional updates
+- 🎙️ **Multiple TTS Engines**: Support for espeak, macOS built-in, and Piper
+- 🧪 **Mock Hardware**: Full development on Mac without Raspberry Pi
 
 ## Quick Start
 
@@ -36,34 +46,57 @@ This project was originally based on the [version](https://www.hackster.io/chip/
 - Install [uv](https://github.com/astral-sh/uv): `curl -LsSf https://astral.sh/uv/install.sh | sh` or `brew install uv`
 - Install [Node.js](https://nodejs.org/)
 
+**Quick Setup with Makefile:**
 ```bash
-# 1. Create virtual environment
-uv venv
+# Install all dependencies
+make install
 
-# 2. Install Python dependencies
-uv pip install -e ".[dev,mock]"
-
-# 3. Install frontend dependencies
-cd frontend
-npm install
-cd ..
-
-# 4. Create .env file
+# Create .env file
 cp .env.example .env
 
-# 5. Start backend (Terminal 1)
+# Start backend (Terminal 1)
+make run
+
+# Start frontend dev server (Terminal 2)
+make frontend
+
+# Open browser at http://localhost:5173
+```
+
+**Manual Setup:**
+```bash
+# 1. Create virtual environment and install dependencies
+uv venv
+uv pip install -e ".[dev,mock]"
+
+# 2. Install frontend dependencies
+cd frontend && npm install && cd ..
+
+# 3. Create .env file
+cp .env.example .env
+
+# 4. Start backend (Terminal 1)
 uv run python -m backend.main
 
-# 6. Start frontend dev server (Terminal 2)
-cd frontend
-npm run dev
+# 5. Start frontend dev server (Terminal 2)
+cd frontend && npm run dev
 
-# 7. Open browser
-# http://localhost:5173
+# 6. Open browser at http://localhost:5173
 ```
 
 ### Raspberry Pi Production
 
+**Quick Deploy:**
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/raspi-ruxpin.git
+cd raspi-ruxpin
+
+# Run deployment script (installs everything and sets up systemd service)
+./scripts/deploy.sh
+```
+
+**Manual Setup:**
 ```bash
 # 1. Install uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -89,36 +122,55 @@ cp .env.example .env
 uv run python -m backend.main
 ```
 
+For detailed production deployment instructions including systemd service setup, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
 ## Project Structure
 
 ```
 raspi-ruxpin/
-├── backend/                 # Python backend
-│   ├── main.py             # FastAPI app entry point
-│   ├── config.py           # Pydantic settings
-│   ├── dependencies.py     # FastAPI DI
-│   ├── api/                # API endpoints
-│   │   ├── websocket.py    # WebSocket handler
-│   │   └── endpoints/      # REST endpoints
-│   ├── services/           # Business logic
-│   │   └── bear_service.py # Bear orchestration
-│   ├── hardware/           # Hardware abstraction
-│   │   ├── gpio_manager.py # GPIO lifecycle
-│   │   ├── servo.py        # Async servo control
-│   │   └── audio_player.py # Async audio
-│   └── core/               # Domain models
-├── frontend/               # Vue 3 + TypeScript
+├── backend/                    # Python backend
+│   ├── main.py                # FastAPI app entry point
+│   ├── config.py              # Pydantic settings with env vars
+│   ├── dependencies.py        # FastAPI dependency injection
+│   ├── logging_config.py      # Logging with WebSocket streaming
+│   ├── api/                   # API layer
+│   │   ├── websocket.py       # WebSocket endpoint
+│   │   └── endpoints/         # REST endpoints
+│   ├── services/              # Business logic
+│   │   └── bear_service.py    # Bear orchestration & control
+│   ├── hardware/              # Hardware abstraction
+│   │   ├── gpio_manager.py    # GPIO lifecycle management
+│   │   ├── servo.py           # Async servo control
+│   │   ├── audio_player.py    # Async audio playback
+│   │   └── models.py          # Hardware Pydantic models
+│   └── core/                  # Domain models
+│       ├── enums.py           # State, Direction enums
+│       └── exceptions.py      # Custom exceptions
+├── frontend/                  # Vue 3 + TypeScript + Vite
 │   ├── src/
-│   │   ├── components/     # Vue SFCs
-│   │   ├── composables/    # useBear, useWebSocket
-│   │   └── types/          # TypeScript types
-│   ├── vite.config.ts
-│   └── package.json
-├── config/                 # Configuration
-│   └── phrases.json        # Audio phrase library
-├── sounds/                 # Audio files
-├── pyproject.toml          # Python packaging
-└── .env                    # Environment config
+│   │   ├── main.ts           # App entry point
+│   │   ├── App.vue           # Root component
+│   │   ├── components/       # Vue SFCs
+│   │   │   ├── BearVisualization.vue
+│   │   │   ├── ControlMode.vue
+│   │   │   ├── ConfigMode.vue
+│   │   │   ├── LogViewer.vue
+│   │   │   └── StatusBar.vue
+│   │   ├── composables/      # Vue composables
+│   │   │   ├── useBear.ts    # Bear state management
+│   │   │   └── useWebSocket.ts # WebSocket singleton
+│   │   └── types/            # TypeScript definitions
+│   ├── vite.config.ts        # Vite configuration
+│   ├── tsconfig.json         # TypeScript config
+│   └── package.json          # Node dependencies
+├── config/                    # Configuration files
+│   └── phrases.json          # Audio phrase library
+├── sounds/                    # Audio files (WAV)
+├── public/                    # Static assets
+│   └── img/                  # Bear images
+├── pyproject.toml            # Python packaging & dependencies
+├── .env.example              # Environment template
+└── .env                      # Environment config (create from example)
 ```
 
 ## Configuration
@@ -130,20 +182,34 @@ Copy `.env.example` to `.env` and configure:
 ```bash
 # Application
 ENVIRONMENT=development
-DEBUG=true
+DEBUG=true              # Enable debug mode (sets log level to DEBUG)
 HOST=0.0.0.0
 PORT=8080
 
-# Hardware (Mac: set USE_MOCK_GPIO=true)
+# Hardware (Mac: set USE_MOCK_GPIO=true for development)
 HARDWARE__USE_MOCK_GPIO=false
 HARDWARE__EYES_PWM=21
+HARDWARE__EYES_DIR=16
+HARDWARE__EYES_CDIR=20
 HARDWARE__MOUTH_PWM=25
+HARDWARE__MOUTH_DIR=7
+HARDWARE__MOUTH_CDIR=8
 
 # Audio
 AUDIO__START_VOLUME=100
-TTS__ENGINE=espeak
-TTS__VOICE=en+m3
+AUDIO__MIXER=PCM        # ALSA mixer name (Linux only)
+
+# Text-to-Speech
+TTS__ENGINE=espeak      # Options: espeak, piper, macos
+TTS__VOICE=en+m3        # Voice (espeak: en+m3, piper: model path)
+TTS__SPEED=125          # Speech speed
+TTS__PITCH=50           # Voice pitch
 ```
+
+**TTS Engine Options:**
+- `espeak` - Available on Linux (apt install espeak)
+- `piper` - High-quality neural TTS (install with `uv pip install piper-tts`)
+- `macos` - Uses macOS built-in TTS (Mac development only)
 
 ### Hardware Configuration (Optional)
 
@@ -159,7 +225,34 @@ hardware:
 
 ## Development
 
-### Backend Development
+### Common Commands (using Makefile)
+
+```bash
+# Show all available commands
+make help
+
+# Run backend with auto-reload
+make dev
+
+# Run frontend dev server
+make frontend
+
+# Run tests
+make test              # Basic test run
+make test-verbose      # With verbose output
+make test-cov          # With coverage report
+
+# Code quality
+make lint              # Run linters
+make format            # Format code
+make type-check        # Run type checker
+make check             # Run all checks (lint, type-check, test)
+
+# Cleanup
+make clean             # Remove build artifacts and caches
+```
+
+### Backend Development (using uv directly)
 
 ```bash
 # Run with auto-reload
@@ -168,12 +261,12 @@ uv run uvicorn backend.main:app --reload --host 0.0.0.0 --port 8080
 # Type checking
 uv run mypy backend/
 
-# Linting
+# Linting and formatting
 uv run ruff check backend/
-uv run black backend/
+uv run ruff format backend/
 
 # Testing
-uv run pytest --cov=backend
+uv run pytest --cov=backend --cov-report=html
 ```
 
 ### Frontend Development
@@ -191,12 +284,36 @@ npm run type-check
 npm run build
 ```
 
+## Using the Interface
+
+The web interface has two main views:
+
+### Control Mode
+The primary control interface with three sections:
+- **Bear Status Panel** (top): Interactive bear image and status controls
+  - Click bear image to toggle eyes/mouth (or use buttons)
+  - Button bar: Eyes, Mouth, Blink, and Status indicators
+  - Volume dropdown (0-100% in 20% increments)
+- **Phrase Library** (left): Play pre-recorded audio clips
+  - Select from dropdown and click "Play Phrase"
+- **Text-to-Speech** (right): Generate speech from text
+  - Type text and click "Speak"
+  - Mouth movements sync with audio amplitude
+
+### Config Mode
+System monitoring and settings:
+- **System Logs**: Real-time log viewer
+  - Filter by log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+  - Auto-scroll toggle
+  - Clear logs button
+  - Shows WebSocket events, GPIO operations, audio playback, etc.
+
 ## API Documentation
 
 Once running, visit:
-- API docs: http://localhost:8080/docs
-- Health check: http://localhost:8080/api/health
-- System status: http://localhost:8080/api/status
+- **Web UI**: http://localhost:8080 (or http://localhost:5173 in dev mode)
+- **API docs**: http://localhost:8080/docs
+- **Health check**: http://localhost:8080/api/health
 
 ## WebSocket Protocol
 
@@ -206,14 +323,42 @@ Connect to `/ws` and send JSON messages:
 // Update bear positions
 { "type": "update_bear", "eyes": "open", "mouth": "closed" }
 
-// Speak text
+// Speak text with TTS
 { "type": "speak", "text": "Hello world" }
 
-// Play phrase
+// Play pre-recorded phrase
 { "type": "play", "sound": "starwars_iamyourfather" }
 
-// Set volume
+// Set volume (0-100)
 { "type": "set_volume", "level": 75 }
+
+// Toggle auto-blink
+{ "type": "set_blink_enabled", "enabled": true }
+
+// Change log level
+{ "type": "set_log_level", "level": "DEBUG" }
+
+// Fetch available phrases
+{ "type": "fetch_phrases" }
+```
+
+**Received Messages:**
+
+```javascript
+// Bear state updates
+{ "type": "bear_state", "data": { "eyes": "open", "mouth": "closed", "volume": 75, ... } }
+
+// Available phrases
+{ "type": "phrases", "data": { "phrase_key": "Description", ... } }
+
+// Log messages (streamed in real-time)
+{ "type": "log", "data": { "level": "INFO", "message": "...", "timestamp": 1234567890, ... } }
+
+// Error messages
+{ "type": "error", "message": "Error description" }
+
+// Success confirmations
+{ "type": "success", "message": "Operation completed" }
 ```
 
 ## Hardware Setup
@@ -234,5 +379,14 @@ MIT
 
 ## Version History
 
-- **2.0.0** - Complete modernization with FastAPI + Vue 3
-- **1.0.0** - Original Vue 2 + aiohttp version
+- **2.0.0** (2025) - Complete modernization
+  - FastAPI backend with async/await patterns
+  - Vue 3 + TypeScript + Vite frontend
+  - Unified Control mode interface
+  - Real-time log viewer with WebSocket streaming
+  - Multiple TTS engine support (espeak, piper, macOS)
+  - Modern responsive UI with Bootstrap 5
+  - Comprehensive deployment automation
+  - Full type safety throughout
+  - Mac development support with Mock GPIO
+- **1.0.0** (2023) - Original Vue 2 + aiohttp version

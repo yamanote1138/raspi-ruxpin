@@ -152,7 +152,9 @@ class Servo:
 
                     # Linear interpolation of position
                     progress = elapsed / duration
-                    self.position_percent = int(start_position + (target_position - start_position) * progress)
+                    self.position_percent = int(
+                        start_position + (target_position - start_position) * progress
+                    )
 
                     await asyncio.sleep(update_interval)
 
@@ -253,7 +255,9 @@ class Servo:
         # Move to target position
         await self._move_to_percent(direction, target_percent, move_duration)
 
-    async def _move_to_percent(self, direction: Direction, target_percent: int, duration: float) -> None:
+    async def _move_to_percent(
+        self, direction: Direction, target_percent: int, duration: float
+    ) -> None:
         """Move servo to specific percentage.
 
         Args:
@@ -284,7 +288,9 @@ class Servo:
 
                     # Linear interpolation
                     progress = elapsed / duration
-                    self.position_percent = int(start_position + (target_percent - start_position) * progress)
+                    self.position_percent = int(
+                        start_position + (target_percent - start_position) * progress
+                    )
 
                     await asyncio.sleep(update_interval)
 

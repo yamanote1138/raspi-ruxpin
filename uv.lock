@@ -897,7 +897,6 @@ dependencies = [
     { name = "aiofiles" },
     { name = "fastapi" },
     { name = "pillow" },
-    { name = "piper-tts" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "python-socketio" },
@@ -916,6 +915,7 @@ dev = [
     { name = "types-pyyaml" },
 ]
 hardware = [
+    { name = "piper-tts" },
     { name = "pyalsaaudio" },
     { name = "rpi-gpio" },
 ]
@@ -931,7 +931,7 @@ requires-dist = [
     { name = "mock-gpio", marker = "extra == 'mock'", specifier = ">=0.1.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.8.0" },
     { name = "pillow", specifier = ">=12.1.0" },
-    { name = "piper-tts", specifier = ">=1.4.0" },
+    { name = "piper-tts", marker = "extra == 'hardware'", specifier = ">=1.4.0" },
     { name = "pyalsaaudio", marker = "extra == 'hardware'", specifier = ">=0.10.0" },
     { name = "pydantic", specifier = ">=2.6.0" },
     { name = "pydantic-settings", specifier = ">=2.1.0" },
