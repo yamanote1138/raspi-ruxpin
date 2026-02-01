@@ -2,12 +2,12 @@
   <div class="log-viewer card bg-panel">
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="card-title mb-0 text-dark">System Logs</h5>
+        <h5 class="card-title mb-0 text-dark">Logs</h5>
         <div class="d-flex gap-2 align-items-center">
           <!-- Log level dropdown -->
           <select
             v-model="currentLevel"
-            class="form-select form-select-sm bg-dark text-light"
+            class="form-select form-select-sm"
             style="width: auto;"
             @change="setLogLevel(currentLevel)"
             title="Log level filter"

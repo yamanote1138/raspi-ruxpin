@@ -98,6 +98,7 @@ class GPIOManager:
         self.is_initialized = False
         self.active_pins: set[int] = set()
         self.active_pwms: dict[int, PWM] = {}
+        self.pin_states: dict[int, bool] = {}  # Track HIGH/LOW state of output pins
 
         # Determine which GPIO module to use
         if use_mock is None:
@@ -183,9 +184,18 @@ class GPIOManager:
         try:
             gpio_value = self.gpio.HIGH if value else self.gpio.LOW
             self.gpio.output(pin, gpio_value)
+            self.pin_states[pin] = value  # Track the state
             logger.debug(f"Pin {pin} set to {'HIGH' if value else 'LOW'}")
         except Exception as e:
             raise GPIOError(f"Failed to set output on pin {pin}: {e}") from e
+
+    def get_pin_states(self) -> dict[int, bool]:
+        """Get the current state of all active pins.
+
+        Returns:
+            Dictionary mapping pin numbers to their output state (True=HIGH, False=LOW)
+        """
+        return self.pin_states.copy()
 
     def create_pwm(self, pin: int, frequency: float) -> PWM:
         """Create a PWM instance for a pin.

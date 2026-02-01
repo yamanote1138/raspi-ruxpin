@@ -73,7 +73,7 @@
           />
 
           <ConfigMode
-            v-else-if="currentMode === Mode.CONFIG"
+            v-else-if="currentMode === Mode.SYSTEM"
           />
         </div>
       </div>

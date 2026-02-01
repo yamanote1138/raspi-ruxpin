@@ -24,10 +24,10 @@
       <button
         type="button"
         class="btn btn-sm mode-btn"
-        :class="currentMode === Mode.CONFIG ? 'btn-primary' : 'btn-light'"
-        @click="$emit('set-mode', Mode.CONFIG)"
+        :class="currentMode === Mode.SYSTEM ? 'btn-primary' : 'btn-light'"
+        @click="$emit('set-mode', Mode.SYSTEM)"
       >
-        Config
+        System
       </button>
     </div>
   </div>

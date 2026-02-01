@@ -12,8 +12,10 @@ export enum MessageType {
   FETCH_PHRASES = 'fetch_phrases',
   SET_BLINK_ENABLED = 'set_blink_enabled',
   SET_LOG_LEVEL = 'set_log_level',
+  GET_GPIO_STATUS = 'get_gpio_status',
   BEAR_STATE = 'bear_state',
   PHRASES = 'phrases',
+  GPIO_STATUS = 'gpio_status',
   ERROR = 'error',
   SUCCESS = 'success',
   LOG = 'log',
@@ -53,6 +55,10 @@ export interface SetBlinkEnabledMessage {
 export interface SetLogLevelMessage {
   type: MessageType.SET_LOG_LEVEL
   level: 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL'
+}
+
+export interface GetGPIOStatusMessage {
+  type: MessageType.GET_GPIO_STATUS
 }
 
 // Incoming messages
@@ -99,9 +105,17 @@ export interface LogMessageResponse {
   data: LogMessage
 }
 
+export interface GPIOStatusMessage {
+  type: MessageType.GPIO_STATUS
+  data: {
+    pins: Record<number, boolean>
+  }
+}
+
 export type WebSocketMessage =
   | BearStateMessage
   | PhrasesMessage
+  | GPIOStatusMessage
   | ErrorMessage
   | SuccessMessage
   | LogMessageResponse

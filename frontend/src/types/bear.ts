@@ -10,7 +10,7 @@ export enum State {
 
 export enum Mode {
   CONTROL = 'control',
-  CONFIG = 'config',
+  SYSTEM = 'system',
 }
 
 export interface BearPosition {

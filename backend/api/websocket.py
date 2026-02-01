@@ -71,6 +71,12 @@ class SetLogLevelMessage(BaseModel):
     )
 
 
+class GetGPIOStatusMessage(BaseModel):
+    """Message to request GPIO status."""
+
+    type: Literal["get_gpio_status"] = "get_gpio_status"
+
+
 # Response models
 class BearStateResponse(BaseModel):
     """Bear state response."""
@@ -105,6 +111,13 @@ class LogMessageResponse(BaseModel):
 
     type: Literal["log"] = "log"
     data: dict[str, Any]  # Contains: timestamp, level, logger, message, module, function, line
+
+
+class GPIOStatusResponse(BaseModel):
+    """GPIO status response."""
+
+    type: Literal["gpio_status"] = "gpio_status"
+    data: dict[str, Any]  # Contains: pins: dict[int, bool]
 
 
 class ConnectionManager:
@@ -196,6 +209,18 @@ async def state_broadcast_loop(bear_service: BearService) -> None:
                 state = bear_service.get_state()
                 response = BearStateResponse(data=state)
                 await manager.broadcast(response.model_dump())
+
+                # Also broadcast GPIO status (every 10 iterations = 1Hz for efficiency)
+                if hasattr(state_broadcast_loop, '_gpio_counter'):
+                    state_broadcast_loop._gpio_counter += 1
+                else:
+                    state_broadcast_loop._gpio_counter = 0
+
+                if state_broadcast_loop._gpio_counter >= 10:
+                    state_broadcast_loop._gpio_counter = 0
+                    gpio_states = bear_service.gpio_manager.get_pin_states()
+                    gpio_response = GPIOStatusResponse(data={"pins": gpio_states})
+                    await manager.broadcast(gpio_response.model_dump())
 
             await asyncio.sleep(0.1)  # 10Hz update rate
     except asyncio.CancelledError:
@@ -400,6 +425,27 @@ async def handle_set_log_level(message: SetLogLevelMessage, websocket: WebSocket
         await manager.send_personal(error.model_dump(), websocket)
 
 
+async def handle_get_gpio_status(
+    message: GetGPIOStatusMessage, bear_service: BearService, websocket: WebSocket
+) -> None:
+    """Handle get_gpio_status message.
+
+    Args:
+        message: Get GPIO status message
+        bear_service: Bear service instance
+        websocket: WebSocket connection
+    """
+    try:
+        gpio_manager = bear_service.gpio_manager
+        pin_states = gpio_manager.get_pin_states()
+
+        response = GPIOStatusResponse(data={"pins": pin_states})
+        await manager.send_personal(response.model_dump(), websocket)
+    except Exception as e:
+        error = ErrorResponse(message=str(e))
+        await manager.send_personal(error.model_dump(), websocket)
+
+
 async def websocket_endpoint(websocket: WebSocket, bear_service: BearService) -> None:
     """WebSocket endpoint for bear control.
 
@@ -465,6 +511,10 @@ async def websocket_endpoint(websocket: WebSocket, bear_service: BearService) ->
             elif message_type == "set_log_level":
                 msg = SetLogLevelMessage(**data)
                 await handle_set_log_level(msg, websocket)
+
+            elif message_type == "get_gpio_status":
+                msg = GetGPIOStatusMessage(**data)
+                await handle_get_gpio_status(msg, bear_service, websocket)
 
             else:
                 error = ErrorResponse(message=f"Unknown message type: {message_type}")

@@ -212,14 +212,21 @@ class BearService:
         try:
             while not self._shutdown:
                 if self.blink_enabled and not self.is_busy and self.eyes.state == State.OPEN:
-                    # Random delay between blinks (2-6 seconds)
-                    await asyncio.sleep(random.uniform(2.0, 6.0))
+                    # Random delay between blinks (3-7 seconds)
+                    delay = random.uniform(3.0, 7.0)
+                    logger.debug(f"Blink scheduled in {delay:.1f}s")
+                    await asyncio.sleep(delay)
 
+                    # Check conditions again after delay
                     if self.blink_enabled and not self.is_busy and self.eyes.state == State.OPEN:
+                        logger.debug("Executing blink")
                         # Quick blink
                         await self.eyes.close(0.1)
                         await asyncio.sleep(0.1)
                         await self.eyes.open(0.1)
+                        logger.debug("Blink completed")
+                    else:
+                        logger.debug(f"Blink cancelled: enabled={self.blink_enabled}, busy={self.is_busy}, eyes={self.eyes.state}")
                 else:
                     await asyncio.sleep(0.5)
         except asyncio.CancelledError:
