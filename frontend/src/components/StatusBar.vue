@@ -6,7 +6,7 @@
         class="status-indicator me-2"
         :class="isConnected ? 'connected' : 'disconnected'"
       ></span>
-      <span class="small">
+      <span class="small text-dark">
         {{ isConnected ? 'Connected' : 'Disconnected' }}
       </span>
     </div>
@@ -15,16 +15,16 @@
     <div class="btn-group" role="group">
       <button
         type="button"
-        class="btn btn-sm"
-        :class="currentMode === Mode.CONTROL ? 'btn-primary' : 'btn-outline-primary'"
+        class="btn btn-sm mode-btn"
+        :class="currentMode === Mode.CONTROL ? 'btn-primary' : 'btn-light'"
         @click="$emit('set-mode', Mode.CONTROL)"
       >
         Control
       </button>
       <button
         type="button"
-        class="btn btn-sm"
-        :class="currentMode === Mode.CONFIG ? 'btn-primary' : 'btn-outline-primary'"
+        class="btn btn-sm mode-btn"
+        :class="currentMode === Mode.CONFIG ? 'btn-primary' : 'btn-light'"
         @click="$emit('set-mode', Mode.CONFIG)"
       >
         Config
@@ -51,7 +51,6 @@ defineEmits<{
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  display: inline-block;
 }
 
 .status-indicator.connected {

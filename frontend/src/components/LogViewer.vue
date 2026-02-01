@@ -1,13 +1,13 @@
 <template>
-  <div class="log-viewer card bg-secondary">
+  <div class="log-viewer card bg-panel">
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="card-title mb-0">System Logs</h5>
+        <h5 class="card-title mb-0 text-dark">System Logs</h5>
         <div class="d-flex gap-2 align-items-center">
           <!-- Log level dropdown -->
           <select
             v-model="currentLevel"
-            class="form-select form-select-sm"
+            class="form-select form-select-sm bg-dark text-light"
             style="width: auto;"
             @change="setLogLevel(currentLevel)"
             title="Log level filter"
@@ -17,26 +17,28 @@
             </option>
           </select>
 
-          <!-- Clear logs button -->
-          <button
-            type="button"
-            class="btn btn-sm btn-outline-danger"
-            @click="clearLogs"
-            title="Clear logs"
-          >
-            <i class="bi bi-trash"></i>
-          </button>
-
-          <!-- Auto-scroll toggle -->
-          <button
-            type="button"
-            class="btn btn-sm"
-            :class="autoScroll ? 'btn-success' : 'btn-outline-secondary'"
-            @click="autoScroll = !autoScroll"
-            title="Toggle auto-scroll"
-          >
-            <i class="bi" :class="autoScroll ? 'bi-unlock' : 'bi-lock'"></i>
-          </button>
+          <!-- Button bar for controls -->
+          <div class="btn-group" role="group">
+            <button
+              type="button"
+              class="btn btn-sm"
+              :class="autoScroll ? 'btn-success' : 'btn-secondary'"
+              @click="autoScroll = !autoScroll"
+              title="Toggle auto-scroll"
+            >
+              <i class="bi me-1" :class="autoScroll ? 'bi-unlock' : 'bi-lock'"></i>
+              Auto-scroll
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm btn-danger"
+              @click="clearLogs"
+              title="Clear logs"
+            >
+              <i class="bi bi-trash me-1"></i>
+              Clear
+            </button>
+          </div>
         </div>
       </div>
 

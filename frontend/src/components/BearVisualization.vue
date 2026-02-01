@@ -1,9 +1,7 @@
 <template>
   <div class="bear-visualization-panel">
-    <div class="card bg-secondary">
+    <div class="card bg-panel">
       <div class="card-body text-center">
-        <h5 class="card-title mb-3">Bear Status</h5>
-
         <!-- Bear Image -->
         <div class="bear-container position-relative d-inline-block">
           <img
@@ -35,45 +33,53 @@
 
         <!-- Status Controls -->
         <div class="mt-3 d-flex flex-wrap justify-content-center align-items-center gap-2">
-          <button
-            type="button"
-            class="badge status-badge"
-            :class="eyesBadgeClass"
-            :disabled="bearState.is_busy"
-            @click="toggleEyes"
-          >
-            Eyes: {{ bearState.eyes }}
-          </button>
+          <!-- Toggle Button Group -->
+          <div class="btn-group" role="group">
+            <button
+              type="button"
+              class="btn btn-sm"
+              :class="bearState.eyes === 'open' ? 'btn-success' : 'btn-danger'"
+              :disabled="bearState.is_busy"
+              @click="toggleEyes"
+            >
+              Eyes: {{ bearState.eyes }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm"
+              :class="bearState.mouth === 'open' ? 'btn-success' : 'btn-danger'"
+              :disabled="bearState.is_busy"
+              @click="toggleMouth"
+            >
+              Mouth: {{ bearState.mouth }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm"
+              :class="bearState.blink_enabled ? 'btn-success' : 'btn-secondary'"
+              :disabled="bearState.is_busy"
+              @click="toggleBlink"
+            >
+              Blink: {{ bearState.blink_enabled ? 'on' : 'off' }}
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm"
+              :class="bearState.is_busy ? 'btn-warning' : 'btn-success'"
+              disabled
+            >
+              <span v-if="bearState.is_busy">
+                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                Busy
+              </span>
+              <span v-else>Idle</span>
+            </button>
+          </div>
 
-          <button
-            type="button"
-            class="badge status-badge"
-            :class="mouthBadgeClass"
-            :disabled="bearState.is_busy"
-            @click="toggleMouth"
-          >
-            Mouth: {{ bearState.mouth }}
-          </button>
-
-          <button
-            type="button"
-            class="badge status-badge"
-            :class="blinkBadgeClass"
-            :disabled="bearState.is_busy"
-            @click="toggleBlink"
-          >
-            Blink: {{ bearState.blink_enabled ? 'on' : 'off' }}
-          </button>
-
-          <span v-if="bearState.is_busy" class="badge bg-warning">
-            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-            Busy
-          </span>
-          <span v-else class="badge bg-success">Idle</span>
-
+          <!-- Volume Dropdown -->
           <select
             v-model.number="localVolume"
-            class="form-select form-select-sm bg-dark text-light"
+            class="form-select form-select-sm bg-dark text-light status-control"
             style="width: auto;"
             :disabled="bearState.is_busy"
             @change="handleVolumeChange"
@@ -174,20 +180,8 @@ area {
   cursor: pointer;
 }
 
-.status-badge {
-  border: none;
-  cursor: pointer;
-  padding: 0.35rem 0.65rem;
-  font-size: 0.875rem;
-  transition: opacity 0.2s;
-}
-
-.status-badge:hover:not(:disabled) {
-  opacity: 0.8;
-}
-
-.status-badge:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
+/* Uniform height for status controls */
+.status-control {
+  height: 32px;
 }
 </style>
