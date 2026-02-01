@@ -371,15 +371,6 @@ wheels = [
 ]
 
 [[package]]
-name = "mock-gpio"
-version = "0.1.10"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/cd/6f/77427a8cceb222273615fe354e79a231d8abb8c866da02ddab104b556adb/Mock.GPIO-0.1.10.tar.gz", hash = "sha256:7e81e9fdf7dc5519a8b502967645b9146d7b95a1a04589fe4bba611ca06d1dda", size = 4971, upload-time = "2024-12-30T05:44:48.238Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d3/0e/d539acbb403693520e6192e844b2e19bb66abc6a606157dc254e95345e0e/Mock.GPIO-0.1.10-py3-none-any.whl", hash = "sha256:9c7707e2c8e1eb944628b5393109b935c9024c59b53ef1eb62823877f3675a89", size = 4186, upload-time = "2024-12-30T05:44:47.074Z" },
-]
-
-[[package]]
 name = "mpmath"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -957,9 +948,6 @@ hardware = [
     { name = "pyalsaaudio" },
     { name = "rpi-gpio" },
 ]
-mock = [
-    { name = "mock-gpio" },
-]
 
 [package.metadata]
 requires-dist = [
@@ -967,7 +955,6 @@ requires-dist = [
     { name = "black", marker = "extra == 'dev'", specifier = ">=24.1.0" },
     { name = "fastapi", specifier = ">=0.109.0" },
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.27.0" },
-    { name = "mock-gpio", marker = "extra == 'mock'", specifier = ">=0.1.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.8.0" },
     { name = "pillow", specifier = ">=12.1.0" },
     { name = "piper-tts", marker = "extra == 'hardware'", specifier = ">=1.4.0" },
@@ -984,7 +971,7 @@ requires-dist = [
     { name = "types-pyyaml", marker = "extra == 'dev'", specifier = ">=6.0.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.27.0" },
 ]
-provides-extras = ["hardware", "dev", "mock"]
+provides-extras = ["hardware", "dev"]
 
 [[package]]
 name = "rpi-gpio"
