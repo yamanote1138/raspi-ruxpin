@@ -190,8 +190,9 @@ class BearService:
                     # Get proportional mouth position based on amplitude
                     target_position = self.audio_player.get_mouth_position()
 
-                    # Update mouth position (75ms movement for smooth animation)
-                    await self.mouth.set_position_percent(target_position, duration=0.075)
+                    # Update mouth position (slower for 40+ year old servo)
+                    # 0.15s allows old servo to respond while maintaining speech sync
+                    await self.mouth.set_position_percent(target_position, duration=0.15)
 
                 # 25Hz update rate (slower for smoother animation)
                 await asyncio.sleep(0.04)
@@ -220,10 +221,10 @@ class BearService:
                     # Check conditions again after delay
                     if self.blink_enabled and not self.is_busy and self.eyes.state == State.OPEN:
                         logger.debug("Executing blink")
-                        # Quick blink
-                        await self.eyes.close(0.1)
-                        await asyncio.sleep(0.1)
-                        await self.eyes.open(0.1)
+                        # Natural blink: slow servos need more time (40+ year old motors)
+                        await self.eyes.close(0.6)    # Close slowly (old servo)
+                        await asyncio.sleep(0.2)      # Stay closed briefly
+                        await self.eyes.open(0.6)     # Open slowly (old servo)
                         logger.debug("Blink completed")
                     else:
                         logger.debug(f"Blink cancelled: enabled={self.blink_enabled}, busy={self.is_busy}, eyes={self.eyes.state}")
@@ -257,14 +258,15 @@ class BearService:
 
         try:
             # Use slower duration for manual movements to show smooth animation
-            # 0.5s gives 10 position updates at 20Hz, creating visible animation
-            manual_duration = 0.5
+            # Longer duration for old servos (40+ years old) to complete movement
+            eyes_manual_duration = 0.8   # Eyes are slower
+            mouth_manual_duration = 0.5  # Mouth can be a bit faster
 
             if eyes_position is not None:
-                await self.eyes.set_position(eyes_position, manual_duration)
+                await self.eyes.set_position(eyes_position, eyes_manual_duration)
 
             if mouth_position is not None:
-                await self.mouth.set_position(mouth_position, manual_duration)
+                await self.mouth.set_position(mouth_position, mouth_manual_duration)
 
             logger.info(f"Positions updated: eyes={eyes_position}, mouth={mouth_position}")
 

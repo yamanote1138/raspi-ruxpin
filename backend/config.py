@@ -29,7 +29,7 @@ class HardwareSettings(BaseSettings):
     eyes_cdir: int = Field(default=20, description="Counter-direction pin for eyes servo")
     eyes_speed: int = Field(default=100, ge=1, le=1000, description="PWM frequency for eyes")
     eyes_duration: float = Field(
-        default=0.4, gt=0, le=2.0, description="Default duration for eyes movement"
+        default=0.8, gt=0, le=2.0, description="Default duration for eyes movement (slower for 40+ year old servos)"
     )
 
     # Mouth servo pins
@@ -38,7 +38,7 @@ class HardwareSettings(BaseSettings):
     mouth_cdir: int = Field(default=8, description="Counter-direction pin for mouth servo")
     mouth_speed: int = Field(default=100, ge=1, le=1000, description="PWM frequency for mouth")
     mouth_duration: float = Field(
-        default=0.15, gt=0, le=2.0, description="Default duration for mouth movement"
+        default=0.3, gt=0, le=2.0, description="Default duration for mouth movement (slower for 40+ year old servos)"
     )
 
     # Platform detection

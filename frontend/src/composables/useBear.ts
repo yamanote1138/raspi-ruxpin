@@ -74,9 +74,9 @@ export function useBear(): BearComposable {
   }
 
   const bearImage = computed(() => {
-    const eyes = bearState.value.eyes === State.OPEN ? 'eo' : 'ec'
+    const eyePos = getPositionLabel(bearState.value.eyes_position)
     const mouthPos = getPositionLabel(bearState.value.mouth_position)
-    return `/img/teddy_${eyes}m${mouthPos}.png`
+    return `/img/teddy_e${eyePos}m${mouthPos}.png`
   })
 
   /**
