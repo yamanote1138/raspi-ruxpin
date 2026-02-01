@@ -58,9 +58,31 @@
       <div class="col-lg-6 mb-4">
         <div class="card bg-panel">
           <div class="card-body">
-            <!-- Text Input -->
+            <!-- Text Input with Button Bar -->
             <div class="mb-3">
-              <label for="tts-text" class="form-label">Enter Text</label>
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <label for="tts-text" class="form-label mb-0">Enter Text</label>
+                <div class="btn-group" role="group">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-light"
+                    :disabled="isBusy"
+                    @click="loadRandomPhrase"
+                    title="Load random example phrase"
+                  >
+                    Random
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-light"
+                    :disabled="isBusy || !ttsText.trim()"
+                    @click="clearText"
+                    title="Clear text"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
               <textarea
                 id="tts-text"
                 v-model="ttsText"
@@ -100,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import type { BearState } from '@/types/bear'
 import type { Phrases } from '@/types/websocket'
 
@@ -115,9 +137,19 @@ const emit = defineEmits<{
   play: [sound: string]
 }>()
 
+// Example phrases for TTS
+const examplePhrases = [
+  "Hello! I'm Teddy Ruxpin, and I love telling stories!",
+  "Did you know that I'm the world's first animated talking toy?",
+  "Let's go on an adventure together through the magical land of Grundo!",
+  "I've got tales of friendship, courage, and wonder to share with you!",
+  "My friends Newton Gimmick and Grubby are the best companions anyone could ask for!"
+]
+
 // State
 const ttsText = ref('')
 const selectedPhrase = ref('')
+const lastRandomIndex = ref(-1)
 
 // Computed
 const sortedPhrases = computed(() => {
@@ -155,6 +187,26 @@ const handlePlay = async () => {
     console.error('Play error:', error)
   }
 }
+
+const loadRandomPhrase = () => {
+  // Get a random phrase that's different from the last one
+  let randomIndex: number
+  do {
+    randomIndex = Math.floor(Math.random() * examplePhrases.length)
+  } while (randomIndex === lastRandomIndex.value && examplePhrases.length > 1)
+
+  lastRandomIndex.value = randomIndex
+  ttsText.value = examplePhrases[randomIndex]
+}
+
+const clearText = () => {
+  ttsText.value = ''
+}
+
+// Load a random phrase on mount
+onMounted(() => {
+  loadRandomPhrase()
+})
 </script>
 
 <style scoped>
