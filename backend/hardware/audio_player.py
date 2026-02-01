@@ -85,8 +85,8 @@ class AudioPlayer:
         self._volume = start_volume
         self._platform = platform.system()
 
-        # Initialize volume
-        asyncio.create_task(self.set_volume(start_volume))
+        # Read current system volume and sync
+        asyncio.create_task(self._initialize_volume(start_volume))
 
         logger.info(
             f"AudioPlayer initialized: platform={self._platform}, "
@@ -103,6 +103,60 @@ class AudioPlayer:
         """Get current volume level."""
         return self._volume
 
+    async def _initialize_volume(self, fallback_volume: int) -> None:
+        """Initialize volume by reading system volume or using fallback.
+
+        Args:
+            fallback_volume: Fallback volume if system volume can't be read
+        """
+        try:
+            # Try to read current system volume
+            system_volume = await self.get_system_volume()
+            if system_volume is not None:
+                self._volume = system_volume
+                logger.info(f"Synced with system volume: {system_volume}%")
+            else:
+                # Use fallback and set it
+                await self.set_volume(fallback_volume)
+                logger.info(f"Set volume to fallback: {fallback_volume}%")
+        except Exception as e:
+            logger.warning(f"Failed to read system volume: {e}, using fallback")
+            await self.set_volume(fallback_volume)
+
+    async def get_system_volume(self) -> int | None:
+        """Get current system volume.
+
+        Returns:
+            Current system volume (0-100) or None if unavailable
+        """
+        try:
+            if self._platform == "Darwin":
+                # macOS: Read volume using AppleScript
+                process = await asyncio.create_subprocess_exec(
+                    "osascript",
+                    "-e",
+                    "output volume of (get volume settings)",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.DEVNULL,
+                )
+                stdout, _ = await process.communicate()
+                volume = int(stdout.decode().strip())
+                return volume
+            else:
+                # Linux: Read ALSA volume
+                try:
+                    import alsaaudio
+
+                    mixer = alsaaudio.Mixer("PCM")
+                    volumes = mixer.getvolume()
+                    return volumes[0] if volumes else None
+                except ImportError:
+                    logger.debug("alsaaudio not available")
+                    return None
+        except Exception as e:
+            logger.debug(f"Failed to read system volume: {e}")
+            return None
+
     async def set_volume(self, level: int) -> None:
         """Set system volume level.
 
@@ -117,15 +171,15 @@ class AudioPlayer:
 
         try:
             if self._platform == "Darwin":
-                # macOS: Use AppleScript
-                volume_percent = int((level / 100) * 7)  # macOS uses 0-7 scale
-                await asyncio.create_subprocess_exec(
+                # macOS: Use AppleScript (0-100 scale)
+                process = await asyncio.create_subprocess_exec(
                     "osascript",
                     "-e",
-                    f"set volume output volume {volume_percent}",
+                    f"set volume output volume {level}",
                     stdout=asyncio.subprocess.DEVNULL,
                     stderr=asyncio.subprocess.DEVNULL,
                 )
+                await process.wait()
             else:
                 # Linux: Use ALSA
                 try:
