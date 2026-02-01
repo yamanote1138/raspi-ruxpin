@@ -365,13 +365,24 @@ Connect to `/ws` and send JSON messages:
 
 See the [wiki](https://github.com/yamanote1138/raspi-ruxpin/wiki/) for detailed hardware setup instructions.
 
+## Project Status
+
+**Current Phase:** Deployment ready - awaiting hardware testing
+
+See [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md) for detailed progress and next steps.
+
 ## Documentation
 
-Detailed instructions available in the [wiki](https://github.com/yamanote1138/raspi-ruxpin/wiki/):
+**Local Documentation:**
+- [Quick Start Guide](docs/QUICKSTART.md) - Setup and installation
+- [Deployment Guide](docs/DEPLOYMENT.md) - Raspberry Pi deployment
+- [Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions
+- [Piper TTS Setup](docs/PIPER_SETUP.md) - Neural TTS configuration
+
+**External Resources:**
 - [Hardware Setup](https://github.com/yamanote1138/raspi-ruxpin/wiki/Hardware-Setup)
 - [Software Installation](https://github.com/yamanote1138/raspi-ruxpin/wiki/Software-Installation)
 - [Operation](https://github.com/yamanote1138/raspi-ruxpin/wiki/Operation)
-- [Troubleshooting](https://github.com/yamanote1138/raspi-ruxpin/wiki/Troubleshooting)
 
 ## License
 

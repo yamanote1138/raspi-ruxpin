@@ -79,3 +79,6 @@ piper/
 test.wav
 test2.wav
 test*.wav
+
+# Claude session tracking (local only)
+.claude/

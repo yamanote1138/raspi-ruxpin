@@ -1,8 +1,23 @@
-# Raspi Ruxpin 2.0 - Next Steps
+# Raspi Ruxpin 2.0 - Project Status & Next Steps
 
-## Current Status: ✅ DEPLOYMENT READY - AWAITING HARDWARE TESTING
+**Last Updated:** 2026-02-01
 
-Development environment complete. Deployment scripts and documentation ready. Next step is hardware testing on Raspberry Pi at workbench.
+---
+
+## 🎯 Current Status: DEPLOYMENT READY - AWAITING HARDWARE TESTING
+
+**What's Done:**
+- ✅ Complete v2.0 modernization (FastAPI + Vue 3)
+- ✅ Mac development environment working
+- ✅ Deployment automation scripts ready
+- ✅ Comprehensive documentation written
+- ✅ Service configuration complete
+- ✅ Codebase cleaned up (removed old v1.0 code)
+
+**What's Next:**
+- ⏳ **Hardware testing on Raspberry Pi** (waiting for workbench access)
+
+**Blocking Issues:** None - just need physical access to hardware
 
 ## What's Running Right Now
 
@@ -170,34 +185,42 @@ uv run black backend/
 cd frontend && npm run lint
 ```
 
-## What's Next?
+## 📋 Detailed Progress
 
-### Completed ✅
-1. ✅ Setup complete
-2. ✅ Backend running
-3. ✅ Frontend running
-4. ✅ Browser testing
-5. ✅ Deployment scripts created
-6. ✅ Service configuration complete
-7. ✅ Troubleshooting guide written
-8. ✅ Platform-specific configs added
+### Phase 1-7: Modernization ✅ COMPLETE
+- ✅ Backend foundation (FastAPI, async/await, Pydantic)
+- ✅ Hardware abstraction layer
+- ✅ Service layer with background tasks
+- ✅ WebSocket communication
+- ✅ Frontend (Vue 3, TypeScript, Vite)
+- ✅ Complete UI with all controls
 
-### Phase 8 (Testing) - SKIPPED
-- ~~Write unit tests~~
-- ~~Write integration tests~~
-- ~~Set up GitHub Actions CI~~ (Skipped by choice)
-- ~~Achieve >80% code coverage~~
+### Phase 8: Testing & CI ❌ SKIPPED
+- Automated testing not needed for this project
+- Manual testing sufficient
 
-### Next: Hardware Testing (Phase 9)
-**Status**: ⏳ ON HOLD - Waiting for workbench access
+### Phase 9: Deployment ✅ MOSTLY COMPLETE
+- ✅ Created systemd service file
+- ✅ Created deployment script (scripts/deploy.sh)
+- ✅ Created service setup script (scripts/setup-service.sh)
+- ✅ Platform-specific configs (.env.example.mac, .env.example.pi)
+- ✅ Troubleshooting guide (704 lines)
+- ✅ Documentation organized into docs/
+- ✅ Removed old v1.0 code (lib/, templates/, main.py)
+- ⏳ **Hardware testing on Raspberry Pi** ← NEXT STEP
 
-When at workbench with hardware:
-- Deploy to Raspberry Pi using scripts/deploy.sh
-- Test actual servo movements (eyes & mouth)
-- Verify GPIO pin configurations
-- Test audio output on Pi hardware
-- Validate mouth sync with real servos
-- Update hardware documentation if needed
+### Phase 10: Hardware Testing ⏳ WAITING
+**Prerequisites:** Physical access to Raspberry Pi at workbench
+
+**Steps when ready:**
+1. Deploy to Pi: `./scripts/deploy.sh`
+2. Test servo movements (eyes open/close, mouth open/close)
+3. Verify GPIO pin assignments match hardware
+4. Test audio output and mouth synchronization
+5. Validate auto-blink functionality
+6. Test TTS with espeak
+7. Verify systemd service starts on boot
+8. Update docs if any issues found
 
 ### Production Deployment
 1. Build frontend:
