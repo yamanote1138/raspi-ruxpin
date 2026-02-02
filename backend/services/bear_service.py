@@ -191,11 +191,18 @@ class BearService:
                     # Get proportional mouth position based on amplitude
                     target_position = self.audio_player.get_mouth_position()
 
-                    # Update mouth position (slower for 40+ year old servo)
-                    # 0.15s allows old servo to respond while maintaining speech sync
-                    await self.mouth.set_position_percent(target_position, duration=0.15)
+                    # Use faster duration when closing mouth (makes it snap shut more naturally)
+                    # and slower duration when opening (smoother speech animation)
+                    if target_position == 0:
+                        # Snap closed quickly for natural talking motion
+                        duration = 0.08
+                    else:
+                        # Slower opening for 40+ year old servo
+                        duration = 0.15
 
-                # 25Hz update rate (slower for smoother animation)
+                    await self.mouth.set_position_percent(target_position, duration=duration)
+
+                # 25Hz update rate for smooth animation
                 await asyncio.sleep(0.04)
         except asyncio.CancelledError:
             logger.info("Talk monitor cancelled")

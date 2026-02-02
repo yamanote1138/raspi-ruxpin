@@ -469,7 +469,20 @@ class AudioPlayer:
             with wave.open(str(audio_file), "rb") as wf:
                 duration = wf.getnframes() / wf.getframerate()
 
-            # Start amplitude tracking task
+            # Set initial amplitude to trigger mouth movement before audio starts
+            # This gives the mouth a "head start" to begin opening
+            if amplitudes:
+                samples_for_preview = len(amplitudes) // int(duration * 50)
+                initial_chunk = amplitudes[:samples_for_preview]
+                initial_amplitude = sum(initial_chunk) // len(initial_chunk) if initial_chunk else 0
+
+                async with self._amplitude_lock:
+                    self._current_amplitude = initial_amplitude
+
+            # Give mouth time to start moving (monitor checks every 0.04s + servo needs ~0.1s)
+            await asyncio.sleep(0.10)
+
+            # Now start both amplitude tracking and audio together (in sync)
             amplitude_task = asyncio.create_task(
                 self._update_amplitude_loop(amplitudes, duration, amplitude_callback)
             )
@@ -553,13 +566,19 @@ class AudioPlayer:
         Returns:
             Mouth position as percentage (0-100)
         """
-        if self._current_amplitude < 100:
+        # Use the configured amplitude threshold instead of hardcoded 100
+        # This ensures mouth closes fully during quiet moments
+        if self._current_amplitude < self.amplitude_threshold:
             return 0
 
-        # Map amplitude to 0-100% with some scaling
+        # Map amplitude above threshold to 0-100% with more aggressive scaling
+        # Subtract threshold so mouth opens from actual speech, not background noise
+        effective_amplitude = self._current_amplitude - self.amplitude_threshold
+        effective_max = max_amplitude - self.amplitude_threshold
+
         # Use square root for more natural response (quieter sounds open mouth less)
-        normalized = min(self._current_amplitude / max_amplitude, 1.0)
-        scaled = normalized**0.5  # Square root for better curve
+        normalized = min(effective_amplitude / effective_max, 1.0)
+        scaled = normalized**0.6  # Adjusted exponent for better talking motion
         position = int(scaled * 100)
 
         return min(max(position, 0), 100)
