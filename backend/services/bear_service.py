@@ -229,10 +229,10 @@ class BearService:
                     # Check conditions again after delay
                     if self.blink_enabled and not self.is_busy and self.eyes.state == State.OPEN:
                         logger.debug("Executing blink")
-                        # Natural blink: slow servos need more time (40+ year old motors)
-                        await self.eyes.close(0.6)    # Close slowly (old servo)
-                        await asyncio.sleep(0.2)      # Stay closed briefly
-                        await self.eyes.open(0.6)     # Open slowly (old servo)
+                        # Natural blink: faster for more responsive animation
+                        await self.eyes.close(0.4)    # Close with moderate speed
+                        await asyncio.sleep(0.15)     # Stay closed briefly
+                        await self.eyes.open(0.4)     # Open with moderate speed
                         logger.debug("Blink completed")
                     else:
                         logger.debug(f"Blink cancelled: enabled={self.blink_enabled}, busy={self.is_busy}, eyes={self.eyes.state}")
@@ -266,8 +266,8 @@ class BearService:
 
         try:
             # Use slower duration for manual movements to show smooth animation
-            # Longer duration for old servos (40+ years old) to complete movement
-            eyes_manual_duration = 0.8   # Eyes are slower
+            # Adjusted for responsive feel while allowing old servos to complete movement
+            eyes_manual_duration = 0.5   # Faster, more responsive eyes
             mouth_manual_duration = 0.5  # Mouth can be a bit faster
 
             if eyes_position is not None:
