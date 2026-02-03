@@ -34,7 +34,6 @@ export default defineConfig({
       output: {
         manualChunks: {
           'vue': ['vue'],
-          'socket': ['socket.io-client'],
         }
       }
     }
