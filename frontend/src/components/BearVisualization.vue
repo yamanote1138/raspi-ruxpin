@@ -84,10 +84,13 @@
             :disabled="bearState.is_busy"
             @change="handleVolumeChange"
           >
-            <option :value="0">Vol: 0%</option>
+            <option :value="10">Vol: 10%</option>
             <option :value="20">Vol: 20%</option>
+            <option :value="30">Vol: 30%</option>
             <option :value="40">Vol: 40%</option>
+            <option :value="50">Vol: 50%</option>
             <option :value="60">Vol: 60%</option>
+            <option :value="70">Vol: 70%</option>
             <option :value="80">Vol: 80%</option>
             <option :value="90">Vol: 90%</option>
           </select>
