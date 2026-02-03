@@ -164,8 +164,87 @@ echo ""
 log_info "Testing audio setup..."
 if aplay -l >/dev/null 2>&1; then
     log_success "Audio devices found"
+    echo ""
     echo "Available audio devices:"
-    aplay -l | grep "card"
+    aplay -l | grep -E "^card"
+    echo ""
+
+    # Interactive audio device selection
+    if [ "$UPDATE_MODE" = false ]; then
+        echo "Would you like to select a specific audio device?"
+        echo "(If unsure, press 'n' to use the system default)"
+        read -p "Select audio device? (y/N): " -n 1 -r
+        echo
+
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            # Get list of cards
+            mapfile -t cards < <(aplay -l | grep -oP "^card \K\d+(?=:)" | sort -u)
+
+            if [ ${#cards[@]} -eq 0 ]; then
+                log_warning "No audio cards detected"
+            elif [ ${#cards[@]} -eq 1 ]; then
+                # Only one card, auto-select it
+                SELECTED_CARD="${cards[0]}"
+                log_info "Only one card available, selecting card $SELECTED_CARD"
+
+                # Update .env with device selection
+                if ! grep -q "^AUDIO__DEVICE=" .env; then
+                    echo "" >> .env
+                    echo "# Audio Device Selection" >> .env
+                    echo "AUDIO__DEVICE=plughw:$SELECTED_CARD,0" >> .env
+                    echo "AUDIO__CARD_INDEX=$SELECTED_CARD" >> .env
+                else
+                    sed -i "s|^AUDIO__DEVICE=.*|AUDIO__DEVICE=plughw:$SELECTED_CARD,0|" .env
+                    sed -i "s|^AUDIO__CARD_INDEX=.*|AUDIO__CARD_INDEX=$SELECTED_CARD|" .env
+                fi
+
+                log_success "Configured to use audio card $SELECTED_CARD"
+            else
+                # Multiple cards, let user choose
+                echo ""
+                echo "Multiple audio cards detected:"
+                for i in "${!cards[@]}"; do
+                    card="${cards[$i]}"
+                    card_info=$(aplay -l | grep "^card $card:" | head -1)
+                    echo "  [$i] Card $card: $card_info"
+                done
+                echo ""
+
+                # Get user selection
+                while true; do
+                    read -p "Select card number (0-$((${#cards[@]} - 1))): " -r
+                    if [[ $REPLY =~ ^[0-9]+$ ]] && [ "$REPLY" -ge 0 ] && [ "$REPLY" -lt "${#cards[@]}" ]; then
+                        SELECTED_CARD="${cards[$REPLY]}"
+                        break
+                    else
+                        echo "Invalid selection. Please try again."
+                    fi
+                done
+
+                # Update .env with device selection
+                if ! grep -q "^AUDIO__DEVICE=" .env; then
+                    echo "" >> .env
+                    echo "# Audio Device Selection" >> .env
+                    echo "AUDIO__DEVICE=plughw:$SELECTED_CARD,0" >> .env
+                    echo "AUDIO__CARD_INDEX=$SELECTED_CARD" >> .env
+                else
+                    sed -i "s|^AUDIO__DEVICE=.*|AUDIO__DEVICE=plughw:$SELECTED_CARD,0|" .env
+                    sed -i "s|^AUDIO__CARD_INDEX=.*|AUDIO__CARD_INDEX=$SELECTED_CARD|" .env
+                fi
+
+                log_success "Configured to use audio card $SELECTED_CARD"
+                echo ""
+                echo "Testing selected audio device..."
+                if speaker-test -D plughw:$SELECTED_CARD,0 -t wav -c 2 -l 1 >/dev/null 2>&1; then
+                    log_success "Audio test successful!"
+                else
+                    log_warning "Audio test failed - you may need to adjust the device manually"
+                fi
+            fi
+        else
+            log_info "Using system default audio device"
+        fi
+    fi
 else
     log_warning "No audio devices found or aplay failed"
 fi
@@ -173,10 +252,15 @@ fi
 # Setup systemd service
 if [ "$UPDATE_MODE" = false ]; then
     echo ""
-    echo "Setting up systemd service..."
+    log_info "Setting up systemd service..."
 
-    # Adjust service file paths
+    # Check if service file exists
     SERVICE_FILE="raspi-ruxpin.service"
+    if [ ! -f "$SERVICE_FILE" ]; then
+        log_error "Service file not found: $SERVICE_FILE"
+        exit 1
+    fi
+
     TEMP_SERVICE="/tmp/raspi-ruxpin.service"
 
     # Replace paths in service file
@@ -185,25 +269,55 @@ if [ "$UPDATE_MODE" = false ]; then
     sed -i "s|Group=pi|Group=$USER|g" "$TEMP_SERVICE"
 
     # Install service
+    log_info "Installing service file..."
     sudo cp "$TEMP_SERVICE" /etc/systemd/system/raspi-ruxpin.service
+
+    if [ ! -f /etc/systemd/system/raspi-ruxpin.service ]; then
+        log_error "Failed to install service file"
+        rm "$TEMP_SERVICE"
+        exit 1
+    fi
+
     sudo systemctl daemon-reload
     sudo systemctl enable raspi-ruxpin
+    log_success "Service installed and enabled"
 
     rm "$TEMP_SERVICE"
 fi
 
 # Start/restart service
 echo ""
-echo "Starting service..."
-sudo systemctl restart raspi-ruxpin
+# Check if service exists before trying to start it
+if systemctl list-unit-files | grep -q "raspi-ruxpin.service"; then
+    if [ "$UPDATE_MODE" = true ]; then
+        log_info "Restarting service..."
+        sudo systemctl restart raspi-ruxpin
+    else
+        log_info "Starting service..."
+        sudo systemctl start raspi-ruxpin
+    fi
 
-# Wait a moment for service to start
-sleep 3
+    # Wait a moment for service to start
+    sleep 3
 
-# Check status
-echo ""
-echo "Checking service status..."
-sudo systemctl status raspi-ruxpin --no-pager || true
+    # Check status
+    echo ""
+    log_info "Checking service status..."
+    if systemctl is-active --quiet raspi-ruxpin; then
+        log_success "Service is running!"
+        sudo systemctl status raspi-ruxpin --no-pager || true
+    else
+        log_error "Service failed to start"
+        echo ""
+        echo "Check logs with:"
+        echo "  sudo journalctl -u raspi-ruxpin -n 50"
+        exit 1
+    fi
+else
+    log_error "Service not found. Installation may have failed."
+    echo "Try running the script again or check for errors above."
+    exit 1
+fi
 
 echo ""
 echo "======================================"

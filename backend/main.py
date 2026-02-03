@@ -71,6 +71,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             tts_speed=settings.tts.speed,
             tts_pitch=settings.tts.pitch,
             start_volume=settings.audio.start_volume,
+            alsa_device=settings.audio.device,
+            alsa_card_index=settings.audio.card_index,
+            alsa_mixer=settings.audio.mixer,
         )
         app.state.audio_player = audio_player
 

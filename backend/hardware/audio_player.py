@@ -57,6 +57,9 @@ class AudioPlayer:
         tts_speed: int = 125,
         tts_pitch: int = 50,
         start_volume: int = 100,
+        alsa_device: str | None = None,
+        alsa_card_index: int | None = None,
+        alsa_mixer: str = "PCM",
     ) -> None:
         """Initialize audio player.
 
@@ -70,6 +73,9 @@ class AudioPlayer:
             tts_speed: TTS speaking speed
             tts_pitch: TTS voice pitch (0-99)
             start_volume: Initial volume level
+            alsa_device: ALSA device name (e.g., 'hw:1,0', 'plughw:1,0')
+            alsa_card_index: ALSA card index for mixer control
+            alsa_mixer: ALSA mixer name (default 'PCM')
         """
         self.sample_rate = sample_rate
         self.amplitude_threshold = amplitude_threshold
@@ -79,6 +85,9 @@ class AudioPlayer:
         self.tts_voice = tts_voice
         self.tts_speed = tts_speed
         self.tts_pitch = tts_pitch
+        self.alsa_device = alsa_device
+        self.alsa_card_index = alsa_card_index
+        self.alsa_mixer = alsa_mixer
 
         self._current_amplitude = 0
         self._amplitude_lock = asyncio.Lock()
@@ -88,9 +97,12 @@ class AudioPlayer:
         # Read current system volume and sync
         asyncio.create_task(self._initialize_volume(start_volume))
 
+        device_info = f", device={alsa_device}" if alsa_device else ""
+        card_info = f", card={alsa_card_index}" if alsa_card_index is not None else ""
         logger.info(
             f"AudioPlayer initialized: platform={self._platform}, "
             f"sample_rate={sample_rate}Hz, threshold={amplitude_threshold}"
+            f"{device_info}{card_info}"
         )
 
     @property
@@ -147,7 +159,10 @@ class AudioPlayer:
                 try:
                     import alsaaudio
 
-                    mixer = alsaaudio.Mixer("PCM")
+                    if self.alsa_card_index is not None:
+                        mixer = alsaaudio.Mixer(self.alsa_mixer, cardindex=self.alsa_card_index)
+                    else:
+                        mixer = alsaaudio.Mixer(self.alsa_mixer)
                     volumes = mixer.getvolume()
                     return volumes[0] if volumes else None
                 except ImportError:
@@ -185,7 +200,10 @@ class AudioPlayer:
                 try:
                     import alsaaudio
 
-                    mixer = alsaaudio.Mixer("PCM")
+                    if self.alsa_card_index is not None:
+                        mixer = alsaaudio.Mixer(self.alsa_mixer, cardindex=self.alsa_card_index)
+                    else:
+                        mixer = alsaaudio.Mixer(self.alsa_mixer)
                     mixer.setvolume(level)
                 except ImportError:
                     logger.warning("alsaaudio not available, skipping volume control")
@@ -498,12 +516,22 @@ class AudioPlayer:
                 )
             else:
                 # Linux: Use aplay
-                process = await asyncio.create_subprocess_exec(
-                    "aplay",
-                    str(audio_file),
-                    stdout=asyncio.subprocess.DEVNULL,
-                    stderr=asyncio.subprocess.PIPE,
-                )
+                if self.alsa_device:
+                    process = await asyncio.create_subprocess_exec(
+                        "aplay",
+                        "-D",
+                        self.alsa_device,
+                        str(audio_file),
+                        stdout=asyncio.subprocess.DEVNULL,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                else:
+                    process = await asyncio.create_subprocess_exec(
+                        "aplay",
+                        str(audio_file),
+                        stdout=asyncio.subprocess.DEVNULL,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
 
             # Wait for playback to complete
             _, stderr = await process.communicate()

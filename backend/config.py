@@ -64,6 +64,8 @@ class AudioSettings(BaseSettings):
         env_nested_delimiter="__",
     )
 
+    device: str | None = Field(default=None, description="ALSA device name (e.g., 'hw:1,0', 'plughw:1,0', 'default')")
+    card_index: int | None = Field(default=None, ge=0, description="ALSA card index for mixer control (0, 1, 2, etc.)")
     mixer: str = Field(default="PCM", description="ALSA mixer name (Linux only)")
     start_volume: int = Field(default=100, ge=0, le=100, description="Initial volume level (0-100)")
     sample_rate: int = Field(default=16000, description="Audio sample rate")
