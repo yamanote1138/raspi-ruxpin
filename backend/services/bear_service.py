@@ -187,20 +187,19 @@ class BearService:
 
         try:
             while not self._shutdown:
-                if self.is_busy:
-                    # Get proportional mouth position based on amplitude
-                    target_position = self.audio_player.get_mouth_position()
+                # Get proportional mouth position based on amplitude
+                target_position = self.audio_player.get_mouth_position()
 
-                    # Use faster duration when closing mouth (makes it snap shut more naturally)
-                    # and slower duration when opening (smoother speech animation)
-                    if target_position == 0:
-                        # Snap closed quickly for natural talking motion
-                        duration = 0.08
-                    else:
-                        # Slower opening for 40+ year old servo
-                        duration = 0.15
+                # Always update mouth position (even when not busy) so it closes immediately
+                # Use configured duration from settings, or faster for closing
+                if target_position == 0:
+                    # Close mouth quickly for natural talking motion
+                    duration = min(self.settings.hardware.mouth_duration, 0.08)
+                else:
+                    # Use configured duration for opening
+                    duration = self.settings.hardware.mouth_duration
 
-                    await self.mouth.set_position_percent(target_position, duration=duration)
+                await self.mouth.set_position_percent(target_position, duration=duration)
 
                 # 25Hz update rate for smooth animation
                 await asyncio.sleep(0.04)
