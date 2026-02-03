@@ -34,6 +34,7 @@ export interface BearComposable {
   setVolume: (level: number) => void
   fetchPhrases: () => void
   setMode: (mode: Mode) => void
+  setBlinkEnabled: (enabled: boolean) => void
   setCharacter: (character: string) => void
 }
 
