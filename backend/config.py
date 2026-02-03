@@ -67,7 +67,7 @@ class AudioSettings(BaseSettings):
     device: str | None = Field(default=None, description="ALSA device name (e.g., 'hw:1,0', 'plughw:1,0', 'default')")
     card_index: int | None = Field(default=None, ge=0, description="ALSA card index for mixer control (0, 1, 2, etc.)")
     mixer: str = Field(default="PCM", description="ALSA mixer name (Linux only)")
-    start_volume: int = Field(default=100, ge=0, le=100, description="Initial volume level (0-100)")
+    start_volume: int = Field(default=90, ge=0, le=90, description="Initial volume level (0-90, capped to prevent instability)")
     sample_rate: int = Field(default=16000, description="Audio sample rate")
     amplitude_threshold: int = Field(default=500, ge=0, description="Threshold for mouth movement")
     sounds_dir: Path = Field(default=Path("sounds"), description="Directory containing sound files")
@@ -76,8 +76,8 @@ class AudioSettings(BaseSettings):
     @classmethod
     def validate_volume(cls, v: int) -> int:
         """Ensure volume is in valid range."""
-        if not (0 <= v <= 100):
-            raise ValueError("Volume must be between 0 and 100")
+        if not (0 <= v <= 90):
+            raise ValueError("Volume must be between 0 and 90")
         return v
 
     @field_validator("sounds_dir")

@@ -17,7 +17,7 @@
                 type="range"
                 class="form-range"
                 min="0"
-                max="100"
+                max="90"
                 :value="bearState.volume"
                 :disabled="isBusy"
                 @input="handleVolumeChange"

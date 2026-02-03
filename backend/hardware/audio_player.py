@@ -176,13 +176,13 @@ class AudioPlayer:
         """Set system volume level.
 
         Args:
-            level: Volume level (0-100)
+            level: Volume level (0-90, capped to prevent system instability)
 
         Raises:
             AudioError: If volume setting fails
         """
-        if not (0 <= level <= 100):
-            raise AudioError(f"Volume must be between 0 and 100, got {level}")
+        if not (0 <= level <= 90):
+            raise AudioError(f"Volume must be between 0 and 90, got {level}")
 
         try:
             if self._platform == "Darwin":

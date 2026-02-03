@@ -153,8 +153,8 @@ export function useBear(): BearComposable {
    * Set volume level
    */
   const setVolume = (level: number) => {
-    if (level < 0 || level > 100) {
-      throw new Error('Volume must be between 0 and 100')
+    if (level < 0 || level > 90) {
+      throw new Error('Volume must be between 0 and 90')
     }
 
     const message = {

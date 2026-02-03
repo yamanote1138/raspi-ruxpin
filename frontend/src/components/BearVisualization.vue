@@ -89,7 +89,7 @@
             <option :value="40">Vol: 40%</option>
             <option :value="60">Vol: 60%</option>
             <option :value="80">Vol: 80%</option>
-            <option :value="100">Vol: 100%</option>
+            <option :value="90">Vol: 90%</option>
           </select>
         </div>
       </div>
