@@ -5,10 +5,8 @@ application with WebSocket support, CORS, static file serving, and lifecycle man
 """
 
 import logging
-import sys
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from pathlib import Path
-from typing import AsyncGenerator
 
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,8 +15,9 @@ from fastapi.staticfiles import StaticFiles
 from backend.api.endpoints.health import router as health_router
 from backend.api.websocket import websocket_endpoint
 from backend.config import get_settings
+from backend.hardware.arduino import ArduinoController
 from backend.hardware.audio_player import AudioPlayer
-from backend.hardware.gpio_manager import GPIOManager
+from backend.hardware.timing_store import TimingStore
 from backend.logging_config import setup_logging
 from backend.services.bear_service import BearService
 
@@ -30,7 +29,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan manager.
 
     Handles startup and shutdown tasks:
-    - Initialize settings, GPIO, audio player, and bear service
+    - Initialize settings, Arduino, audio player, timing store, and bear service
     - Start bear service background tasks
     - Clean up on shutdown
 
@@ -48,17 +47,22 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
         # Initialize logging with appropriate level
         log_level = "DEBUG" if settings.debug else "INFO"
-        setup_logging(level=log_level, enable_websocket_streaming=True)
+        setup_logging(level=log_level)
 
         logger.info("Starting Raspi Ruxpin backend...")
         logger.info(f"Environment: {settings.environment}")
         logger.info(f"Debug mode: {settings.debug}")
         logger.debug(f"Log level: {log_level}")
 
-        # Initialize GPIO manager
-        gpio_manager = GPIOManager(use_mock=settings.hardware.use_mock_gpio)
-        gpio_manager.initialize()
-        app.state.gpio_manager = gpio_manager
+        # Initialize Arduino controller
+        arduino = ArduinoController(
+            port=settings.serial.port,
+            baud_rate=settings.serial.baud_rate,
+            timeout=settings.serial.timeout,
+            connect_timeout=settings.serial.connect_timeout,
+            use_mock=settings.serial.use_mock,
+        )
+        app.state.arduino = arduino
 
         # Initialize audio player
         audio_player = AudioPlayer(
@@ -77,11 +81,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         )
         app.state.audio_player = audio_player
 
+        # Initialize timing store
+        timing_store = TimingStore(timing_dir=settings.sync.timing_dir)
+        app.state.timing_store = timing_store
+
         # Initialize bear service
         bear_service = BearService(
             settings=settings,
-            gpio_manager=gpio_manager,
+            arduino=arduino,
             audio_player=audio_player,
+            timing_store=timing_store,
         )
         await bear_service.start()
         app.state.bear_service = bear_service
@@ -102,9 +111,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             if hasattr(app.state, "bear_service"):
                 await app.state.bear_service.stop()
 
-            if hasattr(app.state, "gpio_manager"):
-                app.state.gpio_manager.cleanup_all()
-
             logger.info("Raspi Ruxpin backend shut down successfully")
         except Exception as e:
             logger.error(f"Shutdown error: {e}")
@@ -121,7 +127,7 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:8080"],
+    allow_origins=["http://localhost:5173", "http://localhost:8888"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -133,7 +139,7 @@ app.include_router(health_router)
 
 # WebSocket endpoint
 @app.websocket("/ws")
-async def websocket_route(websocket: WebSocket):
+async def websocket_route(websocket: WebSocket) -> None:
     """WebSocket endpoint for real-time communication."""
     bear_service = app.state.bear_service
     await websocket_endpoint(websocket, bear_service)
@@ -152,7 +158,7 @@ if settings.is_production and settings.frontend_dist_dir.exists():
 # Serve sounds directory
 if settings.audio.sounds_dir.exists():
     app.mount(
-        "/sounds",
+        "/data/sounds",
         StaticFiles(directory=str(settings.audio.sounds_dir)),
         name="sounds",
     )

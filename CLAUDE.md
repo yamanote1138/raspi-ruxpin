@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Raspi Ruxpin 2.0 — an animatronic Teddy Ruxpin control system with a FastAPI/WebSocket backend and Vue 3 frontend. The bear has two servos (eyes and mouth) controlled via GPIO, with TTS and audio playback synchronized to mouth movements.
+Raspi Ruxpin 2.0 — an animatronic Teddy Ruxpin control system. A Raspberry Pi (or Mac in dev) serves as the brain: audio playback, analysis, web UI. An Arduino handles all motor control via serial. The Pi's audio output is Y-split — one end to speaker, one end to Arduino's analog input for realtime mode.
+
+Two servos: eyes (open/close/blink) and mouth (7-position model: C/T/S/N/M/L/W). Both 5-wire H-bridge (original Teddy Ruxpin) and 3-wire standard servos are supported via Arduino firmware abstraction.
 
 ## Commands
 
@@ -14,7 +16,7 @@ make install
 
 # Run backend server
 make run                    # production mode
-make dev                    # development mode with auto-reload
+make dev                    # development mode with auto-reload (port 8888)
 
 # Run frontend dev server (separate terminal)
 make frontend               # http://localhost:5173
@@ -23,55 +25,82 @@ make frontend               # http://localhost:5173
 make test                   # run all tests
 make test-verbose           # verbose output
 make test-cov               # with coverage
-uv run pytest backend/tests/test_servo.py           # single test file
-uv run pytest backend/tests/test_servo.py::TestServo::test_open  # single test
+uv run pytest backend/tests/test_arduino.py        # single test file
 
 # Code quality
 make lint                   # ruff check backend/
 make format                 # ruff format backend/
 make type-check             # mypy backend/ (strict mode)
 make check                  # all three: lint + type-check + test
+
+# CLI (standalone, no web UI)
+uv run raspi-ruxpin-cli
 ```
 
 ## Architecture
 
+### Three Sync Modes
+
+- **Amplitude**: Pi pre-analyzes WAV amplitude in 20ms windows, caches timing CSV, sends timed `M<code>` commands over serial during playback.
+- **Phoneme**: Pi uses Whisper + phonemizer to analyze phonemes, caches timing CSV, sends timed commands. Requires `uv pip install -e '.[phoneme]'` and `espeak-ng`.
+- **Realtime**: Arduino reads audio signal from ADC pin A0, computes RMS, drives servos autonomously. Reports `MOUTH:<code>` over serial for frontend visualization.
+
 ### Backend (Python 3.12, FastAPI)
 
-**Entry point:** `backend/main.py` — FastAPI app with lifespan manager that wires up all services.
+**Entry point:** `backend/main.py` — FastAPI app with lifespan manager.
 
-**Startup flow:** `lifespan()` creates `GPIOManager` → `AudioPlayer` → `BearService`, stores them on `app.state`. Services are accessed via `backend/dependencies.py` (FastAPI DI) or directly from `app.state` in the WebSocket handler.
+**Startup flow:** `lifespan()` creates `ArduinoController` → `AudioPlayer` → `TimingStore` → `BearService` → `bear_service.start()`. Services stored on `app.state`.
 
 **Key layers:**
-- `backend/config.py` — Pydantic Settings with nested config classes (`HardwareSettings`, `AudioSettings`, `TTSSettings`). Config precedence: env vars > YAML (`config/hardware.yaml`) > defaults. Singleton via `get_settings()`.
-- `backend/services/bear_service.py` — Central orchestrator. Owns two `Servo` instances (eyes, mouth) and an `AudioPlayer`. Runs two background asyncio tasks: `_talk_monitor` (25Hz mouth sync from audio amplitude) and `_blink_monitor` (random eye blinks).
-- `backend/hardware/servo.py` — Async servo control with PWM. Uses `asyncio.Lock` per servo, animates position with linear interpolation. Supports both binary open/close and proportional `set_position_percent()`.
-- `backend/hardware/gpio_manager.py` — Wraps RPi.GPIO or mock_gpio behind a Protocol. Tracks active pins/PWMs for clean shutdown.
-- `backend/hardware/audio_player.py` — Platform-aware audio (afplay on Mac, aplay on Linux). Reads WAV amplitude data and updates `_current_amplitude` at 50Hz for mouth sync. TTS via espeak (Linux), macOS `say`, or Piper neural TTS.
-- `backend/api/websocket.py` — All client communication is WebSocket-based (no REST for control). Message types are Pydantic models with `Literal` type discriminators. A `ConnectionManager` handles multi-client broadcast. State broadcasts at 10Hz, GPIO status at 1Hz.
+- `backend/config.py` — Pydantic Settings with nested classes (`AudioSettings`, `TTSSettings`, `SerialSettings`, `SyncSettings`). Config precedence: env vars > YAML > defaults. Singleton via `get_settings()`.
+- `backend/services/bear_service.py` — Central orchestrator. Owns `ArduinoController`, `AudioPlayer`, `TimingStore`. Runs background tasks: `_talk_monitor` (cleanup after playback) and `_blink_monitor` (random eye blinks). `_perform_playback()` handles the common speak/play flow. `_execute_timing_schedule()` dispatches timed serial commands synced to audio via `asyncio.Event`.
+- `backend/hardware/arduino.py` — Async serial controller. Handles handshake, config, runtime commands. Background reader intercepts `MOUTH:<code>` reports (realtime mode) via callback. All serial I/O via `asyncio.to_thread`.
+- `backend/hardware/mock_serial.py` — Mock for Mac dev. Simulates READY/OK/PONG. In realtime mode, generates simulated mouth position reports during audio playback (triggered by `AUDIO:START`/`AUDIO:STOP`).
+- `backend/hardware/audio_player.py` — Platform-aware audio (afplay on Mac, aplay on Linux). Supports `start_callback` for timing sync. TTS via espeak or Piper.
+- `backend/hardware/audio_analyzer.py` — Amplitude and phoneme analysis. Produces `list[tuple[int, MouthPosition]]` timelines.
+- `backend/hardware/timing_store.py` — Caches analysis results as CSV in `data/timing/`.
+- `backend/hardware/calibration.py` — 7-position jaw calibration table with interpolation.
+- `backend/api/websocket.py` — All client communication is WebSocket-based at `/ws`. Message routing via `_MESSAGE_HANDLERS` dict. State broadcasts at 10Hz, logs streamed in realtime.
 
-**Hardware abstraction:** On Mac, `backend/hardware/mock_gpio.py` provides a mock GPIO module. Controlled by `HARDWARE__USE_MOCK_GPIO` env var (auto-detected from platform).
+### Arduino Firmware (`arduino/ruxpin/ruxpin.ino`)
+
+State machine: BOOT → HANDSHAKE → CONFIG → RUNNING. Serial protocol: 115200 baud, newline-terminated ASCII.
+
+**Commands:** `M<code>` (mouth position), `J<u>,<l>` (direct angles), `EO`/`EC`/`EB` (eyes), `MODE:<mode>`, `PING`, `STATUS`, `AUDIO:START`/`AUDIO:STOP` (informational).
+
+**Servo abstraction:** H-bridge (PWM + DIR + CDIR, timed movements) or Standard (Servo.h, direct angles).
+
+**ADC processing (realtime mode):** Reads A0 at ~50Hz, 20ms RMS windows, 0.7 power compression, 7-threshold mapping. Reports position changes via `MOUTH:<code>\n`.
 
 ### Frontend (Vue 3 + TypeScript + Vite)
 
-- `frontend/src/composables/useWebSocket.ts` — WebSocket singleton managing connection to `/ws`
-- `frontend/src/composables/useBear.ts` — Bear state management composable
-- Components: `ControlMode.vue` (primary interface), `ConfigMode.vue` (logs/settings), `BearVisualization.vue` (interactive bear display)
+- `frontend/src/composables/useWebSocket.ts` — WebSocket singleton at `/ws`
+- `frontend/src/composables/useBear.ts` — Bear state management, mode switching, change-detection logging
+- `frontend/src/components/ControlMode.vue` — Primary control interface
+- `frontend/src/components/ConfigMode.vue` — Arduino status and log viewer
+- `frontend/src/components/ModeSelector.vue` — Three-button sync mode toggle (Amplitude/Phoneme/Realtime)
+- `frontend/src/components/BearVisualization.vue` — Interactive bear display with mouth/eye visualization
 
 ### Communication
 
-All real-time control uses WebSocket at `/ws`. Message types: `update_bear`, `speak`, `play`, `set_volume`, `set_blink_enabled`, `set_character`, `set_log_level`, `fetch_phrases`, `get_gpio_status`. Server pushes `bear_state`, `log`, `gpio_status`, `error`, `success`.
+All real-time control uses WebSocket at `/ws`. Message types: `update_bear`, `speak`, `play`, `set_volume`, `set_blink_enabled`, `set_character`, `set_sync_mode`, `analyze_audio`, `fetch_phrases`. Server pushes `bear_state` (10Hz), `error`, `success`, `phrases`.
 
 ## Key Constraints
 
-- **Volume capped at 90%** — values above 90 cause system instability on the Pi hardware
-- **Servo durations max 2.0s** — old 40+ year old servos need tuned timing
-- **Mouth sync at 25Hz** in `_talk_monitor`, audio amplitude updates at 50Hz
-- **Python 3.12 required** — uses `X | Y` union syntax throughout
+- **Volume capped at 90%** — values above 90 cause system instability on the Pi
+- **Python 3.12 required** — uses `StrEnum`, `X | Y` union syntax
 - **mypy strict mode** enabled — all code must be fully typed
-- **ruff** for linting/formatting, line length 100
+- **ruff** for linting and formatting, line length 100
 - **pytest with asyncio_mode=auto** — async test functions just work
 - **Test markers:** `@pytest.mark.unit`, `@pytest.mark.integration`, `@pytest.mark.hardware`
 
+## Data Directories
+
+- `data/sounds/` — WAV audio clips
+- `data/timing/` — Cached analysis CSVs (`{stem}_{amp|phn}.csv`)
+- `data/tts/` — Generated TTS audio files (gitignored)
+- `config/` — `jaw_calibration.json`
+
 ## Environment
 
-Copy `.env.example` to `.env`. Key variables use double-underscore nesting: `HARDWARE__USE_MOCK_GPIO`, `AUDIO__START_VOLUME`, `TTS__ENGINE`, etc.
+Copy `.env` and adjust. Key variables use double-underscore nesting: `SERIAL__USE_MOCK`, `AUDIO__START_VOLUME`, `SYNC__MODE`, `TTS__ENGINE`, etc. Serial mock is auto-detected on macOS.

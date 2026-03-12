@@ -1,0 +1,9 @@
+{
+  "C": {"upper": 101, "lower": 99},
+  "T": {"upper": 97, "lower": 95},
+  "S": {"upper": 92, "lower": 90},
+  "N": {"upper": 86, "lower": 84},
+  "M": {"upper": 78, "lower": 76},
+  "L": {"upper": 68, "lower": 66},
+  "W": {"upper": 55, "lower": 53}
+}

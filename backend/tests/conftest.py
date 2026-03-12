@@ -1,57 +1,32 @@
 """Pytest configuration and fixtures for backend tests."""
 
-import pytest
-from unittest.mock import Mock, MagicMock
 from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock
 
-from backend.config import AppSettings, HardwareSettings, AudioSettings, TTSSettings
+import pytest
 
-
-@pytest.fixture
-def mock_gpio():
-    """Provide mock GPIO for tests."""
-    # Mock the RPi.GPIO module
-    gpio_mock = MagicMock()
-    gpio_mock.BCM = 11
-    gpio_mock.OUT = 0
-    gpio_mock.HIGH = 1
-    gpio_mock.LOW = 0
-
-    # Mock PWM
-    pwm_mock = MagicMock()
-    pwm_mock.start = MagicMock()
-    pwm_mock.ChangeDutyCycle = MagicMock()
-    pwm_mock.stop = MagicMock()
-    gpio_mock.PWM.return_value = pwm_mock
-
-    return gpio_mock
+from backend.config import (
+    AppSettings,
+    AudioSettings,
+    SerialSettings,
+    SyncSettings,
+    TTSSettings,
+)
+from backend.core.enums import MouthPosition, SyncMode
 
 
 @pytest.fixture
 def test_settings():
     """Provide test configuration settings."""
     return AppSettings(
-        environment="test",
+        environment="testing",
         debug=True,
         host="127.0.0.1",
         port=8080,
-        hardware=HardwareSettings(
-            use_mock_gpio=True,
-            eyes_pwm=21,
-            eyes_dir=16,
-            eyes_cdir=20,
-            eyes_speed=100,
-            eyes_duration=0.4,
-            mouth_pwm=25,
-            mouth_dir=7,
-            mouth_cdir=8,
-            mouth_speed=100,
-            mouth_duration=0.15,
-        ),
         audio=AudioSettings(
             sample_rate=44100,
             amplitude_threshold=30,
-            sounds_dir=Path("sounds"),
+            sounds_dir=Path("data/sounds"),
             start_volume=80,
             mixer="PCM",
         ),
@@ -62,43 +37,80 @@ def test_settings():
             speed=125,
             pitch=50,
         ),
+        serial=SerialSettings(
+            port="/dev/mock",
+            baud_rate=115200,
+            timeout=1.0,
+            connect_timeout=5.0,
+            use_mock=True,
+        ),
+        sync=SyncSettings(
+            mode=SyncMode.AMPLITUDE,
+            timing_dir=Path("/tmp/timing"),
+        ),
     )
-
-
-@pytest.fixture
-def mock_gpio_manager(mock_gpio):
-    """Provide a mock GPIO manager."""
-    from backend.hardware.gpio_manager import GPIOManager
-
-    manager = GPIOManager(use_mock=True)
-    manager.gpio = mock_gpio
-    manager.initialize()
-
-    return manager
 
 
 @pytest.fixture
 def mock_audio_player():
     """Provide a mock audio player."""
     player = MagicMock()
-    player.play_file = MagicMock(return_value=None)
-    player.speak = MagicMock(return_value=None)
-    player.set_volume = MagicMock(return_value=None)
-    player.get_amplitude = MagicMock(return_value=0)
-    player.is_playing = MagicMock(return_value=False)
-
+    player.play_file = AsyncMock(return_value=None)
+    player.set_volume = AsyncMock(return_value=None)
+    player.generate_tts = AsyncMock(return_value=Path("/tmp/tts/test.wav"))
+    player.resolve_sound_file = MagicMock(return_value=Path("data/sounds/examples/test.wav"))
+    player.list_sounds = MagicMock(return_value={})
+    player.volume = 80
+    player.sounds_dir = Path("data/sounds")
     return player
 
 
 @pytest.fixture
-async def mock_bear_service(test_settings, mock_gpio_manager, mock_audio_player):
-    """Provide a mock bear service."""
+def mock_arduino():
+    """Provide a mock Arduino controller."""
+    arduino = AsyncMock()
+    arduino.connected = True
+    arduino.connect = AsyncMock()
+    arduino.disconnect = AsyncMock()
+    arduino.set_mouth_position = AsyncMock()
+    arduino.set_mouth_angles = AsyncMock()
+    arduino.open_eyes = AsyncMock()
+    arduino.close_eyes = AsyncMock()
+    arduino.blink_eyes = AsyncMock()
+    arduino.set_mode = AsyncMock()
+    arduino.set_mouth_position_callback = MagicMock()
+    arduino.notify_audio_start = AsyncMock()
+    arduino.notify_audio_stop = AsyncMock()
+    arduino.ping = AsyncMock(return_value=True)
+    arduino.get_status = AsyncMock(return_value=None)
+    arduino.port = "/dev/mock"
+    arduino.baud_rate = 115200
+    arduino.use_mock = True
+    return arduino
+
+
+@pytest.fixture
+def mock_timing_store():
+    """Provide a mock timing store."""
+    store = AsyncMock()
+    store.get_or_analyze = AsyncMock(
+        return_value=[(0, MouthPosition.C), (100, MouthPosition.M), (200, MouthPosition.C)]
+    )
+    store.load = AsyncMock(return_value=[])
+    store.save = AsyncMock()
+    return store
+
+
+@pytest.fixture
+async def mock_bear_service(test_settings, mock_arduino, mock_audio_player, mock_timing_store):
+    """Provide a mock bear service (not started)."""
     from backend.services.bear_service import BearService
 
     service = BearService(
         settings=test_settings,
-        gpio_manager=mock_gpio_manager,
+        arduino=mock_arduino,
         audio_player=mock_audio_player,
+        timing_store=mock_timing_store,
     )
 
     # Don't actually start background tasks in tests

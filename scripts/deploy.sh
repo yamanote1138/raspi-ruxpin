@@ -342,7 +342,6 @@ echo ""
 if [ "$UPDATE_MODE" = false ]; then
     log_warning "Configuration notes:"
     echo "  - GPIO pin numbers: Edit .env to match your wiring"
-    echo "  - Add phrases: config/phrases.json"
     echo "  - Add sounds: sounds/ directory"
     echo ""
 

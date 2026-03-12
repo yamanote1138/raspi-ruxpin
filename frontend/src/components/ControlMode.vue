@@ -1,5 +1,15 @@
 <template>
   <div class="control-mode">
+    <!-- Sync Mode Selector -->
+    <div class="mb-3">
+      <ModeSelector
+        :sync-mode="bearState.sync_mode || 'amplitude'"
+        :arduino-connected="bearState.arduino_connected ?? false"
+        :mouth-code="bearState.mouth_code || 'C'"
+        @change="$emit('setSyncMode', $event)"
+      />
+    </div>
+
     <div class="row">
       <!-- Phrases -->
       <div class="col-lg-6 mb-4">
@@ -38,7 +48,7 @@
             >
               <span v-if="isBusy">
                 <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                Playing...
+                {{ bearState.status_text || 'Playing...' }}
               </span>
               <span v-else>
                 <i class="bi bi-play-fill me-2"></i>
@@ -107,7 +117,7 @@
             >
               <span v-if="isBusy">
                 <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                Speaking...
+                {{ bearState.status_text || 'Speaking...' }}
               </span>
               <span v-else>
                 <i class="bi bi-mic-fill me-2"></i>
@@ -125,6 +135,7 @@
 import { ref, computed, onMounted } from 'vue'
 import type { BearState } from '@/types/bear'
 import type { Phrases } from '@/types/websocket'
+import ModeSelector from './ModeSelector.vue'
 
 const props = defineProps<{
   bearState: BearState
@@ -135,6 +146,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   speak: [text: string]
   play: [sound: string]
+  setSyncMode: [mode: string]
 }>()
 
 // Example phrases for TTS

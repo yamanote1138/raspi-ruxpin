@@ -52,7 +52,6 @@
             <div class="col-12">
               <BearVisualization
                 :bear-state="bearState"
-                :is-busy="isBusy"
                 :bear-image="bearImage"
                 :clickable="currentMode === Mode.CONTROL"
                 @click-eyes="toggleEyes"
@@ -72,10 +71,12 @@
             :phrases="phrases"
             @speak="speak"
             @play="play"
+            @set-sync-mode="setSyncMode"
           />
 
           <ConfigMode
             v-else-if="currentMode === Mode.SYSTEM"
+            :bear-state="bearState"
           />
         </div>
       </div>
@@ -108,6 +109,7 @@ const {
   setMode,
   setBlinkEnabled,
   setCharacter,
+  setSyncMode,
 } = useBear()
 
 // Toggle functions for clicking bear image in puppet mode

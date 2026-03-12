@@ -154,7 +154,7 @@ raspi-ruxpin/
 │   │   │   ├── BearVisualization.vue
 │   │   │   ├── ControlMode.vue
 │   │   │   ├── ConfigMode.vue
-│   │   │   ├── LogViewer.vue
+│   │   │   ├── ModeSelector.vue
 │   │   │   └── StatusBar.vue
 │   │   ├── composables/      # Vue composables
 │   │   │   ├── useBear.ts    # Bear state management
@@ -164,7 +164,6 @@ raspi-ruxpin/
 │   ├── tsconfig.json         # TypeScript config
 │   └── package.json          # Node dependencies
 ├── config/                    # Configuration files
-│   └── phrases.json          # Audio phrase library
 ├── sounds/                    # Audio files (WAV)
 ├── public/                    # Static assets
 │   └── img/                  # Bear images
@@ -334,9 +333,6 @@ Connect to `/ws` and send JSON messages:
 
 // Toggle auto-blink
 { "type": "set_blink_enabled", "enabled": true }
-
-// Change log level
-{ "type": "set_log_level", "level": "DEBUG" }
 
 // Fetch available phrases
 { "type": "fetch_phrases" }

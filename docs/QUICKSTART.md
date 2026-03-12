@@ -53,7 +53,7 @@ npm install
 cd ..
 
 # 5. Create TTS directory
-mkdir -p sounds/tts
+mkdir -p data/sounds data/tts data/timing
 ```
 
 **On Raspberry Pi:**
@@ -73,7 +73,7 @@ npm install
 cd ..
 
 # 5. Create TTS directory
-mkdir -p sounds/tts
+mkdir -p data/sounds data/tts data/timing
 ```
 
 ## Running the Application
@@ -282,7 +282,6 @@ Add breakpoints in VS Code or use print statements. Console logs appear in:
 
 1. **Customize Configuration**
    - Edit `.env` for your setup (use `.env.example.mac` or `.env.example.pi` as starting point)
-   - Add custom phrases to `config/phrases.json`
    - Add custom sounds to `sounds/` directory
 
 2. **Deploy to Pi**

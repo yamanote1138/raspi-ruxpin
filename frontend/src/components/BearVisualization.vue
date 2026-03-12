@@ -101,12 +101,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { State, type BearState } from '@/types/bear'
 
 const props = defineProps<{
   bearState: BearState
-  isBusy: boolean
   bearImage: string
   clickable?: boolean
 }>()
@@ -125,19 +124,6 @@ const localVolume = ref(props.bearState.volume)
 watch(() => props.bearState.volume, (newVolume) => {
   localVolume.value = newVolume
 })
-
-// Badge styling
-const eyesBadgeClass = computed(() =>
-  props.bearState.eyes === State.OPEN ? 'bg-success' : 'bg-danger'
-)
-
-const mouthBadgeClass = computed(() =>
-  props.bearState.mouth === State.OPEN ? 'bg-success' : 'bg-danger'
-)
-
-const blinkBadgeClass = computed(() =>
-  props.bearState.blink_enabled ? 'bg-success' : 'bg-secondary'
-)
 
 // Handlers
 const toggleEyes = () => {

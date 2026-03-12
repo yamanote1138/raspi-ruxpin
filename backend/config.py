@@ -6,54 +6,13 @@ and YAML override capability. Configuration precedence: env vars > YAML > defaul
 
 import platform
 from pathlib import Path
-from typing import Any
 
 import yaml
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from backend.core.enums import ServoType, SyncMode
 from backend.core.exceptions import ConfigurationError
-
-
-class HardwareSettings(BaseSettings):
-    """Hardware-related settings for GPIO and servos."""
-
-    model_config = SettingsConfigDict(
-        env_prefix="HARDWARE__",
-        env_nested_delimiter="__",
-    )
-
-    # Eyes servo pins
-    eyes_pwm: int = Field(default=21, description="PWM pin for eyes servo")
-    eyes_dir: int = Field(default=16, description="Direction pin for eyes servo")
-    eyes_cdir: int = Field(default=20, description="Counter-direction pin for eyes servo")
-    eyes_speed: int = Field(default=100, ge=1, le=1000, description="PWM frequency for eyes")
-    eyes_duration: float = Field(
-        default=0.8, gt=0, le=2.0, description="Default duration for eyes movement (slower for 40+ year old servos)"
-    )
-
-    # Mouth servo pins
-    mouth_pwm: int = Field(default=25, description="PWM pin for mouth servo")
-    mouth_dir: int = Field(default=7, description="Direction pin for mouth servo")
-    mouth_cdir: int = Field(default=8, description="Counter-direction pin for mouth servo")
-    mouth_speed: int = Field(default=100, ge=1, le=1000, description="PWM frequency for mouth")
-    mouth_duration: float = Field(
-        default=0.3, gt=0, le=2.0, description="Default duration for mouth movement (slower for 40+ year old servos)"
-    )
-
-    # Platform detection
-    use_mock_gpio: bool = Field(
-        default_factory=lambda: platform.system() == "Darwin",
-        description="Use Mock.GPIO instead of RPi.GPIO",
-    )
-
-    @field_validator("eyes_duration", "mouth_duration")
-    @classmethod
-    def validate_duration(cls, v: float) -> float:
-        """Ensure duration is in valid range."""
-        if not (0 < v <= 2.0):
-            raise ValueError("Duration must be between 0 and 2.0 seconds")
-        return v
 
 
 class AudioSettings(BaseSettings):
@@ -70,7 +29,7 @@ class AudioSettings(BaseSettings):
     start_volume: int = Field(default=90, ge=0, le=90, description="Initial volume level (0-90, capped to prevent instability)")
     sample_rate: int = Field(default=16000, description="Audio sample rate")
     amplitude_threshold: int = Field(default=500, ge=0, description="Threshold for mouth movement")
-    sounds_dir: Path = Field(default=Path("sounds"), description="Directory containing sound files")
+    sounds_dir: Path = Field(default=Path("data/sounds"), description="Directory containing sound files")
 
     @field_validator("start_volume")
     @classmethod
@@ -83,11 +42,13 @@ class AudioSettings(BaseSettings):
     @field_validator("sounds_dir")
     @classmethod
     def validate_sounds_dir(cls, v: Path) -> Path:
-        """Ensure sounds directory exists."""
+        """Ensure sounds directory and required subdirectories exist."""
         if not v.is_absolute():
             v = Path.cwd() / v
         if not v.exists():
             raise ValueError(f"Sounds directory does not exist: {v}")
+        (v / "examples").mkdir(exist_ok=True)
+        (v / "user").mkdir(exist_ok=True)
         return v
 
 
@@ -104,7 +65,7 @@ class TTSSettings(BaseSettings):
     speed: int = Field(default=125, ge=80, le=500, description="Speaking speed (words per minute)")
     pitch: int = Field(default=50, ge=0, le=99, description="Voice pitch (0-99)")
     output_dir: Path = Field(
-        default=Path("sounds/tts"), description="Directory for generated TTS files"
+        default=Path("data/tts"), description="Directory for generated TTS files"
     )
 
     @field_validator("output_dir")
@@ -115,6 +76,111 @@ class TTSSettings(BaseSettings):
             v = Path.cwd() / v
         v.mkdir(parents=True, exist_ok=True)
         return v
+
+
+class SerialSettings(BaseSettings):
+    """Serial communication settings for Arduino connection."""
+
+    model_config = SettingsConfigDict(
+        env_prefix="SERIAL__",
+        env_nested_delimiter="__",
+    )
+
+    port: str = Field(default="/dev/ttyUSB0", description="Serial port for Arduino")
+    baud_rate: int = Field(default=115200, description="Serial baud rate")
+    timeout: float = Field(default=1.0, gt=0, description="Serial read timeout in seconds")
+    connect_timeout: float = Field(
+        default=10.0, gt=0, description="Timeout waiting for Arduino READY signal"
+    )
+    use_mock: bool = Field(
+        default_factory=lambda: platform.system() == "Darwin",
+        description="Use mock serial instead of real serial (auto-detected on macOS)",
+    )
+
+
+class SyncSettings(BaseSettings):
+    """Audio-to-mouth synchronization settings."""
+
+    model_config = SettingsConfigDict(
+        env_prefix="SYNC__",
+        env_nested_delimiter="__",
+    )
+
+    mode: SyncMode = Field(default=SyncMode.AMPLITUDE, description="Sync mode")
+    servo_type: ServoType = Field(
+        default=ServoType.HBRIDGE, description="Servo hardware type on Arduino"
+    )
+    calibration_file: Path = Field(
+        default=Path("config/jaw_calibration.json"),
+        description="Jaw calibration data file",
+    )
+    timing_dir: Path = Field(
+        default=Path("data/timing"), description="Directory for cached timing CSVs"
+    )
+
+    @field_validator("timing_dir")
+    @classmethod
+    def ensure_timing_dir(cls, v: Path) -> Path:
+        """Ensure timing directory exists."""
+        if not v.is_absolute():
+            v = Path.cwd() / v
+        v.mkdir(parents=True, exist_ok=True)
+        return v
+
+    @property
+    def phoneme_available(self) -> bool:
+        """Check if phoneme analysis dependencies are installed.
+
+        Requires both Python packages (faster-whisper, phonemizer) and
+        the espeak-ng system binary + shared library (used by phonemizer).
+        """
+        return self.phoneme_missing_reason is None
+
+    @property
+    def phoneme_missing_reason(self) -> str | None:
+        """Return a human-readable reason why phoneme mode is unavailable, or None."""
+        import ctypes.util
+        import shutil
+
+        missing_pkgs = []
+        try:
+            import faster_whisper  # noqa: F401
+        except ImportError:
+            missing_pkgs.append("faster-whisper")
+        try:
+            import phonemizer  # noqa: F401
+        except ImportError:
+            missing_pkgs.append("phonemizer")
+
+        if missing_pkgs:
+            return (
+                f"Missing Python packages: {', '.join(missing_pkgs)}. "
+                "Install with: uv pip install -e '.[phoneme]'"
+            )
+
+        if not shutil.which("espeak-ng") and not shutil.which("espeak"):
+            return (
+                "espeak-ng is not installed on your system. "
+                "Install with: brew install espeak-ng (macOS) "
+                "or apt install espeak-ng (Linux)"
+            )
+
+        # Check shared library is discoverable (phonemizer uses ctypes)
+        if ctypes.util.find_library("espeak-ng") is None:
+            # Check if it exists in Homebrew but isn't in search path
+            from pathlib import Path as _Path
+
+            for lib_dir in ["/opt/homebrew/lib", "/usr/local/lib"]:
+                if _Path(lib_dir, "libespeak-ng.dylib").exists():
+                    # Library exists but ctypes can't find it — will be fixed at runtime
+                    return None
+            return (
+                "espeak-ng shared library not found. "
+                "Install with: brew install espeak-ng (macOS) "
+                "or apt install libespeak-ng-dev (Linux)"
+            )
+
+        return None
 
 
 class AppSettings(BaseSettings):
@@ -134,18 +200,18 @@ class AppSettings(BaseSettings):
     )
     debug: bool = Field(default=False, description="Enable debug mode")
     host: str = Field(default="0.0.0.0", description="Server host")
-    port: int = Field(default=8080, ge=1, le=65535, description="Server port")
+    port: int = Field(default=8888, ge=1, le=65535, description="Server port")
 
     # Nested settings
-    hardware: HardwareSettings = Field(default_factory=HardwareSettings)
     audio: AudioSettings = Field(default_factory=AudioSettings)
     tts: TTSSettings = Field(default_factory=TTSSettings)
+    serial: SerialSettings = Field(default_factory=SerialSettings)
+    sync: SyncSettings = Field(default_factory=SyncSettings)
 
     # Configuration files
     config_dir: Path = Field(default=Path("config"), description="Configuration directory")
-    phrases_file: Path = Field(default=Path("config/phrases.json"), description="Phrases JSON file")
     hardware_config_file: Path | None = Field(
-        default=None, description="Optional YAML hardware config override"
+        default=None, description="Optional YAML config override"
     )
 
     @field_validator("environment")
@@ -167,39 +233,25 @@ class AppSettings(BaseSettings):
         return v
 
     def load_yaml_overrides(self) -> None:
-        """Load hardware configuration from YAML if file exists."""
+        """Load configuration overrides from YAML if file exists."""
         yaml_file = self.hardware_config_file or (self.config_dir / "hardware.yaml")
 
         if not yaml_file.exists():
             return
 
         try:
-            with open(yaml_file, "r", encoding="utf-8") as f:
+            with open(yaml_file, encoding="utf-8") as f:
                 yaml_data = yaml.safe_load(f)
 
             if not yaml_data:
                 return
 
-            # Apply hardware overrides
-            if "hardware" in yaml_data:
-                hw_data = yaml_data["hardware"]
-                for key, value in hw_data.items():
-                    if hasattr(self.hardware, key):
-                        setattr(self.hardware, key, value)
-
-            # Apply audio overrides
-            if "audio" in yaml_data:
-                audio_data = yaml_data["audio"]
-                for key, value in audio_data.items():
-                    if hasattr(self.audio, key):
-                        setattr(self.audio, key, value)
-
-            # Apply TTS overrides
-            if "tts" in yaml_data:
-                tts_data = yaml_data["tts"]
-                for key, value in tts_data.items():
-                    if hasattr(self.tts, key):
-                        setattr(self.tts, key, value)
+            for section_name in ("audio", "tts", "serial", "sync"):
+                if section_name in yaml_data:
+                    section_obj = getattr(self, section_name)
+                    for key, value in yaml_data[section_name].items():
+                        if hasattr(section_obj, key):
+                            setattr(section_obj, key, value)
 
         except yaml.YAMLError as e:
             raise ConfigurationError(f"Failed to parse YAML config: {e}") from e

@@ -2,11 +2,10 @@
  * Bear state management composable
  */
 
-import { ref, computed, watch, onMounted, type Ref, type ComputedRef } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, type Ref, type ComputedRef } from 'vue'
 import { useWebSocket } from './useWebSocket'
-import { State, Mode, type BearState } from '@/types/bear'
+import { State, Mode, SyncMode, MouthCode, type BearState } from '@/types/bear'
 import type {
-  MessageType,
   Phrases,
   WebSocketMessage,
   BearStateMessage,
@@ -36,6 +35,7 @@ export interface BearComposable {
   setMode: (mode: Mode) => void
   setBlinkEnabled: (enabled: boolean) => void
   setCharacter: (character: string) => void
+  setSyncMode: (mode: string) => void
 }
 
 /**
@@ -55,7 +55,7 @@ export function useBear(): BearComposable {
     volume: 100,
     blink_enabled: false,
     character: 'teddy',
-  })
+  } as BearState)
 
   // UI state
   const phrases = ref<Phrases>({})
@@ -208,23 +208,67 @@ export function useBear(): BearComposable {
   }
 
   /**
+   * Set sync mode (amplitude or phoneme)
+   */
+  const setSyncMode = (mode: string) => {
+    const message = {
+      type: 'set_sync_mode',
+      mode,
+    }
+
+    ws.send(message)
+  }
+
+  /**
    * Handle incoming WebSocket messages
    */
-  const handleMessage = (data: WebSocketMessage) => {
-    console.log('Received message:', data)
+  let lastMouthPosition = 0
+  let lastSyncMode = ''
+  let lastBusy = false
+  let lastStatusText = ''
 
+  const handleMessage = (data: WebSocketMessage) => {
     switch (data.type) {
       case 'bear_state':
         const stateMsg = data as BearStateMessage
+        const newMouthPos = stateMsg.data.mouth_position ?? 0
+        const newSyncMode = stateMsg.data.sync_mode ?? 'amplitude'
+        const newBusy = stateMsg.data.is_busy ?? false
+        const newStatusText = stateMsg.data.status_text ?? ''
+
+        if (newSyncMode !== lastSyncMode) {
+          if (lastSyncMode) {
+            console.log(`Sync mode: ${lastSyncMode} → ${newSyncMode}`)
+          }
+          lastSyncMode = newSyncMode
+        }
+        if (newMouthPos !== lastMouthPosition) {
+          console.log(`Mouth: ${lastMouthPosition} → ${newMouthPos} (code: ${stateMsg.data.mouth_code ?? '?'})`)
+          lastMouthPosition = newMouthPos
+        }
+        if (newBusy !== lastBusy) {
+          console.log(`Bear ${newBusy ? 'busy' : 'idle'}${newStatusText ? ': ' + newStatusText : ''}`)
+          lastBusy = newBusy
+        } else if (newStatusText !== lastStatusText && newStatusText) {
+          console.log(`Status: ${newStatusText}`)
+        }
+        lastStatusText = newStatusText
         bearState.value = {
           eyes: stateMsg.data.eyes,
           mouth: stateMsg.data.mouth,
           eyes_position: stateMsg.data.eyes_position ?? 0,
-          mouth_position: stateMsg.data.mouth_position ?? 0,
+          mouth_position: newMouthPos,
           is_busy: stateMsg.data.is_busy,
           volume: stateMsg.data.volume,
           blink_enabled: stateMsg.data.blink_enabled ?? true,
           character: stateMsg.data.character ?? 'teddy',
+          sync_mode: (stateMsg.data.sync_mode ?? 'amplitude') as SyncMode,
+          mouth_code: (stateMsg.data.mouth_code ?? 'C') as MouthCode,
+          arduino_connected: stateMsg.data.arduino_connected ?? false,
+          arduino_port: stateMsg.data.arduino_port ?? '',
+          arduino_baud_rate: stateMsg.data.arduino_baud_rate ?? 0,
+          arduino_connection_type: stateMsg.data.arduino_connection_type ?? 'unknown',
+          status_text: stateMsg.data.status_text ?? '',
         }
         break
 
@@ -243,7 +287,6 @@ export function useBear(): BearComposable {
         break
 
       case 'success':
-        // Handle success if needed
         break
 
       default:
@@ -252,29 +295,9 @@ export function useBear(): BearComposable {
   }
 
   /**
-   * Preload all bear images to prevent flickering
-   */
-  const preloadImages = () => {
-    const eyeStates = ['eo', 'ec']
-    const mouthPositions = [0, 25, 50, 75, 100]
-
-    eyeStates.forEach(eyes => {
-      mouthPositions.forEach(mouth => {
-        const img = new Image()
-        img.src = `/img/teddy_${eyes}m${mouth}.png`
-      })
-    })
-
-    console.log('Preloaded 5-state bear images')
-  }
-
-  /**
    * Initialize WebSocket connection and event handlers
    */
   onMounted(() => {
-    // Preload all bear images immediately
-    preloadImages()
-
     // Connect to WebSocket
     ws.connect()
 
@@ -292,6 +315,11 @@ export function useBear(): BearComposable {
       },
       { immediate: true }
     )
+  })
+
+  // Clean up handler on unmount (prevents HMR duplicates)
+  onUnmounted(() => {
+    ws.off('message', handleMessage)
   })
 
   return {
@@ -316,5 +344,6 @@ export function useBear(): BearComposable {
     setMode,
     setBlinkEnabled,
     setCharacter,
+    setSyncMode,
   }
 }

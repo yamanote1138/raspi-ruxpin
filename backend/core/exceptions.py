@@ -13,20 +13,14 @@ class HardwareError(RaspiRuxpinError):
     pass
 
 
-class GPIOError(HardwareError):
-    """Raised when GPIO operations fail."""
-
-    pass
-
-
-class ServoError(HardwareError):
-    """Raised when servo operations fail."""
-
-    pass
-
-
 class AudioError(HardwareError):
     """Raised when audio operations fail."""
+
+    pass
+
+
+class SerialError(HardwareError):
+    """Raised when serial/Arduino communication fails."""
 
     pass
 
@@ -37,7 +31,3 @@ class ConfigurationError(RaspiRuxpinError):
     pass
 
 
-class ValidationError(RaspiRuxpinError):
-    """Raised when validation fails."""
-
-    pass

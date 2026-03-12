@@ -13,21 +13,36 @@ export enum Mode {
   SYSTEM = 'system',
 }
 
-export interface BearPosition {
-  eyes: State
-  mouth: State
+export enum SyncMode {
+  AMPLITUDE = 'amplitude',
+  PHONEME = 'phoneme',
+  REALTIME = 'realtime',
 }
 
-export interface BearState extends BearPosition {
+export enum MouthCode {
+  C = 'C',
+  T = 'T',
+  S = 'S',
+  N = 'N',
+  M = 'M',
+  L = 'L',
+  W = 'W',
+}
+
+export interface BearState {
+  eyes: State
+  mouth: State
   eyes_position: number // 0-100
   mouth_position: number // 0-100
   is_busy: boolean
   volume: number
   blink_enabled: boolean
   character: string // 'teddy' or 'grubby'
-}
-
-export interface CharacterInfo {
-  name: string
-  image: string
+  sync_mode: SyncMode
+  mouth_code: MouthCode
+  arduino_connected: boolean
+  arduino_port: string
+  arduino_baud_rate: number
+  arduino_connection_type: string // 'serial' or 'mock'
+  status_text: string
 }

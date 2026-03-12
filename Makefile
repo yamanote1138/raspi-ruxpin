@@ -8,11 +8,11 @@ help:  ## Show this help message
 
 install:  ## Install dependencies for Mac development (mock GPIO)
 	uv venv
-	uv pip install -e ".[dev,mock]"
+	uv pip install -e ".[dev]"
 	cd frontend && npm install
 
 install-dev:  ## Install development dependencies with mock GPIO
-	uv pip install -e ".[dev,mock]"
+	uv pip install -e ".[dev]"
 
 install-pi:  ## Install dependencies for Raspberry Pi (hardware)
 	uv venv
@@ -31,7 +31,7 @@ run:  ## Run backend server
 	uv run python -m backend.main
 
 dev:  ## Run backend in development mode (auto-reload)
-	uv run uvicorn backend.main:app --reload --host 0.0.0.0 --port 8080
+	uv run uvicorn backend.main:app --reload --host 0.0.0.0 --port 8888
 
 frontend:  ## Run frontend dev server
 	cd frontend && npm run dev

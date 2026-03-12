@@ -54,10 +54,16 @@ frontend/dist/
 frontend/.vite/
 
 # TTS generated files
-sounds/tts/*.wav
-sounds/tts/*.aiff
-sounds/espeak.wav
+data/tts/*.wav
+data/tts/*.aiff
 speech.wav
+
+# User sound files (only examples/ is committed)
+data/sounds/user/*
+!data/sounds/user/.gitkeep
+
+# Timing analysis cache (regenerated on demand)
+data/timing/*.csv
 
 # Testing
 .pytest_cache/
