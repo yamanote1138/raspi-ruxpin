@@ -80,6 +80,23 @@ Clips with long leading silence will delay mouth movement. Trim silence from the
 ffmpeg -i input.wav -af "silenceremove=start_periods=1:start_silence=0.05:start_threshold=-40dB" -ac 1 -ar 22050 -sample_fmt s16 output.wav
 ```
 
+## Audio Quality Scoring
+
+The CLI includes an audio quality analyzer that scores files on how well they'll drive the bear's mouth animation. Access it via **Manage sound files → Audio quality analysis**.
+
+Each file is scored 0–100 across four components:
+
+| Component        | Points | What it measures                                    |
+|------------------|--------|-----------------------------------------------------|
+| Position variety | 30     | How many of the 7 mouth positions are used          |
+| Activity balance | 25     | Whether open-time % falls in the ideal 30–85% range |
+| Signal strength  | 25     | Peak amplitude and mean RMS                         |
+| Noise floor      | 20     | Silence cleanliness and signal-to-noise ratio       |
+
+Grades: **Excellent** (85+), **Good** (70–84), **Fair** (50–69), **Poor** (0–49).
+
+For detailed tips on preparing audio for the best scores, see [audio-guide.md](audio-guide.md).
+
 ## File Size
 
 A typical 5-second mono 22050 Hz 16-bit clip is about 220 KB. Keep clips short (under 30 seconds) for responsive playback on the Pi.

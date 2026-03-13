@@ -58,6 +58,7 @@ uv run raspi-ruxpin-cli
 - `backend/hardware/mock_serial.py` — Mock for Mac dev. Simulates READY/OK/PONG. In realtime mode, generates simulated mouth position reports during audio playback (triggered by `AUDIO:START`/`AUDIO:STOP`).
 - `backend/hardware/audio_player.py` — Platform-aware audio (afplay on Mac, aplay on Linux). Supports `start_callback` for timing sync. TTS via espeak or Piper.
 - `backend/hardware/audio_analyzer.py` — Amplitude and phoneme analysis. Produces `list[tuple[int, MouthPosition]]` timelines.
+- `backend/cli/audio_quality.py` — WAV quality scoring for mouth animation suitability. Scores 0–100 across position variety, activity balance, signal strength, and noise floor. Used by CLI menu's quality analysis view.
 - `backend/hardware/timing_store.py` — Caches analysis results as CSV in `data/timing/`.
 - `backend/hardware/calibration.py` — 7-position jaw calibration table with interpolation.
 - `backend/api/websocket.py` — All client communication is WebSocket-based at `/ws`. Message routing via `_MESSAGE_HANDLERS` dict. State broadcasts at 10Hz, logs streamed in realtime.
