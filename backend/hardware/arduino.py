@@ -68,8 +68,8 @@ class ArduinoController:
         self.connected = False
 
         self._serial: SerialPort | None = None
-        self._write_lock = asyncio.Lock()
-        self._response_queue: asyncio.Queue[str] = asyncio.Queue()
+        self._write_lock: asyncio.Lock | None = None
+        self._response_queue: asyncio.Queue[str] | None = None
         self._reader_task: asyncio.Task[None] | None = None
         self._shutdown = False
         self._mouth_position_callback: MouthPositionCallback | None = None
@@ -90,6 +90,10 @@ class ArduinoController:
         Raises:
             SerialError: If connection or handshake fails.
         """
+        # Create asyncio primitives in the worker process (not at import time)
+        self._write_lock = asyncio.Lock()
+        self._response_queue = asyncio.Queue()
+
         if self.connected:
             logger.warning("Already connected, disconnecting first")
             await self.disconnect()

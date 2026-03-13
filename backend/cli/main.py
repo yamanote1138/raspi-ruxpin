@@ -63,6 +63,7 @@ async def async_main() -> None:
     )
 
     try:
+        await audio_player.start()
         await bear_service.start()
         logger.info("Bear service started")
 

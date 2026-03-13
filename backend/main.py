@@ -79,6 +79,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             alsa_card_index=settings.audio.card_index,
             alsa_mixer=settings.audio.mixer,
         )
+        await audio_player.start()
         app.state.audio_player = audio_player
 
         # Initialize timing store

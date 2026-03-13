@@ -91,12 +91,9 @@ class AudioPlayer:
         self.alsa_mixer = alsa_mixer
 
         self._current_amplitude = 0
-        self._amplitude_lock = asyncio.Lock()
+        self._amplitude_lock: asyncio.Lock | None = None
         self._volume = start_volume
         self._platform = platform.system()
-
-        # Read current system volume and sync
-        asyncio.create_task(self._initialize_volume(start_volume))
 
         device_info = f", device={alsa_device}" if alsa_device else ""
         card_info = f", card={alsa_card_index}" if alsa_card_index is not None else ""
@@ -105,6 +102,11 @@ class AudioPlayer:
             f"sample_rate={sample_rate}Hz, threshold={amplitude_threshold}"
             f"{device_info}{card_info}"
         )
+
+    async def start(self) -> None:
+        """Initialize async primitives and sync volume. Call from lifespan."""
+        self._amplitude_lock = asyncio.Lock()
+        await self._initialize_volume(self._volume)
 
     @property
     def current_amplitude(self) -> int:
