@@ -30,9 +30,7 @@ export interface BearComposable {
   speak: (text: string) => Promise<void>
   play: (sound: string) => Promise<void>
   setVolume: (level: number) => void
-  fetchPhrases: () => void
   setBlinkEnabled: (enabled: boolean) => void
-  setCharacter: (character: string) => void
   setSyncMode: (mode: string) => void
 }
 
@@ -50,7 +48,7 @@ export function useBear(): BearComposable {
     eyes_position: 0,
     mouth_position: 0,
     is_busy: false,
-    volume: 100,
+    volume: 90,
     blink_enabled: false,
     character: 'teddy',
   } as BearState)
@@ -186,19 +184,7 @@ export function useBear(): BearComposable {
   }
 
   /**
-   * Set character (teddy or grubby)
-   */
-  const setCharacter = (character: string) => {
-    const message = {
-      type: 'set_character',
-      character,
-    }
-
-    ws.send(message)
-  }
-
-  /**
-   * Set sync mode (amplitude or phoneme)
+   * Set sync mode
    */
   const setSyncMode = (mode: string) => {
     const message = {
@@ -336,9 +322,7 @@ export function useBear(): BearComposable {
     speak,
     play,
     setVolume,
-    fetchPhrases,
     setBlinkEnabled,
-    setCharacter,
     setSyncMode,
   }
 }

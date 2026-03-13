@@ -75,16 +75,18 @@ State machine: BOOT → HANDSHAKE → CONFIG → RUNNING. Serial protocol: 11520
 
 ### Frontend (Vue 3 + TypeScript + Vite)
 
+**Layout:** 2-column on wide screens (≥992px), single-column stacked on narrow. Left column: bear image. Right column: controls, phrase player, TTS — stacked vertically.
+
 - `frontend/src/composables/useWebSocket.ts` — WebSocket singleton at `/ws`
 - `frontend/src/composables/useBear.ts` — Bear state management, mode switching, change-detection logging
-- `frontend/src/components/ControlMode.vue` — Primary control interface
-- `frontend/src/components/ConfigMode.vue` — Arduino status and log viewer
-- `frontend/src/components/ModeSelector.vue` — Three-button sync mode toggle (Amplitude/Phoneme/Realtime)
-- `frontend/src/components/BearVisualization.vue` — Interactive bear display with mouth/eye visualization
+- `frontend/src/components/BearVisualization.vue` — Bear image display (purely visual, no interaction)
+- `frontend/src/components/BearControls.vue` — Eyes/mouth/blink toggles, volume, sync mode cycling, socket/arduino status, info modal trigger
+- `frontend/src/components/PhrasePlayer.vue` — Phrase selection dropdown with random and play buttons
+- `frontend/src/components/TTSControls.vue` — Text-to-speech textarea with random, clear, and speak buttons
 
 ### Communication
 
-All real-time control uses WebSocket at `/ws`. Message types: `update_bear`, `speak`, `play`, `set_volume`, `set_blink_enabled`, `set_character`, `set_sync_mode`, `analyze_audio`, `fetch_phrases`. Server pushes `bear_state` (10Hz), `error`, `success`, `phrases`.
+All real-time control uses WebSocket at `/ws`. Message types: `update_bear`, `speak`, `play`, `set_volume`, `set_blink_enabled`, `set_sync_mode`, `fetch_phrases`. Server pushes `bear_state` (10Hz), `error`, `success`, `phrases`. Character selection (`set_character`) is config-only (not exposed in UI).
 
 ## Key Constraints
 

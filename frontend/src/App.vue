@@ -1,25 +1,13 @@
 <template>
-  <div id="app" class="min-vh-100 bg-dark text-light">
+  <div id="app" class="min-vh-100 text-light">
     <!-- Header -->
     <header class="bg-panel py-3 mb-4">
       <div class="container-fluid px-3 px-md-4">
         <div class="row justify-content-center">
-          <div class="col-12 col-xxl-10">
-            <div class="row align-items-center">
-              <div class="col">
-                <h1 class="mb-0">
-                  <img :src="headerImage" alt="Raspi" height="40" />
-                </h1>
-              </div>
-              <div class="col-auto">
-                <StatusBar
-                  :is-connected="isConnected"
-                  :character="bearState.character"
-                  @set-character="setCharacter"
-                  @show-info="showInfo = true"
-                />
-              </div>
-            </div>
+          <div class="col-12 col-xxl-10 text-center">
+            <h1 class="mb-0">
+              <img :src="headerImage" alt="Raspi" class="header-logo" />
+            </h1>
           </div>
         </div>
       </div>
@@ -42,35 +30,48 @@
       </div>
     </div>
 
-    <!-- Main Content -->
+    <!-- Main Content — 4-Pane Layout -->
     <div class="container-fluid px-3 px-md-4">
       <div class="row justify-content-center">
         <div class="col-12 col-xxl-10">
-          <!-- Bear Visualization - Always Visible -->
-          <div class="row mb-4">
-            <div class="col-12">
-              <BearVisualization
-                :bear-state="bearState"
-                :bear-image="bearImage"
-                :clickable="true"
-                @click-eyes="toggleEyes"
-                @click-mouth="toggleMouth"
-                @update-bear="updateBear"
-                @set-blink-enabled="setBlinkEnabled"
-                @set-volume="setVolume"
-              />
+          <div class="row">
+            <!-- Bear Image -->
+            <div class="col-lg-6 mb-3">
+              <div class="card bg-panel h-100">
+                <BearVisualization :bear-image="bearImage" />
+              </div>
+            </div>
+
+            <!-- Right Column: Controls, Phrases, TTS stacked -->
+            <div class="col-lg-6 mb-3">
+              <div class="card bg-panel mb-3">
+                <BearControls
+                  :bear-state="bearState"
+                  :is-connected="isConnected"
+                  @update-bear="updateBear"
+                  @set-blink-enabled="setBlinkEnabled"
+                  @set-volume="setVolume"
+                  @set-sync-mode="setSyncMode"
+                  @show-info="showInfo = true"
+                />
+              </div>
+              <div class="card bg-panel mb-3">
+                <PhrasePlayer
+                  :bear-state="bearState"
+                  :is-busy="isBusy"
+                  :phrases="phrases"
+                  @play="play"
+                />
+              </div>
+              <div class="card bg-panel">
+                <TTSControls
+                  :is-busy="isBusy"
+                  :bear-state="bearState"
+                  @speak="speak"
+                />
+              </div>
             </div>
           </div>
-
-          <!-- Control Mode -->
-          <ControlMode
-            :bear-state="bearState"
-            :is-busy="isBusy"
-            :phrases="phrases"
-            @speak="speak"
-            @play="play"
-            @set-sync-mode="setSyncMode"
-          />
         </div>
       </div>
     </div>
@@ -91,6 +92,10 @@
           <div class="modal-body p-0">
             <table class="table table-striped table-sm mb-0 info-table">
               <tbody>
+                <tr>
+                  <td class="fw-bold">Character</td>
+                  <td>{{ bearState.character === 'grubby' ? 'Grubby' : 'Teddy' }}</td>
+                </tr>
                 <tr>
                   <td class="fw-bold">Arduino</td>
                   <td>{{ bearState.arduino_connected ? 'Connected' : 'Disconnected' }}</td>
@@ -146,11 +151,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { State } from '@/types/bear'
 import { useBear } from '@/composables/useBear'
-import StatusBar from '@/components/StatusBar.vue'
 import BearVisualization from '@/components/BearVisualization.vue'
-import ControlMode from '@/components/ControlMode.vue'
+import BearControls from '@/components/BearControls.vue'
+import PhrasePlayer from '@/components/PhrasePlayer.vue'
+import TTSControls from '@/components/TTSControls.vue'
 
 const {
   bearState,
@@ -165,25 +170,11 @@ const {
   play,
   setVolume,
   setBlinkEnabled,
-  setCharacter,
   setSyncMode,
 } = useBear()
 
 // Info modal state
 const showInfo = ref(false)
-
-// Toggle functions for clicking bear image in puppet mode
-const toggleEyes = () => {
-  if (isBusy.value) return
-  const newState = bearState.value.eyes === State.OPEN ? State.CLOSED : State.OPEN
-  updateBear(newState, undefined)
-}
-
-const toggleMouth = () => {
-  if (isBusy.value) return
-  const newState = bearState.value.mouth === State.OPEN ? State.CLOSED : State.OPEN
-  updateBear(undefined, newState)
-}
 
 // Preload all bear images to prevent stuttering
 onMounted(() => {
@@ -223,9 +214,14 @@ onMounted(() => {
 
 #app {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-image: url(/img/bg.png);
-  background-size: cover;
-  background-attachment: fixed;
+  background-color: #3d2b1f;
+}
+
+header.bg-panel {
+  background-color: #c4ad8f !important;
+  background-image: url(/img/bg.png) !important;
+  background-size: auto;
+  background-repeat: repeat;
   background-position: center;
 }
 
@@ -236,14 +232,48 @@ onMounted(() => {
   font-weight: 700;
 }
 
+/* Dark pink button */
+.btn.btn-dark-pink {
+  background-color: #e05580 !important;
+  border-color: #e05580 !important;
+  color: #fff !important;
+}
+.btn.btn-dark-pink:hover {
+  background-color: #d4406a !important;
+  border-color: #d4406a !important;
+}
+.btn.btn-dark-pink:disabled {
+  background-color: #e05580 !important;
+  border-color: #e05580 !important;
+  opacity: 0.65;
+}
+
+/* Header logo — scale with viewport */
+.header-logo {
+  height: 50px;
+}
+
+@media (min-width: 576px) {
+  .header-logo {
+    height: 70px;
+  }
+}
+
+@media (min-width: 992px) {
+  .header-logo {
+    height: 90px;
+  }
+}
+
 /* Custom very light grey background for panels */
 .bg-panel {
-  background-color: #bababa !important;
+  background-color: #3a3a3a !important;
+  border: 3px solid #c4ad8f !important;
 }
 
 /* Override text colors for light panel background */
 .bg-panel .text-muted {
-  color: #000000 !important;
+  color: #aaaaaa !important;
 }
 
 /* Info modal table styling */
