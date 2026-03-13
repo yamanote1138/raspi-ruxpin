@@ -1,5 +1,7 @@
 """Shared fixtures for integration tests."""
 
+from pathlib import Path
+
 import pytest
 
 from backend.config import (
@@ -13,7 +15,7 @@ from backend.core.enums import SyncMode
 
 
 @pytest.fixture
-def integration_settings(tmp_path):
+def integration_settings(tmp_path: Path) -> AppSettings:
     """Provide integration test settings with tmp_path directories."""
     sounds_dir = tmp_path / "sounds"
     sounds_dir.mkdir()

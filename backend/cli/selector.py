@@ -1,27 +1,34 @@
-"""Interactive file selector for terminal use.
+"""Interactive arrow-key file selector for terminal use.
 
-Provides a simple text-based file selection with filtering. Ported from
-ruxpin-cli's interactive_file_selector, simplified for asyncio.
+Provides a full-screen file selector with fuzzy search, arrow-key navigation,
+windowed scrolling, and color-coded display. Ported from ruxpin-cli's
+interactive_file_selector, adapted for async.
 """
 
-import asyncio
 from collections.abc import Callable
 from pathlib import Path
+
+from backend.cli.terminal import Colors, agetch, clear_screen
+
+
+def _fuzzy_filter(query: str, items: list[Path], labels: dict[Path, str]) -> list[Path]:
+    """Return items whose label contains query (case-insensitive)."""
+    if not query:
+        return list(items)
+    q = query.lower()
+    return [item for item in items if q in labels[item].lower()]
 
 
 async def interactive_file_selector(
     files: list[Path],
-    prompt: str = "Select a file",
+    prompt: str = "Select Audio File",
     title_fn: Callable[[Path], str | None] | None = None,
 ) -> Path | None:
-    """Present a numbered list of files and let the user choose one.
-
-    Supports filtering by typing a search string, or entering a number
-    to select directly.
+    """Arrow-key file selector with fuzzy search and windowed scrolling.
 
     Args:
         files: List of file paths to choose from.
-        prompt: Header text.
+        prompt: Header text displayed at the top.
         title_fn: Optional callable that returns a display title for a file.
 
     Returns:
@@ -37,46 +44,90 @@ async def interactive_file_selector(
         title = title_fn(f) if title_fn else None
         labels[f] = f"{f.stem} — {title}" if title else f.stem
 
+    search_query = ""
+    selected_idx = 0
     filtered = list(files)
-    filter_text = ""
 
     while True:
-        # Display filtered list
-        print(f"\n--- {prompt} ---")
-        if filter_text:
-            print(f"  Filter: '{filter_text}'")
+        clear_screen()
 
-        display_files = filtered[:20]  # Show at most 20
-        for i, f in enumerate(display_files, 1):
-            print(f"  {i:3d}. {labels[f]}")
+        # Header
+        print(Colors.separator())
+        print(f"   {Colors.header(prompt)}")
+        print(Colors.separator())
+        print()
+        print(
+            f"{Colors.GRAY}Type to search, ↑/↓ to select, "
+            f"Enter to confirm, ESC or 'q' to cancel{Colors.RESET}"
+        )
+        print()
+        print(f"{Colors.prompt('Search:')} {Colors.CYAN}{search_query}_{Colors.RESET}")
+        print(Colors.separator("-"))
 
-        if len(filtered) > 20:
-            print(f"  ... and {len(filtered) - 20} more (type to filter)")
+        # Show filtered results in a 15-item window
+        if not filtered:
+            print(f"\n  {Colors.GRAY}No matches found{Colors.RESET}")
+        else:
+            window_size = 15
+            display_start = max(0, selected_idx - window_size // 2)
+            display_end = min(len(filtered), display_start + window_size)
+            # Adjust start if we're near the end
+            if display_end - display_start < window_size:
+                display_start = max(0, display_end - window_size)
 
-        print(f"  Total: {len(filtered)} files")
-        print("  Enter number to select, text to filter, or 'q' to cancel")
+            for i in range(display_start, display_end):
+                f = filtered[i]
+                label = labels[f]
+                file_size = f.stat().st_size / 1024
 
-        choice = await asyncio.to_thread(input, "> ")
+                if i == selected_idx:
+                    prefix = f"{Colors.CYAN}→ "
+                    name = f"{Colors.BOLD}{label}{Colors.RESET}"
+                    print(f"{prefix}{name:<54} {Colors.YELLOW}{file_size:>6.1f} KB{Colors.RESET}")
+                else:
+                    print(f"  {label:<45} {Colors.GRAY}{file_size:>6.1f} KB{Colors.RESET}")
 
-        if choice.lower() in ("q", "quit", "cancel", ""):
+        print()
+        print(f"{Colors.GRAY}Showing {len(filtered)} of {len(files)} files{Colors.RESET}")
+
+        # Get key
+        key = await agetch()
+
+        # ESC (standalone) — cancel
+        if key == "\x1b":
             return None
 
-        # Try as number
-        try:
-            idx = int(choice)
-            if 1 <= idx <= len(display_files):
-                return display_files[idx - 1]
-            else:
-                print("Number out of range.")
-                continue
-        except ValueError:
-            pass
+        # Arrow keys
+        if key == "\x1b[A":  # Up
+            if filtered and selected_idx > 0:
+                selected_idx -= 1
+        elif key == "\x1b[B":  # Down
+            if filtered and selected_idx < len(filtered) - 1:
+                selected_idx += 1
 
-        # Use as filter (searches both stem and title)
-        filter_text = choice.lower()
-        filtered = [f for f in files if filter_text in labels[f].lower()]
+        # Enter — select
+        elif key in ("\r", "\n"):
+            if filtered:
+                return filtered[selected_idx]
+            return None
 
-        if not filtered:
-            print(f"No matches for '{filter_text}'. Clearing filter.")
-            filter_text = ""
-            filtered = list(files)
+        # Backspace — delete search char
+        elif key in ("\x7f", "\x08"):
+            if search_query:
+                search_query = search_query[:-1]
+                filtered = _fuzzy_filter(search_query, files, labels)
+                selected_idx = min(selected_idx, max(0, len(filtered) - 1))
+
+        # Ctrl+C — raise
+        elif key == "\x03":
+            raise KeyboardInterrupt
+
+        # q/Q — cancel (only when not mid-search)
+        elif key.lower() == "q" and not search_query:
+            return None
+
+        # Printable character — append to search
+        elif len(key) == 1 and key.isprintable():
+            search_query += key
+            filtered = _fuzzy_filter(search_query, files, labels)
+            selected_idx = 0

@@ -325,7 +325,8 @@ async def websocket_endpoint(websocket: WebSocket, bear_service: BearService) ->
     global _broadcast_task
 
     await manager.connect(websocket)
-    logger.info(f"WebSocket connected from {websocket.client.host}:{websocket.client.port}")
+    client_info = f"{websocket.client.host}:{websocket.client.port}" if websocket.client else "unknown"
+    logger.info(f"WebSocket connected from {client_info}")
 
     # Start broadcast task on first connection
     if len(manager.active_connections) == 1:
@@ -360,9 +361,10 @@ async def websocket_endpoint(websocket: WebSocket, bear_service: BearService) ->
         logger.error(f"WebSocket error: {e}")
         manager.disconnect(websocket)
     finally:
-        logger.debug(
-            f"WebSocket disconnected from {websocket.client.host}:{websocket.client.port}"
+        client_info_dc = (
+            f"{websocket.client.host}:{websocket.client.port}" if websocket.client else "unknown"
         )
+        logger.debug(f"WebSocket disconnected from {client_info_dc}")
 
         # Stop broadcast task if this was the last connection
         if len(manager.active_connections) == 0:

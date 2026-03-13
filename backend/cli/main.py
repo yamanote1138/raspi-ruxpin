@@ -6,6 +6,7 @@ Creates Arduino, AudioPlayer, TimingStore, and BearService directly
 
 import asyncio
 import logging
+from pathlib import Path
 
 from backend.cli.menu import RuxpinCLI
 from backend.config import get_settings
@@ -17,12 +18,14 @@ from backend.services.bear_service import BearService
 
 logger = logging.getLogger(__name__)
 
+LOG_FILE = Path("data/logs/cli.log")
+
 
 async def async_main() -> None:
     """Async entry point: wire up services and run CLI."""
     settings = get_settings()
 
-    setup_logging(level="DEBUG" if settings.debug else "INFO")
+    setup_logging(level="DEBUG" if settings.debug else "INFO", log_file=LOG_FILE)
 
     logger.info("Starting Raspi Ruxpin CLI...")
 

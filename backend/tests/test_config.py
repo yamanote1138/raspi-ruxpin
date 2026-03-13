@@ -2,11 +2,13 @@
 
 from pathlib import Path
 
+import pytest
+
 from backend.config import AppSettings, AudioSettings, SerialSettings, SyncSettings, TTSSettings
 from backend.core.enums import SyncMode
 
 
-def test_app_settings_defaults(monkeypatch):
+def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test default application settings."""
     # Clear any environment variables that might override defaults
     monkeypatch.delenv("DEBUG", raising=False)
@@ -20,7 +22,7 @@ def test_app_settings_defaults(monkeypatch):
     assert settings.port == 8888
 
 
-def test_audio_settings_defaults():
+def test_audio_settings_defaults() -> None:
     """Test default audio settings."""
     settings = AudioSettings()
 
@@ -30,7 +32,7 @@ def test_audio_settings_defaults():
     assert isinstance(settings.sounds_dir, Path)
 
 
-def test_tts_settings_defaults():
+def test_tts_settings_defaults() -> None:
     """Test default TTS settings."""
     settings = TTSSettings()
 
@@ -41,7 +43,7 @@ def test_tts_settings_defaults():
     assert isinstance(settings.output_dir, Path)
 
 
-def test_serial_settings_defaults():
+def test_serial_settings_defaults() -> None:
     """Test default serial settings."""
     settings = SerialSettings()
 
@@ -50,7 +52,7 @@ def test_serial_settings_defaults():
     assert isinstance(settings.use_mock, bool)
 
 
-def test_sync_settings_defaults():
+def test_sync_settings_defaults() -> None:
     """Test default sync settings."""
     settings = SyncSettings()
 
@@ -58,7 +60,7 @@ def test_sync_settings_defaults():
     assert isinstance(settings.timing_dir, Path)
 
 
-def test_settings_with_environment_override(monkeypatch):
+def test_settings_with_environment_override(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test settings can be overridden with environment variables."""
     monkeypatch.setenv("DEBUG", "true")
     monkeypatch.setenv("PORT", "9000")
@@ -73,7 +75,7 @@ def test_settings_with_environment_override(monkeypatch):
     assert settings.serial.use_mock is True
 
 
-def test_nested_settings_structure():
+def test_nested_settings_structure() -> None:
     """Test nested settings structure."""
     settings = AppSettings()
 
@@ -83,13 +85,13 @@ def test_nested_settings_structure():
     assert isinstance(settings.sync, SyncSettings)
 
 
-def test_audio_paths_are_paths(tmp_path):
+def test_audio_paths_are_paths(tmp_path: Path) -> None:
     """Test that audio directory settings are Path objects."""
     # Create a temporary sounds directory for testing
     test_sounds_dir = tmp_path / "test_sounds"
     test_sounds_dir.mkdir()
 
-    settings = AudioSettings(sounds_dir=str(test_sounds_dir))
+    settings = AudioSettings(sounds_dir=test_sounds_dir)
 
     assert isinstance(settings.sounds_dir, Path)
     assert settings.sounds_dir.exists()

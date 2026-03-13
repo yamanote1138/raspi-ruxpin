@@ -16,7 +16,7 @@ from backend.core.enums import MouthPosition, SyncMode
 
 
 @pytest.fixture
-def test_settings():
+def test_settings() -> AppSettings:
     """Provide test configuration settings."""
     return AppSettings(
         environment="testing",
@@ -52,7 +52,7 @@ def test_settings():
 
 
 @pytest.fixture
-def mock_audio_player():
+def mock_audio_player() -> MagicMock:
     """Provide a mock audio player."""
     player = MagicMock()
     player.play_file = AsyncMock(return_value=None)
@@ -66,7 +66,7 @@ def mock_audio_player():
 
 
 @pytest.fixture
-def mock_arduino():
+def mock_arduino() -> AsyncMock:
     """Provide a mock Arduino controller."""
     arduino = AsyncMock()
     arduino.connected = True
@@ -90,7 +90,7 @@ def mock_arduino():
 
 
 @pytest.fixture
-def mock_timing_store():
+def mock_timing_store() -> AsyncMock:
     """Provide a mock timing store."""
     store = AsyncMock()
     store.get_or_analyze = AsyncMock(
@@ -102,7 +102,12 @@ def mock_timing_store():
 
 
 @pytest.fixture
-async def mock_bear_service(test_settings, mock_arduino, mock_audio_player, mock_timing_store):
+async def mock_bear_service(
+    test_settings: AppSettings,
+    mock_arduino: AsyncMock,
+    mock_audio_player: MagicMock,
+    mock_timing_store: AsyncMock,
+) -> AsyncMock:
     """Provide a mock bear service (not started)."""
     from backend.services.bear_service import BearService
 
@@ -117,4 +122,4 @@ async def mock_bear_service(test_settings, mock_arduino, mock_audio_player, mock
     service._talk_task = None
     service._blink_task = None
 
-    return service
+    return service  # type: ignore[return-value]

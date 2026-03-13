@@ -1,15 +1,23 @@
 """Integration tests for BearService."""
 
 import asyncio
+from collections.abc import AsyncGenerator
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from backend.config import AppSettings
 from backend.core.enums import MouthPosition, State, SyncMode
 from backend.services.bear_service import BearService
 
 
 @pytest.fixture
-async def bear_service(integration_settings, mock_arduino, mock_audio_player, mock_timing_store):
+async def bear_service(
+    integration_settings: AppSettings,
+    mock_arduino: AsyncMock,
+    mock_audio_player: MagicMock,
+    mock_timing_store: AsyncMock,
+) -> AsyncGenerator[BearService, None]:
     """Provide a BearService instance (not started)."""
     service = BearService(
         settings=integration_settings,
@@ -32,8 +40,11 @@ async def bear_service(integration_settings, mock_arduino, mock_audio_player, mo
 
 @pytest.mark.asyncio
 async def test_bear_service_initialization(
-    integration_settings, mock_arduino, mock_audio_player, mock_timing_store
-):
+    integration_settings: AppSettings,
+    mock_arduino: AsyncMock,
+    mock_audio_player: MagicMock,
+    mock_timing_store: AsyncMock,
+) -> None:
     """Test BearService initializes correctly."""
     service = BearService(
         settings=integration_settings,
@@ -51,7 +62,7 @@ async def test_bear_service_initialization(
 
 
 @pytest.mark.asyncio
-async def test_bear_service_start(bear_service):
+async def test_bear_service_start(bear_service: BearService) -> None:
     """Test BearService starts background tasks."""
     await bear_service.start()
 
@@ -62,15 +73,15 @@ async def test_bear_service_start(bear_service):
     assert not bear_service._blink_task.done()
 
     # Arduino should have been connected
-    bear_service.arduino.connect.assert_called_once()
+    bear_service.arduino.connect.assert_called_once()  # type: ignore[attr-defined]
 
     # Eyes should be open
-    bear_service.arduino.open_eyes.assert_called_once()
+    bear_service.arduino.open_eyes.assert_called_once()  # type: ignore[attr-defined]
     assert bear_service.eyes_open is True
 
 
 @pytest.mark.asyncio
-async def test_bear_service_stop(bear_service):
+async def test_bear_service_stop(bear_service: BearService) -> None:
     """Test BearService stops cleanly."""
     await bear_service.start()
     await bear_service.stop()
@@ -80,34 +91,34 @@ async def test_bear_service_stop(bear_service):
     assert bear_service._blink_task is None or bear_service._blink_task.done()
 
     # Arduino should have been disconnected
-    bear_service.arduino.disconnect.assert_called_once()
+    bear_service.arduino.disconnect.assert_called_once()  # type: ignore[attr-defined]
 
 
 @pytest.mark.asyncio
-async def test_bear_service_update_eyes(bear_service):
+async def test_bear_service_update_eyes(bear_service: BearService) -> None:
     """Test updating eyes position."""
     await bear_service.start()
 
     await bear_service.update_positions(eyes_position=State.CLOSED)
     assert bear_service.eyes_open is False
-    bear_service.arduino.close_eyes.assert_called()
+    bear_service.arduino.close_eyes.assert_called()  # type: ignore[attr-defined]
 
     await bear_service.update_positions(eyes_position=State.OPEN)
     assert bear_service.eyes_open is True
 
 
 @pytest.mark.asyncio
-async def test_bear_service_update_mouth(bear_service):
+async def test_bear_service_update_mouth(bear_service: BearService) -> None:
     """Test updating mouth position."""
     await bear_service.start()
 
     await bear_service.update_positions(mouth_position=State.OPEN)
     assert bear_service.mouth_position == MouthPosition.W
-    bear_service.arduino.set_mouth_position.assert_called_with(MouthPosition.W)
+    bear_service.arduino.set_mouth_position.assert_called_with(MouthPosition.W)  # type: ignore[attr-defined]
 
 
 @pytest.mark.asyncio
-async def test_bear_service_update_both(bear_service):
+async def test_bear_service_update_both(bear_service: BearService) -> None:
     """Test updating both eyes and mouth."""
     await bear_service.start()
 
@@ -117,16 +128,16 @@ async def test_bear_service_update_both(bear_service):
 
 
 @pytest.mark.asyncio
-async def test_bear_service_set_volume(bear_service):
+async def test_bear_service_set_volume(bear_service: BearService) -> None:
     """Test setting volume."""
     await bear_service.start()
 
     await bear_service.set_volume(75)
-    bear_service.audio_player.set_volume.assert_called_once_with(75)
+    bear_service.audio_player.set_volume.assert_called_once_with(75)  # type: ignore[attr-defined]
 
 
 @pytest.mark.asyncio
-async def test_bear_service_busy_state(bear_service):
+async def test_bear_service_busy_state(bear_service: BearService) -> None:
     """Test busy state management."""
     await bear_service.start()
 
@@ -135,7 +146,7 @@ async def test_bear_service_busy_state(bear_service):
 
 
 @pytest.mark.asyncio
-async def test_bear_service_toggle_blink(bear_service):
+async def test_bear_service_toggle_blink(bear_service: BearService) -> None:
     """Test toggling auto-blink."""
     assert bear_service.blink_enabled is False
 
@@ -147,7 +158,7 @@ async def test_bear_service_toggle_blink(bear_service):
 
 
 @pytest.mark.asyncio
-async def test_bear_service_get_state(bear_service):
+async def test_bear_service_get_state(bear_service: BearService) -> None:
     """Test getting current state."""
     state = bear_service.get_state()
 
@@ -167,7 +178,9 @@ async def test_bear_service_get_state(bear_service):
 
 
 @pytest.mark.asyncio
-async def test_bear_service_set_sync_mode_phoneme_unavailable(bear_service, monkeypatch):
+async def test_bear_service_set_sync_mode_phoneme_unavailable(
+    bear_service: BearService, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test switching to phoneme mode rejects when deps unavailable."""
     await bear_service.start()
 
@@ -189,7 +202,9 @@ async def test_bear_service_set_sync_mode_phoneme_unavailable(bear_service, monk
 
 
 @pytest.mark.asyncio
-async def test_bear_service_set_sync_mode_with_mock(bear_service, monkeypatch):
+async def test_bear_service_set_sync_mode_with_mock(
+    bear_service: BearService, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test switching sync mode succeeds when deps are available."""
     await bear_service.start()
 
@@ -201,22 +216,22 @@ async def test_bear_service_set_sync_mode_with_mock(bear_service, monkeypatch):
     await bear_service.set_sync_mode(SyncMode.PHONEME)
     assert bear_service.sync_mode == SyncMode.PHONEME
     # Arduino gets AMPLITUDE (serial command mode) for both amplitude and phoneme
-    bear_service.arduino.set_mode.assert_called_with(SyncMode.AMPLITUDE)
+    bear_service.arduino.set_mode.assert_called_with(SyncMode.AMPLITUDE)  # type: ignore[attr-defined]
 
 
 @pytest.mark.asyncio
-async def test_bear_service_set_sync_mode_realtime(bear_service):
+async def test_bear_service_set_sync_mode_realtime(bear_service: BearService) -> None:
     """Test switching to realtime mode."""
     await bear_service.start()
 
     await bear_service.set_sync_mode(SyncMode.REALTIME)
     assert bear_service.sync_mode == SyncMode.REALTIME
     # Arduino gets REALTIME (ADC mode)
-    bear_service.arduino.set_mode.assert_called_with(SyncMode.REALTIME)
+    bear_service.arduino.set_mode.assert_called_with(SyncMode.REALTIME)  # type: ignore[attr-defined]
 
 
 @pytest.mark.asyncio
-async def test_bear_service_lifecycle_full(bear_service):
+async def test_bear_service_lifecycle_full(bear_service: BearService) -> None:
     """Test full lifecycle: start, operate, stop."""
     await bear_service.start()
     assert bear_service._talk_task is not None
@@ -239,7 +254,7 @@ async def test_bear_service_lifecycle_full(bear_service):
 
 
 @pytest.mark.asyncio
-async def test_bear_service_concurrent_operations(bear_service):
+async def test_bear_service_concurrent_operations(bear_service: BearService) -> None:
     """Test handling concurrent operations."""
     await bear_service.start()
 
@@ -255,12 +270,12 @@ async def test_bear_service_concurrent_operations(bear_service):
 
 
 @pytest.mark.asyncio
-async def test_bear_service_error_recovery(bear_service):
+async def test_bear_service_error_recovery(bear_service: BearService) -> None:
     """Test error recovery in operations."""
     await bear_service.start()
 
     # Simulate audio player error
-    bear_service.audio_player.play_file.side_effect = Exception("Audio error")
+    bear_service.audio_player.play_file.side_effect = Exception("Audio error")  # type: ignore[attr-defined]
 
     with pytest.raises(Exception, match="Audio error"):
         await bear_service.play_audio("test")
@@ -272,7 +287,7 @@ async def test_bear_service_error_recovery(bear_service):
 
 
 @pytest.mark.asyncio
-async def test_bear_service_mouth_position_percent(bear_service):
+async def test_bear_service_mouth_position_percent(bear_service: BearService) -> None:
     """Test mouth position percentage calculation."""
     bear_service.mouth_position = MouthPosition.C
     assert bear_service._mouth_position_percent() == 0

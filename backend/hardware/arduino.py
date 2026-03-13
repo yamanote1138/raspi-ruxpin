@@ -8,6 +8,7 @@ import asyncio
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Protocol
 
 from backend.core.enums import MouthPosition, ServoType, SyncMode
 from backend.core.exceptions import SerialError
@@ -17,6 +18,14 @@ logger = logging.getLogger(__name__)
 
 # Type alias for mouth position callbacks from Arduino realtime reports
 MouthPositionCallback = Callable[[MouthPosition], None]
+
+
+class SerialPort(Protocol):
+    """Structural type for serial port objects (pyserial and MockSerial)."""
+
+    def write(self, data: bytes) -> int: ...
+    def readline(self) -> bytes: ...
+    def close(self) -> None: ...
 
 
 @dataclass
@@ -58,7 +67,7 @@ class ArduinoController:
         self.use_mock = use_mock
         self.connected = False
 
-        self._serial: object | None = None
+        self._serial: SerialPort | None = None
         self._write_lock = asyncio.Lock()
         self._response_queue: asyncio.Queue[str] = asyncio.Queue()
         self._reader_task: asyncio.Task[None] | None = None
@@ -135,7 +144,7 @@ class ArduinoController:
 
         if self._serial is not None:
             try:
-                await asyncio.to_thread(self._serial.close)  # type: ignore[union-attr]
+                await asyncio.to_thread(self._serial.close)
             except Exception as e:
                 logger.error(f"Error closing serial: {e}")
             self._serial = None
@@ -281,7 +290,7 @@ class ArduinoController:
         async with self._write_lock:
             try:
                 data = f"{command}\n".encode()
-                await asyncio.to_thread(self._serial.write, data)  # type: ignore[union-attr]
+                await asyncio.to_thread(self._serial.write, data)
                 logger.debug(f"TX: {command}")
             except Exception as e:
                 raise SerialError(f"Failed to send command '{command}': {e}") from e
@@ -320,7 +329,7 @@ class ArduinoController:
         if self._serial is None:
             return None
         try:
-            raw = self._serial.readline()  # type: ignore[union-attr]
+            raw = self._serial.readline()
             if raw:
                 return raw.decode("utf-8", errors="replace").strip()
         except Exception:

@@ -1,6 +1,7 @@
 """Tests for jaw calibration module."""
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -15,7 +16,7 @@ from backend.hardware.calibration import (
 
 
 @pytest.mark.unit
-def test_default_calibration_complete():
+def test_default_calibration_complete() -> None:
     """Default calibration should have all 7 positions."""
     table = get_default_calibration()
     assert len(table.positions) == 7
@@ -24,7 +25,7 @@ def test_default_calibration_complete():
 
 
 @pytest.mark.unit
-def test_default_calibration_values():
+def test_default_calibration_values() -> None:
     """Default values should match the hardcoded defaults."""
     table = get_default_calibration()
     for pos in MouthPosition:
@@ -34,7 +35,7 @@ def test_default_calibration_values():
 
 
 @pytest.mark.unit
-def test_default_calibration_monotonic():
+def test_default_calibration_monotonic() -> None:
     """Calibration angles should decrease from C (closed) to W (wide open)."""
     table = get_default_calibration()
     prev_upper = 999
@@ -45,7 +46,7 @@ def test_default_calibration_monotonic():
 
 
 @pytest.mark.unit
-def test_load_calibration(tmp_path):
+def test_load_calibration(tmp_path: Path) -> None:
     """Test loading calibration from JSON file."""
     cal_data = {
         "C": {"upper": 100, "lower": 98},
@@ -67,7 +68,7 @@ def test_load_calibration(tmp_path):
 
 
 @pytest.mark.unit
-def test_load_calibration_missing_positions(tmp_path):
+def test_load_calibration_missing_positions(tmp_path: Path) -> None:
     """Missing positions should use defaults."""
     cal_data = {
         "C": {"upper": 100, "lower": 98},
@@ -89,7 +90,7 @@ def test_load_calibration_missing_positions(tmp_path):
 
 
 @pytest.mark.unit
-def test_interpolate_positions():
+def test_interpolate_positions() -> None:
     """Interpolation from closed + wide should produce 7 positions."""
     table = interpolate_positions(
         closed_upper=100, closed_lower=98,
@@ -109,7 +110,7 @@ def test_interpolate_positions():
 
 
 @pytest.mark.unit
-def test_interpolate_is_monotonic():
+def test_interpolate_is_monotonic() -> None:
     """Interpolated values should decrease monotonically from C to W."""
     table = interpolate_positions(100, 98, 40, 38)
     prev_upper = 999
@@ -120,7 +121,7 @@ def test_interpolate_is_monotonic():
 
 
 @pytest.mark.unit
-def test_calibration_to_dict():
+def test_calibration_to_dict() -> None:
     """Test serialization to dict."""
     table = get_default_calibration()
     d = table.to_dict()
@@ -130,7 +131,7 @@ def test_calibration_to_dict():
 
 
 @pytest.mark.unit
-def test_position_order():
+def test_position_order() -> None:
     """POSITION_ORDER should contain all 7 positions in order."""
     assert len(POSITION_ORDER) == 7
     assert POSITION_ORDER[0] == MouthPosition.C

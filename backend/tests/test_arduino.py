@@ -1,6 +1,5 @@
 """Tests for Arduino serial communication."""
 
-
 import pytest
 
 from backend.core.enums import MouthPosition, ServoType, SyncMode
@@ -10,7 +9,7 @@ from backend.hardware.calibration import get_default_calibration
 
 
 @pytest.fixture
-def controller():
+def controller() -> ArduinoController:
     """Provide a mock-mode Arduino controller."""
     return ArduinoController(
         port="/dev/mock",
@@ -22,7 +21,7 @@ def controller():
 
 
 @pytest.mark.unit
-async def test_connect_with_mock(controller):
+async def test_connect_with_mock(controller: ArduinoController) -> None:
     """Test connection with mock serial."""
     await controller.connect()
     assert controller.connected is True
@@ -31,7 +30,7 @@ async def test_connect_with_mock(controller):
 
 
 @pytest.mark.unit
-async def test_connect_sends_config(controller):
+async def test_connect_sends_config(controller: ArduinoController) -> None:
     """Test that connect sends servo type, calibration, and mode."""
     calibration = get_default_calibration()
     await controller.connect(
@@ -44,7 +43,7 @@ async def test_connect_sends_config(controller):
 
 
 @pytest.mark.unit
-async def test_mouth_position_command(controller):
+async def test_mouth_position_command(controller: ArduinoController) -> None:
     """Test sending mouth position commands."""
     await controller.connect()
     await controller.set_mouth_position(MouthPosition.W)
@@ -53,7 +52,7 @@ async def test_mouth_position_command(controller):
 
 
 @pytest.mark.unit
-async def test_mouth_angles_command(controller):
+async def test_mouth_angles_command(controller: ArduinoController) -> None:
     """Test sending direct jaw angle commands."""
     await controller.connect()
     await controller.set_mouth_angles(90, 85)
@@ -61,7 +60,7 @@ async def test_mouth_angles_command(controller):
 
 
 @pytest.mark.unit
-async def test_eyes_commands(controller):
+async def test_eyes_commands(controller: ArduinoController) -> None:
     """Test eye control commands."""
     await controller.connect()
     await controller.open_eyes()
@@ -71,7 +70,7 @@ async def test_eyes_commands(controller):
 
 
 @pytest.mark.unit
-async def test_mode_switch(controller):
+async def test_mode_switch(controller: ArduinoController) -> None:
     """Test switching sync mode."""
     await controller.connect()
     await controller.set_mode(SyncMode.PHONEME)
@@ -80,7 +79,7 @@ async def test_mode_switch(controller):
 
 
 @pytest.mark.unit
-async def test_ping(controller):
+async def test_ping(controller: ArduinoController) -> None:
     """Test ping/pong health check."""
     await controller.connect()
     result = await controller.ping()
@@ -89,7 +88,7 @@ async def test_ping(controller):
 
 
 @pytest.mark.unit
-async def test_send_command_when_disconnected():
+async def test_send_command_when_disconnected() -> None:
     """Test that sending commands when disconnected raises error."""
     controller = ArduinoController(use_mock=True)
     with pytest.raises(SerialError, match="Not connected"):
@@ -97,7 +96,7 @@ async def test_send_command_when_disconnected():
 
 
 @pytest.mark.unit
-async def test_status_parsing():
+async def test_status_parsing() -> None:
     """Test parsing of STATUS response lines."""
     status = ArduinoController._parse_status("STATUS:MODE:AMPLITUDE,MOUTH:C,EYES:open")
     assert status.mode == SyncMode.AMPLITUDE
@@ -106,7 +105,7 @@ async def test_status_parsing():
 
 
 @pytest.mark.unit
-async def test_status_parsing_phoneme_closed():
+async def test_status_parsing_phoneme_closed() -> None:
     """Test parsing STATUS with phoneme mode and closed eyes."""
     status = ArduinoController._parse_status("STATUS:MODE:PHONEME,MOUTH:W,EYES:closed")
     assert status.mode == SyncMode.PHONEME
@@ -115,7 +114,7 @@ async def test_status_parsing_phoneme_closed():
 
 
 @pytest.mark.unit
-async def test_status_parsing_invalid():
+async def test_status_parsing_invalid() -> None:
     """Test parsing invalid STATUS response."""
     with pytest.raises(SerialError, match="Failed to parse"):
         ArduinoController._parse_status("STATUS:COMPLETELY_INVALID_NO_COMMAS")

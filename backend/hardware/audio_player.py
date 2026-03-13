@@ -594,7 +594,7 @@ class AudioPlayer:
             Title string or None if no title metadata
         """
         try:
-            w = WAVE(path)
+            w = WAVE(path)  # type: ignore[no-untyped-call]
             if w.tags and "TIT2" in w.tags:
                 return str(w.tags["TIT2"])
         except Exception as e:

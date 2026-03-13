@@ -1,13 +1,16 @@
 """Integration tests for API endpoints."""
 
+from typing import Any
+
 import pytest
 from fastapi.testclient import TestClient
 
+from backend.config import AppSettings
 from backend.main import app
 
 
 @pytest.fixture
-def client(integration_settings):
+def client(integration_settings: AppSettings) -> TestClient:  # type: ignore[misc]
     """Provide FastAPI test client."""
     from backend.dependencies import get_settings
 
@@ -19,11 +22,13 @@ def client(integration_settings):
     app.dependency_overrides.clear()
 
 
-def _receive_until_type(websocket, target_type: str, max_messages: int = 20) -> dict | None:
+def _receive_until_type(
+    websocket: Any, target_type: str, max_messages: int = 20
+) -> dict[str, Any] | None:
     """Receive messages until we get one of the target type."""
     for _ in range(max_messages):
         try:
-            data = websocket.receive_json()
+            data: dict[str, Any] = websocket.receive_json()
             if data.get("type") == target_type:
                 return data
         except Exception:
@@ -31,7 +36,7 @@ def _receive_until_type(websocket, target_type: str, max_messages: int = 20) -> 
     return None
 
 
-def test_health_endpoint(client):
+def test_health_endpoint(client: TestClient) -> None:
     """Test health check endpoint returns 200."""
     response = client.get("/api/health")
 
@@ -41,7 +46,7 @@ def test_health_endpoint(client):
     assert "version" in data
 
 
-def test_health_endpoint_structure(client):
+def test_health_endpoint_structure(client: TestClient) -> None:
     """Test health endpoint returns expected structure."""
     response = client.get("/api/health")
     data = response.json()
@@ -54,14 +59,14 @@ def test_health_endpoint_structure(client):
 
 
 @pytest.mark.asyncio
-async def test_websocket_connection(client):
+async def test_websocket_connection(client: TestClient) -> None:
     """Test WebSocket connection establishment."""
     with client.websocket_connect("/ws") as websocket:
         assert websocket is not None
 
 
 @pytest.mark.asyncio
-async def test_websocket_initial_state(client):
+async def test_websocket_initial_state(client: TestClient) -> None:
     """Test WebSocket sends initial bear state on connection."""
     with client.websocket_connect("/ws") as websocket:
         data = websocket.receive_json()
@@ -77,7 +82,7 @@ async def test_websocket_initial_state(client):
 
 
 @pytest.mark.asyncio
-async def test_websocket_update_bear(client):
+async def test_websocket_update_bear(client: TestClient) -> None:
     """Test WebSocket update_bear message."""
     with client.websocket_connect("/ws") as websocket:
         # Receive initial state
@@ -97,7 +102,7 @@ async def test_websocket_update_bear(client):
 
 
 @pytest.mark.asyncio
-async def test_websocket_set_volume(client):
+async def test_websocket_set_volume(client: TestClient) -> None:
     """Test WebSocket set_volume message."""
     with client.websocket_connect("/ws") as websocket:
         websocket.receive_json()
@@ -110,7 +115,7 @@ async def test_websocket_set_volume(client):
 
 
 @pytest.mark.asyncio
-async def test_websocket_fetch_phrases(client):
+async def test_websocket_fetch_phrases(client: TestClient) -> None:
     """Test WebSocket fetch_phrases message."""
     with client.websocket_connect("/ws") as websocket:
         websocket.receive_json()
@@ -125,7 +130,7 @@ async def test_websocket_fetch_phrases(client):
 
 
 @pytest.mark.asyncio
-async def test_websocket_invalid_message(client):
+async def test_websocket_invalid_message(client: TestClient) -> None:
     """Test WebSocket handles invalid message gracefully."""
     with client.websocket_connect("/ws") as websocket:
         websocket.receive_json()
@@ -142,7 +147,7 @@ async def test_websocket_invalid_message(client):
 
 
 @pytest.mark.asyncio
-async def test_websocket_unknown_message_type(client):
+async def test_websocket_unknown_message_type(client: TestClient) -> None:
     """Test WebSocket handles unknown message type."""
     with client.websocket_connect("/ws") as websocket:
         websocket.receive_json()
@@ -157,7 +162,7 @@ async def test_websocket_unknown_message_type(client):
 
 
 @pytest.mark.asyncio
-async def test_websocket_multiple_clients(client):
+async def test_websocket_multiple_clients(client: TestClient) -> None:
     """Test multiple WebSocket clients can connect."""
     with client.websocket_connect("/ws") as ws1:
         with client.websocket_connect("/ws") as ws2:
@@ -170,7 +175,7 @@ async def test_websocket_multiple_clients(client):
 
 
 @pytest.mark.asyncio
-async def test_websocket_disconnect_cleanup(client):
+async def test_websocket_disconnect_cleanup(client: TestClient) -> None:
     """Test WebSocket connection cleanup on disconnect."""
     with client.websocket_connect("/ws") as websocket:
         websocket.receive_json()
@@ -181,13 +186,13 @@ async def test_websocket_disconnect_cleanup(client):
         assert data["type"] == "bear_state"
 
 
-def test_cors_headers(client):
+def test_cors_headers(client: TestClient) -> None:
     """Test CORS headers are present in development."""
     response = client.get("/api/health")
     cors_headers = [k for k in response.headers.keys() if "access-control" in k.lower()]
     assert len(cors_headers) > 0 or response.status_code == 200
 
 
-def test_static_file_serving(client):
+def test_static_file_serving(client: TestClient) -> None:
     """Test static file serving is configured."""
     assert app is not None

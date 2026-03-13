@@ -15,50 +15,50 @@ from backend.hardware.audio_analyzer import (
 
 
 @pytest.mark.unit
-def test_amplitude_silence():
+def test_amplitude_silence() -> None:
     """Silence should map to closed mouth."""
     assert amplitude_to_position(0.0) == MouthPosition.C
 
 
 @pytest.mark.unit
-def test_amplitude_very_quiet():
+def test_amplitude_very_quiet() -> None:
     """Very quiet should map to T (teeth together)."""
     assert amplitude_to_position(0.015) == MouthPosition.T
 
 
 @pytest.mark.unit
-def test_amplitude_quiet():
+def test_amplitude_quiet() -> None:
     """Quiet should map to S (slightly open)."""
     assert amplitude_to_position(0.04) == MouthPosition.S
 
 
 @pytest.mark.unit
-def test_amplitude_medium():
+def test_amplitude_medium() -> None:
     """Medium should map to N (neutral)."""
     assert amplitude_to_position(0.06) == MouthPosition.N
 
 
 @pytest.mark.unit
-def test_amplitude_loud():
+def test_amplitude_loud() -> None:
     """Loud should map to M (medium open)."""
     assert amplitude_to_position(0.09) == MouthPosition.M
 
 
 @pytest.mark.unit
-def test_amplitude_very_loud():
+def test_amplitude_very_loud() -> None:
     """Very loud should map to L (large open)."""
     assert amplitude_to_position(0.15) == MouthPosition.L
 
 
 @pytest.mark.unit
-def test_amplitude_maximum():
+def test_amplitude_maximum() -> None:
     """Maximum should map to W (wide open)."""
     assert amplitude_to_position(0.2) == MouthPosition.W
     assert amplitude_to_position(1.0) == MouthPosition.W
 
 
 @pytest.mark.unit
-def test_threshold_boundaries():
+def test_threshold_boundaries() -> None:
     """Test exact threshold boundary values."""
     # At exactly each threshold, should match the threshold's position
     for threshold, expected_pos in AMPLITUDE_THRESHOLDS:
@@ -69,7 +69,7 @@ def test_threshold_boundaries():
 
 
 @pytest.mark.unit
-def test_threshold_just_below():
+def test_threshold_just_below() -> None:
     """Test values just below each threshold fall to the next position."""
     for i, (threshold, _) in enumerate(AMPLITUDE_THRESHOLDS[:-1]):
         just_below = threshold - 0.001
@@ -91,7 +91,7 @@ def _create_test_wav(path: Path, samples: list[int], sample_rate: int = 16000) -
 
 
 @pytest.mark.unit
-async def test_analyze_silent_wav(tmp_path):
+async def test_analyze_silent_wav(tmp_path: Path) -> None:
     """Analyzing a silent WAV should return all C positions."""
     wav_file = tmp_path / "silence.wav"
     # 1 second of silence at 16kHz
@@ -105,7 +105,7 @@ async def test_analyze_silent_wav(tmp_path):
 
 
 @pytest.mark.unit
-async def test_analyze_loud_wav(tmp_path):
+async def test_analyze_loud_wav(tmp_path: Path) -> None:
     """Analyzing a loud WAV should include open mouth positions."""
     wav_file = tmp_path / "loud.wav"
     # 0.5s of loud signal (alternating high/low)
@@ -124,7 +124,7 @@ async def test_analyze_loud_wav(tmp_path):
 
 
 @pytest.mark.unit
-async def test_analyze_timeline_ordered(tmp_path):
+async def test_analyze_timeline_ordered(tmp_path: Path) -> None:
     """Timeline should have monotonically increasing timestamps."""
     wav_file = tmp_path / "test.wav"
     samples = [int(10000 * (i % 100) / 100) for i in range(16000)]
