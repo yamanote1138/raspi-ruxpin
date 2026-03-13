@@ -13,8 +13,9 @@
     "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {
-    "vue": "^3.5.0",
-    "bootstrap": "^5.3.0"
+    "bootstrap": "^5.3.0",
+    "bootstrap-icons": "^1.13.1",
+    "vue": "^3.5.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",

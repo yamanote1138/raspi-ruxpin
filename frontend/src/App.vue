@@ -14,10 +14,9 @@
               <div class="col-auto">
                 <StatusBar
                   :is-connected="isConnected"
-                  :current-mode="currentMode"
                   :character="bearState.character"
-                  @set-mode="setMode"
                   @set-character="setCharacter"
+                  @show-info="showInfo = true"
                 />
               </div>
             </div>
@@ -53,7 +52,7 @@
               <BearVisualization
                 :bear-state="bearState"
                 :bear-image="bearImage"
-                :clickable="currentMode === Mode.CONTROL"
+                :clickable="true"
                 @click-eyes="toggleEyes"
                 @click-mouth="toggleMouth"
                 @update-bear="updateBear"
@@ -63,9 +62,8 @@
             </div>
           </div>
 
-          <!-- Mode-Specific Content -->
+          <!-- Control Mode -->
           <ControlMode
-            v-if="currentMode === Mode.CONTROL"
             :bear-state="bearState"
             :is-busy="isBusy"
             :phrases="phrases"
@@ -73,30 +71,90 @@
             @play="play"
             @set-sync-mode="setSyncMode"
           />
-
-          <ConfigMode
-            v-else-if="currentMode === Mode.SYSTEM"
-            :bear-state="bearState"
-          />
         </div>
       </div>
     </div>
+
+    <!-- Info Modal -->
+    <div v-if="showInfo" class="modal show d-block" tabindex="-1" @click.self="showInfo = false">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light border-secondary">
+          <div class="modal-header border-secondary">
+            <h5 class="modal-title">System Info</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              @click="showInfo = false"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body p-0">
+            <table class="table table-striped table-sm mb-0 info-table">
+              <tbody>
+                <tr>
+                  <td class="fw-bold">Arduino</td>
+                  <td>{{ bearState.arduino_connected ? 'Connected' : 'Disconnected' }}</td>
+                </tr>
+                <tr>
+                  <td class="fw-bold">Connection</td>
+                  <td>
+                    <template v-if="bearState.arduino_connection_type === 'mock'">
+                      Mock serial
+                    </template>
+                    <template v-else>
+                      {{ bearState.arduino_port }} · {{ bearState.arduino_baud_rate }} baud
+                    </template>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="fw-bold">Servo Type</td>
+                  <td>{{ bearState.servo_type === 'hbridge' ? 'H-Bridge (5-wire)' : 'Standard (3-wire)' }}</td>
+                </tr>
+                <tr>
+                  <td class="fw-bold">Sync Mode</td>
+                  <td>{{ bearState.sync_mode }}</td>
+                </tr>
+                <tr>
+                  <td class="fw-bold">Phoneme</td>
+                  <td>{{ bearState.phoneme_available ? 'Available' : 'Not available' }}</td>
+                </tr>
+                <tr>
+                  <td class="fw-bold">TTS Engine</td>
+                  <td>{{ bearState.tts_engine }} ({{ bearState.tts_voice }})</td>
+                </tr>
+                <tr>
+                  <td class="fw-bold">Audio Files</td>
+                  <td>{{ bearState.sound_count }} phrases loaded</td>
+                </tr>
+                <tr>
+                  <td class="fw-bold">Platform</td>
+                  <td>{{ bearState.platform === 'Darwin' ? 'macOS' : bearState.platform }}</td>
+                </tr>
+                <tr>
+                  <td class="fw-bold">Environment</td>
+                  <td>{{ bearState.environment }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div v-if="showInfo" class="modal-backdrop show" @click="showInfo = false"></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { Mode, State } from '@/types/bear'
+import { ref, onMounted } from 'vue'
+import { State } from '@/types/bear'
 import { useBear } from '@/composables/useBear'
 import StatusBar from '@/components/StatusBar.vue'
 import BearVisualization from '@/components/BearVisualization.vue'
 import ControlMode from '@/components/ControlMode.vue'
-import ConfigMode from '@/components/ConfigMode.vue'
 
 const {
   bearState,
   phrases,
-  currentMode,
   isConnected,
   errorMessage,
   isBusy,
@@ -106,11 +164,13 @@ const {
   speak,
   play,
   setVolume,
-  setMode,
   setBlinkEnabled,
   setCharacter,
   setSyncMode,
 } = useBear()
+
+// Info modal state
+const showInfo = ref(false)
 
 // Toggle functions for clicking bear image in puppet mode
 const toggleEyes = () => {
@@ -184,5 +244,29 @@ onMounted(() => {
 /* Override text colors for light panel background */
 .bg-panel .text-muted {
   color: #000000 !important;
+}
+
+/* Info modal table styling */
+.info-table {
+  color: #e0e0e0;
+}
+
+.info-table td:first-child {
+  width: 130px;
+  white-space: nowrap;
+  padding-left: 1rem;
+}
+
+.info-table td {
+  padding: 0.5rem 0.75rem;
+  vertical-align: middle;
+}
+
+.info-table tr:nth-child(odd) {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.info-table tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.02);
 }
 </style>

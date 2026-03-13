@@ -8,6 +8,7 @@ the Pi sends pre-computed timing commands over serial.
 
 import asyncio
 import logging
+import platform
 import random
 import time
 from pathlib import Path
@@ -474,6 +475,13 @@ class BearService:
             "arduino_baud_rate": self.arduino.baud_rate,
             "arduino_connection_type": connection_type,
             "status_text": self.status_text,
+            "servo_type": self.settings.sync.servo_type.value,
+            "tts_engine": self.settings.tts.engine,
+            "tts_voice": self.settings.tts.voice,
+            "environment": self.settings.environment,
+            "platform": platform.system(),
+            "sound_count": len(self.phrases),
+            "phoneme_available": self.settings.sync.phoneme_available,
         }
 
     def _mouth_position_percent(self) -> int:

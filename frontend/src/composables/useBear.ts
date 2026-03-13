@@ -4,7 +4,7 @@
 
 import { ref, computed, watch, onMounted, onUnmounted, type Ref, type ComputedRef } from 'vue'
 import { useWebSocket } from './useWebSocket'
-import { State, Mode, SyncMode, MouthCode, type BearState } from '@/types/bear'
+import { State, SyncMode, MouthCode, type BearState } from '@/types/bear'
 import type {
   Phrases,
   WebSocketMessage,
@@ -17,7 +17,6 @@ export interface BearComposable {
   // State
   bearState: Ref<BearState>
   phrases: Ref<Phrases>
-  currentMode: Ref<Mode>
   isConnected: Ref<boolean>
   errorMessage: Ref<string | null>
 
@@ -32,7 +31,6 @@ export interface BearComposable {
   play: (sound: string) => Promise<void>
   setVolume: (level: number) => void
   fetchPhrases: () => void
-  setMode: (mode: Mode) => void
   setBlinkEnabled: (enabled: boolean) => void
   setCharacter: (character: string) => void
   setSyncMode: (mode: string) => void
@@ -59,7 +57,6 @@ export function useBear(): BearComposable {
 
   // UI state
   const phrases = ref<Phrases>({})
-  const currentMode = ref<Mode>(Mode.CONTROL)
   const errorMessage = ref<string | null>(null)
 
   // Computed properties
@@ -177,13 +174,6 @@ export function useBear(): BearComposable {
   }
 
   /**
-   * Set UI mode
-   */
-  const setMode = (mode: Mode) => {
-    currentMode.value = mode
-  }
-
-  /**
    * Enable or disable eye blinking
    */
   const setBlinkEnabled = (enabled: boolean) => {
@@ -269,6 +259,13 @@ export function useBear(): BearComposable {
           arduino_baud_rate: stateMsg.data.arduino_baud_rate ?? 0,
           arduino_connection_type: stateMsg.data.arduino_connection_type ?? 'unknown',
           status_text: stateMsg.data.status_text ?? '',
+          servo_type: stateMsg.data.servo_type ?? 'hbridge',
+          tts_engine: stateMsg.data.tts_engine ?? 'espeak',
+          tts_voice: stateMsg.data.tts_voice ?? '',
+          environment: stateMsg.data.environment ?? 'development',
+          platform: stateMsg.data.platform ?? '',
+          sound_count: stateMsg.data.sound_count ?? 0,
+          phoneme_available: stateMsg.data.phoneme_available ?? false,
         }
         break
 
@@ -326,7 +323,6 @@ export function useBear(): BearComposable {
     // State
     bearState,
     phrases,
-    currentMode,
     isConnected: ws.isConnected,
     errorMessage,
 
@@ -341,7 +337,6 @@ export function useBear(): BearComposable {
     play,
     setVolume,
     fetchPhrases,
-    setMode,
     setBlinkEnabled,
     setCharacter,
     setSyncMode,

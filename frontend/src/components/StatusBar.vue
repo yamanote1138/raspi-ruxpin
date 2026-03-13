@@ -11,26 +11,6 @@
       </span>
     </div>
 
-    <!-- Mode Toggle -->
-    <div class="btn-group" role="group">
-      <button
-        type="button"
-        class="btn btn-sm mode-btn"
-        :class="currentMode === Mode.CONTROL ? 'btn-primary' : 'btn-light'"
-        @click="$emit('set-mode', Mode.CONTROL)"
-      >
-        Control
-      </button>
-      <button
-        type="button"
-        class="btn btn-sm mode-btn"
-        :class="currentMode === Mode.SYSTEM ? 'btn-primary' : 'btn-light'"
-        @click="$emit('set-mode', Mode.SYSTEM)"
-      >
-        System
-      </button>
-    </div>
-
     <!-- Character Toggle -->
     <div class="btn-group" role="group">
       <button
@@ -52,21 +32,29 @@
         Grubby
       </button>
     </div>
+
+    <!-- Info Button -->
+    <button
+      type="button"
+      class="btn btn-sm btn-outline-dark rounded-circle d-flex align-items-center justify-content-center"
+      style="width: 28px; height: 28px;"
+      @click="$emit('show-info')"
+      title="System info"
+    >
+      <i class="bi bi-info-lg"></i>
+    </button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Mode } from '@/types/bear'
-
 defineProps<{
   isConnected: boolean
-  currentMode: Mode
   character: string
 }>()
 
 defineEmits<{
-  'set-mode': [mode: Mode]
   'set-character': [character: string]
+  'show-info': []
 }>()
 </script>
 
