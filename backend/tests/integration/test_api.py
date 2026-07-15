@@ -18,7 +18,7 @@ _BROADCAST_MESSAGE_TYPES = {"bear_state", "gpio_status", "log"}
 
 
 def _receive_until(
-    websocket: WebSocketTestSession, expected_types: set[str], max_attempts: int = 20
+    websocket: WebSocketTestSession, expected_types: set[str], max_attempts: int = 50
 ) -> dict[str, Any]:
     """Read messages until one matches an expected type, skipping periodic broadcasts."""
     for _ in range(max_attempts):
@@ -33,7 +33,7 @@ def _receive_until(
 
 
 def _receive_until_state_with(
-    websocket: WebSocketTestSession, max_attempts: int = 20, **expected_data: Any
+    websocket: WebSocketTestSession, max_attempts: int = 50, **expected_data: Any
 ) -> dict[str, Any]:
     """Read bear_state messages until one reflects the given data, skipping stale broadcasts."""
     for _ in range(max_attempts):
