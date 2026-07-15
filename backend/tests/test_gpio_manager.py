@@ -1,13 +1,12 @@
 """Tests for GPIO manager."""
 
 import pytest
-from unittest.mock import MagicMock, patch
 
-from backend.hardware.gpio_manager import GPIOManager
 from backend.core.exceptions import GPIOError
+from backend.hardware.gpio_manager import GPIOManager
 
 
-def test_gpio_manager_initialization_mock():
+def test_gpio_manager_initialization_mock() -> None:
     """Test GPIO manager initializes with mock GPIO."""
     manager = GPIOManager(use_mock=True)
 
@@ -15,7 +14,7 @@ def test_gpio_manager_initialization_mock():
     assert manager.gpio is not None
 
 
-def test_gpio_manager_initialize_mock():
+def test_gpio_manager_initialize_mock() -> None:
     """Test GPIO manager initialize method with mock."""
     manager = GPIOManager(use_mock=True)
     manager.initialize()
@@ -24,14 +23,14 @@ def test_gpio_manager_initialize_mock():
     assert manager.gpio is not None
 
 
-def test_gpio_manager_setup_pin(mock_gpio_manager):
+def test_gpio_manager_setup_pin(mock_gpio_manager: GPIOManager) -> None:
     """Test setting up a GPIO pin."""
     mock_gpio_manager.setup_pin(21, "OUT")
 
     assert 21 in mock_gpio_manager.active_pins
 
 
-def test_gpio_manager_output(mock_gpio_manager):
+def test_gpio_manager_output(mock_gpio_manager: GPIOManager) -> None:
     """Test GPIO output."""
     # First setup the pin
     mock_gpio_manager.setup_pin(21, "OUT")
@@ -41,7 +40,7 @@ def test_gpio_manager_output(mock_gpio_manager):
     # Just verify no exception was raised
 
 
-def test_gpio_manager_pwm_creation(mock_gpio_manager):
+def test_gpio_manager_pwm_creation(mock_gpio_manager: GPIOManager) -> None:
     """Test PWM creation."""
     # First setup the pin
     mock_gpio_manager.setup_pin(21, "OUT")
@@ -53,7 +52,7 @@ def test_gpio_manager_pwm_creation(mock_gpio_manager):
     assert 21 in mock_gpio_manager.active_pwms
 
 
-def test_gpio_manager_cleanup(mock_gpio_manager):
+def test_gpio_manager_cleanup(mock_gpio_manager: GPIOManager) -> None:
     """Test GPIO cleanup."""
     # Setup a pin first
     mock_gpio_manager.setup_pin(21, "OUT")
@@ -65,20 +64,20 @@ def test_gpio_manager_cleanup(mock_gpio_manager):
     assert len(mock_gpio_manager.active_pins) == 0
 
 
-def test_gpio_manager_cleanup_not_initialized():
+def test_gpio_manager_cleanup_not_initialized() -> None:
     """Test cleanup when not initialized doesn't error."""
     manager = GPIOManager(use_mock=True)
     manager.cleanup_all()  # Should not raise
 
 
-def test_gpio_manager_double_initialize(mock_gpio_manager):
+def test_gpio_manager_double_initialize(mock_gpio_manager: GPIOManager) -> None:
     """Test double initialization is handled gracefully."""
     # Already initialized in fixture
     mock_gpio_manager.initialize()  # Should not error
     assert mock_gpio_manager.is_initialized is True
 
 
-def test_gpio_manager_context_manager():
+def test_gpio_manager_context_manager() -> None:
     """Test GPIO manager as context manager."""
     with GPIOManager(use_mock=True) as manager:
         manager.initialize()
@@ -88,7 +87,7 @@ def test_gpio_manager_context_manager():
     assert manager.is_initialized is False
 
 
-def test_gpio_manager_output_low(mock_gpio_manager):
+def test_gpio_manager_output_low(mock_gpio_manager: GPIOManager) -> None:
     """Test GPIO output low."""
     # First setup the pin
     mock_gpio_manager.setup_pin(25, "OUT")
@@ -98,7 +97,7 @@ def test_gpio_manager_output_low(mock_gpio_manager):
     # Just verify no exception was raised
 
 
-def test_gpio_manager_setup_multiple_pins(mock_gpio_manager):
+def test_gpio_manager_setup_multiple_pins(mock_gpio_manager: GPIOManager) -> None:
     """Test setting up multiple pins."""
     pins = [21, 16, 20, 25, 7, 8]
 
@@ -108,7 +107,7 @@ def test_gpio_manager_setup_multiple_pins(mock_gpio_manager):
     assert len(mock_gpio_manager.active_pins) == len(pins)
 
 
-def test_gpio_manager_output_without_setup():
+def test_gpio_manager_output_without_setup() -> None:
     """Test that output raises error if pin not set up."""
     manager = GPIOManager(use_mock=True)
     manager.initialize()
@@ -117,7 +116,7 @@ def test_gpio_manager_output_without_setup():
         manager.output(21, True)
 
 
-def test_gpio_manager_pwm_without_setup():
+def test_gpio_manager_pwm_without_setup() -> None:
     """Test that PWM creation raises error if pin not set up."""
     manager = GPIOManager(use_mock=True)
     manager.initialize()

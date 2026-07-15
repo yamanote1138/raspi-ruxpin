@@ -1,16 +1,54 @@
 """Integration tests for API endpoints."""
 
+from collections.abc import Generator
+from pathlib import Path
+from typing import Any, cast
+
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import AsyncMock, MagicMock, patch
-from pathlib import Path
+from starlette.testclient import WebSocketTestSession
 
+from backend.config import AppSettings, AudioSettings, HardwareSettings, TTSSettings
 from backend.main import app
-from backend.config import AppSettings, HardwareSettings, AudioSettings, TTSSettings
+
+# Message types the server broadcasts periodically, independent of any
+# command a test just sent. Tests waiting for a specific reply must skip
+# past these rather than assume the very next message is their reply.
+_BROADCAST_MESSAGE_TYPES = {"bear_state", "gpio_status", "log"}
+
+
+def _receive_until(
+    websocket: WebSocketTestSession, expected_types: set[str], max_attempts: int = 20
+) -> dict[str, Any]:
+    """Read messages until one matches an expected type, skipping periodic broadcasts."""
+    for _ in range(max_attempts):
+        message = cast(dict[str, Any], websocket.receive_json())
+        if message.get("type") in expected_types:
+            return message
+        if message.get("type") not in _BROADCAST_MESSAGE_TYPES:
+            return message
+    raise AssertionError(
+        f"No message of type {expected_types} received after {max_attempts} attempts"
+    )
+
+
+def _receive_until_state_with(
+    websocket: WebSocketTestSession, max_attempts: int = 20, **expected_data: Any
+) -> dict[str, Any]:
+    """Read bear_state messages until one reflects the given data, skipping stale broadcasts."""
+    for _ in range(max_attempts):
+        message = cast(dict[str, Any], websocket.receive_json())
+        if message.get("type") == "bear_state" and all(
+            message.get("data", {}).get(key) == value for key, value in expected_data.items()
+        ):
+            return message
+    raise AssertionError(
+        f"No bear_state reflecting {expected_data} received after {max_attempts} attempts"
+    )
 
 
 @pytest.fixture
-def test_app_settings(tmp_path):
+def test_app_settings(tmp_path: Path) -> AppSettings:
     """Provide test application settings."""
     sounds_dir = tmp_path / "sounds"
     sounds_dir.mkdir()
@@ -53,7 +91,7 @@ def test_app_settings(tmp_path):
 
 
 @pytest.fixture
-def client(test_app_settings):
+def client(test_app_settings: AppSettings) -> Generator[TestClient, None, None]:
     """Provide FastAPI test client."""
     # Override the settings dependency
     from backend.dependencies import get_settings
@@ -67,7 +105,7 @@ def client(test_app_settings):
     app.dependency_overrides.clear()
 
 
-def test_health_endpoint(client):
+def test_health_endpoint(client: TestClient) -> None:
     """Test health check endpoint returns 200."""
     response = client.get("/api/health")
 
@@ -77,7 +115,7 @@ def test_health_endpoint(client):
     assert "version" in data
 
 
-def test_health_endpoint_structure(client):
+def test_health_endpoint_structure(client: TestClient) -> None:
     """Test health endpoint returns expected structure."""
     response = client.get("/api/health")
     data = response.json()
@@ -93,7 +131,7 @@ def test_health_endpoint_structure(client):
 
 
 @pytest.mark.asyncio
-async def test_websocket_connection(client):
+async def test_websocket_connection(client: TestClient) -> None:
     """Test WebSocket connection establishment."""
     with client.websocket_connect("/ws") as websocket:
         # Connection should succeed
@@ -101,7 +139,7 @@ async def test_websocket_connection(client):
 
 
 @pytest.mark.asyncio
-async def test_websocket_initial_state(client):
+async def test_websocket_initial_state(client: TestClient) -> None:
     """Test WebSocket sends initial bear state on connection."""
     with client.websocket_connect("/ws") as websocket:
         # Should receive initial state message
@@ -118,7 +156,7 @@ async def test_websocket_initial_state(client):
 
 
 @pytest.mark.asyncio
-async def test_websocket_update_bear(client):
+async def test_websocket_update_bear(client: TestClient) -> None:
     """Test WebSocket update_bear message."""
     with client.websocket_connect("/ws") as websocket:
         # Receive initial state
@@ -126,9 +164,7 @@ async def test_websocket_update_bear(client):
         assert initial["type"] == "bear_state"
 
         # Send update_bear message
-        websocket.send_json(
-            {"type": "update_bear", "data": {"eyes": "closed", "mouth": "open"}}
-        )
+        websocket.send_json({"type": "update_bear", "data": {"eyes": "closed", "mouth": "open"}})
 
         # Should receive updated state
         response = websocket.receive_json()
@@ -139,7 +175,7 @@ async def test_websocket_update_bear(client):
 
 
 @pytest.mark.asyncio
-async def test_websocket_set_volume(client):
+async def test_websocket_set_volume(client: TestClient) -> None:
     """Test WebSocket set_volume message."""
     with client.websocket_connect("/ws") as websocket:
         # Receive initial state
@@ -148,15 +184,15 @@ async def test_websocket_set_volume(client):
         # Send set_volume message
         websocket.send_json({"type": "set_volume", "data": {"volume": 75}})
 
-        # Should receive success response or error
-        response = websocket.receive_json()
+        # Should receive success response or error (skip periodic broadcasts)
+        response = _receive_until(websocket, {"volume_updated", "error"})
         assert "type" in response
         # Volume update might succeed or fail depending on audio system
         assert response["type"] in ["volume_updated", "error"]
 
 
 @pytest.mark.asyncio
-async def test_websocket_fetch_phrases(client):
+async def test_websocket_fetch_phrases(client: TestClient) -> None:
     """Test WebSocket fetch_phrases message."""
     with client.websocket_connect("/ws") as websocket:
         # Receive initial state
@@ -165,8 +201,8 @@ async def test_websocket_fetch_phrases(client):
         # Send fetch_phrases message
         websocket.send_json({"type": "fetch_phrases"})
 
-        # Should receive phrases response
-        response = websocket.receive_json()
+        # Should receive phrases response (skip periodic broadcasts)
+        response = _receive_until(websocket, {"phrases"})
         assert response["type"] == "phrases"
         assert "data" in response
         # Data should be a dict of phrases
@@ -174,7 +210,7 @@ async def test_websocket_fetch_phrases(client):
 
 
 @pytest.mark.asyncio
-async def test_websocket_invalid_message(client):
+async def test_websocket_invalid_message(client: TestClient) -> None:
     """Test WebSocket handles invalid message gracefully."""
     with client.websocket_connect("/ws") as websocket:
         # Receive initial state
@@ -185,7 +221,7 @@ async def test_websocket_invalid_message(client):
 
         # Should receive error response or handle gracefully
         try:
-            response = websocket.receive_json(timeout=2)
+            response = websocket.receive_json()
             # If we get a response, it should be an error
             if "type" in response:
                 assert response["type"] in ["error", "bear_state"]
@@ -195,7 +231,7 @@ async def test_websocket_invalid_message(client):
 
 
 @pytest.mark.asyncio
-async def test_websocket_unknown_message_type(client):
+async def test_websocket_unknown_message_type(client: TestClient) -> None:
     """Test WebSocket handles unknown message type."""
     with client.websocket_connect("/ws") as websocket:
         # Receive initial state
@@ -206,7 +242,7 @@ async def test_websocket_unknown_message_type(client):
 
         # Should receive error response or handle gracefully
         try:
-            response = websocket.receive_json(timeout=2)
+            response = websocket.receive_json()
             # If we get a response, check it's valid
             assert "type" in response
             # Could be error or just ignore unknown type
@@ -216,7 +252,7 @@ async def test_websocket_unknown_message_type(client):
 
 
 @pytest.mark.asyncio
-async def test_websocket_multiple_clients(client):
+async def test_websocket_multiple_clients(client: TestClient) -> None:
     """Test multiple WebSocket clients can connect."""
     with client.websocket_connect("/ws") as ws1:
         with client.websocket_connect("/ws") as ws2:
@@ -228,13 +264,13 @@ async def test_websocket_multiple_clients(client):
             assert data2["type"] == "bear_state"
 
             # Update from one client
-            ws1.send_json(
-                {"type": "update_bear", "data": {"eyes": "open", "mouth": "open"}}
-            )
+            ws1.send_json({"type": "update_bear", "data": {"eyes": "open", "mouth": "open"}})
 
-            # Both clients should receive update
-            response1 = ws1.receive_json()
-            response2 = ws2.receive_json()
+            # Both clients should receive update (skip periodic broadcasts, but
+            # bear_state is itself the expected reply type here, so require the
+            # update to actually be reflected in the data)
+            response1 = _receive_until_state_with(ws1, eyes="open")
+            response2 = _receive_until_state_with(ws2, eyes="open")
 
             assert response1["type"] == "bear_state"
             assert response2["type"] == "bear_state"
@@ -243,7 +279,7 @@ async def test_websocket_multiple_clients(client):
 
 
 @pytest.mark.asyncio
-async def test_websocket_disconnect_cleanup(client):
+async def test_websocket_disconnect_cleanup(client: TestClient) -> None:
     """Test WebSocket connection cleanup on disconnect."""
     with client.websocket_connect("/ws") as websocket:
         websocket.receive_json()
@@ -255,7 +291,7 @@ async def test_websocket_disconnect_cleanup(client):
         assert data["type"] == "bear_state"
 
 
-def test_cors_headers(client):
+def test_cors_headers(client: TestClient) -> None:
     """Test CORS headers are present in development."""
     response = client.get("/api/health")
 
@@ -265,7 +301,7 @@ def test_cors_headers(client):
     assert len(cors_headers) > 0 or response.status_code == 200  # At minimum, endpoint should work
 
 
-def test_static_file_serving(client):
+def test_static_file_serving(client: TestClient) -> None:
     """Test static file serving is configured."""
     # In test mode, static files might not be built
     # Just verify the app has static file serving configured

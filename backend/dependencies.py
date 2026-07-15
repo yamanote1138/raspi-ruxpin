@@ -4,7 +4,7 @@ This module provides DI functions for accessing application services
 and settings throughout the FastAPI application.
 """
 
-from typing import Annotated
+from typing import Annotated, cast
 
 from fastapi import Depends, Request
 
@@ -21,7 +21,7 @@ def get_settings(request: Request) -> AppSettings:
     Returns:
         Application settings instance
     """
-    return request.app.state.settings
+    return cast(AppSettings, request.app.state.settings)
 
 
 def get_bear_service(request: Request) -> BearService:
@@ -33,7 +33,7 @@ def get_bear_service(request: Request) -> BearService:
     Returns:
         Bear service instance
     """
-    return request.app.state.bear_service
+    return cast(BearService, request.app.state.bear_service)
 
 
 # Type aliases for dependency injection

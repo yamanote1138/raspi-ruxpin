@@ -1,22 +1,22 @@
 """Tests for servo control."""
 
 import pytest
-from unittest.mock import MagicMock
 
-from backend.hardware.servo import Servo
-from backend.hardware.models import PinSet
 from backend.core.enums import Direction, State
 from backend.core.exceptions import ServoError
+from backend.hardware.gpio_manager import GPIOManager
+from backend.hardware.models import PinSet
+from backend.hardware.servo import Servo
 
 
 @pytest.fixture
-def pin_set():
+def pin_set() -> PinSet:
     """Provide test pin configuration."""
     return PinSet(pwm=21, dir=16, cdir=20)
 
 
 @pytest.fixture
-async def servo(mock_gpio_manager, pin_set):
+async def servo(mock_gpio_manager: GPIOManager, pin_set: PinSet) -> Servo:
     """Provide test servo instance."""
     s = Servo(
         name="test_servo",
@@ -30,7 +30,7 @@ async def servo(mock_gpio_manager, pin_set):
 
 
 @pytest.mark.asyncio
-async def test_servo_initialization(mock_gpio_manager, pin_set):
+async def test_servo_initialization(mock_gpio_manager: GPIOManager, pin_set: PinSet) -> None:
     """Test servo initializes correctly."""
     servo = Servo(
         name="test_servo",
@@ -48,7 +48,7 @@ async def test_servo_initialization(mock_gpio_manager, pin_set):
 
 
 @pytest.mark.asyncio
-async def test_servo_open(servo):
+async def test_servo_open(servo: Servo) -> None:
     """Test servo open operation."""
     await servo.open()
 
@@ -57,7 +57,7 @@ async def test_servo_open(servo):
 
 
 @pytest.mark.asyncio
-async def test_servo_close(servo):
+async def test_servo_close(servo: Servo) -> None:
     """Test servo close operation."""
     await servo.close()
 
@@ -66,7 +66,7 @@ async def test_servo_close(servo):
 
 
 @pytest.mark.asyncio
-async def test_servo_brake(servo):
+async def test_servo_brake(servo: Servo) -> None:
     """Test servo brake operation."""
     await servo._set_direction(Direction.BRAKE)
 
@@ -75,7 +75,7 @@ async def test_servo_brake(servo):
 
 
 @pytest.mark.asyncio
-async def test_servo_duration_validation(mock_gpio_manager):
+async def test_servo_duration_validation(mock_gpio_manager: GPIOManager) -> None:
     """Test servo duration validation."""
     pin_set = PinSet(pwm=21, dir=16, cdir=20)
 
@@ -121,7 +121,7 @@ async def test_servo_duration_validation(mock_gpio_manager):
 
 
 @pytest.mark.asyncio
-async def test_servo_set_direction_opening(servo):
+async def test_servo_set_direction_opening(servo: Servo) -> None:
     """Test setting direction to OPENING."""
     await servo._set_direction(Direction.OPENING)
 
@@ -129,7 +129,7 @@ async def test_servo_set_direction_opening(servo):
 
 
 @pytest.mark.asyncio
-async def test_servo_set_direction_closing(servo):
+async def test_servo_set_direction_closing(servo: Servo) -> None:
     """Test setting direction to CLOSING."""
     await servo._set_direction(Direction.CLOSING)
 
@@ -137,7 +137,7 @@ async def test_servo_set_direction_closing(servo):
 
 
 @pytest.mark.asyncio
-async def test_servo_pwm_start(servo):
+async def test_servo_pwm_start(servo: Servo) -> None:
     """Test PWM starts during operation."""
     await servo.open()
 
@@ -146,7 +146,7 @@ async def test_servo_pwm_start(servo):
 
 
 @pytest.mark.asyncio
-async def test_servo_speed_validation(mock_gpio_manager):
+async def test_servo_speed_validation(mock_gpio_manager: GPIOManager) -> None:
     """Test servo speed validation."""
     pin_set = PinSet(pwm=21, dir=16, cdir=20)
 
@@ -181,7 +181,7 @@ async def test_servo_speed_validation(mock_gpio_manager):
         )
 
 
-def test_pin_set_model():
+def test_pin_set_model() -> None:
     """Test PinSet Pydantic model."""
     pins = PinSet(pwm=21, dir=16, cdir=20)
 
@@ -190,7 +190,7 @@ def test_pin_set_model():
     assert pins.cdir == 20
 
 
-def test_pin_set_validation():
+def test_pin_set_validation() -> None:
     """Test PinSet validation."""
     # Valid pins
     pins = PinSet(pwm=21, dir=16, cdir=20)

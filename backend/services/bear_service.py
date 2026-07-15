@@ -8,7 +8,6 @@ import asyncio
 import json
 import logging
 import random
-from pathlib import Path
 from typing import Any
 
 from backend.config import AppSettings
@@ -170,7 +169,7 @@ class BearService:
             return
 
         try:
-            with open(phrases_file, "r", encoding="utf-8") as f:
+            with open(phrases_file, encoding="utf-8") as f:
                 self.phrases = json.load(f)
 
             logger.info(f"Loaded {len(self.phrases)} phrases")
@@ -224,12 +223,14 @@ class BearService:
                     if self.blink_enabled and not self.is_busy and self.eyes.state == State.OPEN:
                         logger.debug("Executing blink")
                         # Natural blink: faster for more responsive animation
-                        await self.eyes.close(0.4)    # Close with moderate speed
-                        await asyncio.sleep(0.15)     # Stay closed briefly
-                        await self.eyes.open(0.4)     # Open with moderate speed
+                        await self.eyes.close(0.4)  # Close with moderate speed
+                        await asyncio.sleep(0.15)  # Stay closed briefly
+                        await self.eyes.open(0.4)  # Open with moderate speed
                         logger.debug("Blink completed")
                     else:
-                        logger.debug(f"Blink cancelled: enabled={self.blink_enabled}, busy={self.is_busy}, eyes={self.eyes.state}")
+                        logger.debug(
+                            f"Blink cancelled: enabled={self.blink_enabled}, busy={self.is_busy}, eyes={self.eyes.state}"
+                        )
                 else:
                     await asyncio.sleep(0.5)
         except asyncio.CancelledError:
@@ -261,7 +262,7 @@ class BearService:
         try:
             # Use slower duration for manual movements to show smooth animation
             # Adjusted for responsive feel while allowing old servos to complete movement
-            eyes_manual_duration = 0.5   # Faster, more responsive eyes
+            eyes_manual_duration = 0.5  # Faster, more responsive eyes
             mouth_manual_duration = 0.5  # Mouth can be a bit faster
 
             if eyes_position is not None:

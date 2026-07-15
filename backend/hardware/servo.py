@@ -6,11 +6,10 @@ dependency injection, and type safety.
 
 import asyncio
 import logging
-from typing import Literal
 
 from backend.core.enums import Direction, State
 from backend.core.exceptions import ServoError
-from backend.hardware.gpio_manager import GPIOManager
+from backend.hardware.gpio_manager import PWM, GPIOManager
 from backend.hardware.models import PinSet
 
 logger = logging.getLogger(__name__)
@@ -65,7 +64,7 @@ class Servo:
         self.gpio_manager = gpio_manager
         self.state = State.UNKNOWN
         self.position_percent = 0  # 0 = fully closed, 100 = fully open
-        self.pwm = None
+        self.pwm: PWM | None = None
         self._lock = asyncio.Lock()
 
         logger.info(
@@ -265,6 +264,9 @@ class Servo:
             target_percent: Target position percentage
             duration: Movement duration
         """
+        if not self.pwm:
+            raise ServoError(f"Servo '{self.name}' not initialized")
+
         if duration < 0.01:
             duration = 0.01  # Minimum duration
 
