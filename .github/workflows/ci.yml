@@ -9,6 +9,10 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    env:
+      # CI runs on Linux, but this repo's mock-GPIO auto-detection only
+      # kicks in on Darwin (Mac dev). Force it explicitly here.
+      HARDWARE__USE_MOCK_GPIO: "true"
     steps:
       - uses: actions/checkout@v4
       - name: Install uv
