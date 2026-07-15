@@ -109,12 +109,12 @@ class GPIOManager:
                 logger.info("Using mock GPIO for development")
                 from backend.hardware import mock_gpio
 
-                self.gpio = mock_gpio  # type: ignore
+                self.gpio = mock_gpio
             else:
                 logger.info("Using RPi.GPIO for production")
-                import RPi.GPIO as GPIO  # type: ignore
+                import RPi.GPIO as GPIO
 
-                self.gpio = GPIO  # type: ignore
+                self.gpio = GPIO
         except ImportError as e:
             raise GPIOError(f"Failed to import GPIO module: {e}") from e
 

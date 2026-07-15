@@ -6,7 +6,6 @@ and YAML override capability. Configuration precedence: env vars > YAML > defaul
 
 import platform
 from pathlib import Path
-from typing import Any
 
 import yaml
 from pydantic import Field, field_validator
@@ -29,7 +28,10 @@ class HardwareSettings(BaseSettings):
     eyes_cdir: int = Field(default=20, description="Counter-direction pin for eyes servo")
     eyes_speed: int = Field(default=100, ge=1, le=1000, description="PWM frequency for eyes")
     eyes_duration: float = Field(
-        default=0.8, gt=0, le=2.0, description="Default duration for eyes movement (slower for 40+ year old servos)"
+        default=0.8,
+        gt=0,
+        le=2.0,
+        description="Default duration for eyes movement (slower for 40+ year old servos)",
     )
 
     # Mouth servo pins
@@ -38,7 +40,10 @@ class HardwareSettings(BaseSettings):
     mouth_cdir: int = Field(default=8, description="Counter-direction pin for mouth servo")
     mouth_speed: int = Field(default=100, ge=1, le=1000, description="PWM frequency for mouth")
     mouth_duration: float = Field(
-        default=0.3, gt=0, le=2.0, description="Default duration for mouth movement (slower for 40+ year old servos)"
+        default=0.3,
+        gt=0,
+        le=2.0,
+        description="Default duration for mouth movement (slower for 40+ year old servos)",
     )
 
     # Platform detection
@@ -64,10 +69,19 @@ class AudioSettings(BaseSettings):
         env_nested_delimiter="__",
     )
 
-    device: str | None = Field(default=None, description="ALSA device name (e.g., 'hw:1,0', 'plughw:1,0', 'default')")
-    card_index: int | None = Field(default=None, ge=0, description="ALSA card index for mixer control (0, 1, 2, etc.)")
+    device: str | None = Field(
+        default=None, description="ALSA device name (e.g., 'hw:1,0', 'plughw:1,0', 'default')"
+    )
+    card_index: int | None = Field(
+        default=None, ge=0, description="ALSA card index for mixer control (0, 1, 2, etc.)"
+    )
     mixer: str = Field(default="PCM", description="ALSA mixer name (Linux only)")
-    start_volume: int = Field(default=90, ge=0, le=90, description="Initial volume level (0-90, capped to prevent instability)")
+    start_volume: int = Field(
+        default=90,
+        ge=0,
+        le=90,
+        description="Initial volume level (0-90, capped to prevent instability)",
+    )
     sample_rate: int = Field(default=16000, description="Audio sample rate")
     amplitude_threshold: int = Field(default=500, ge=0, description="Threshold for mouth movement")
     sounds_dir: Path = Field(default=Path("sounds"), description="Directory containing sound files")
@@ -174,7 +188,7 @@ class AppSettings(BaseSettings):
             return
 
         try:
-            with open(yaml_file, "r", encoding="utf-8") as f:
+            with open(yaml_file, encoding="utf-8") as f:
                 yaml_data = yaml.safe_load(f)
 
             if not yaml_data:

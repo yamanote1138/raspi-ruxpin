@@ -5,24 +5,19 @@ for mouth synchronization. It supports both Linux (ALSA) and macOS (afplay).
 """
 
 import asyncio
+import importlib.util
 import logging
 import platform
 import struct
-import subprocess
-from pathlib import Path
-from typing import Callable
-
 import wave
+from collections.abc import Callable
+from pathlib import Path
 
 from backend.core.exceptions import AudioError
 
-# Optional piper import (only available on Pi with [hardware] dependencies)
-try:
-    from piper import PiperVoice
-
-    PIPER_AVAILABLE = True
-except ImportError:
-    PIPER_AVAILABLE = False
+# Piper is only available on Pi with the [hardware] extra; we shell out to its
+# CLI rather than importing the package, so we just probe for its presence.
+PIPER_AVAILABLE = importlib.util.find_spec("piper") is not None
 
 logger = logging.getLogger(__name__)
 
@@ -394,7 +389,7 @@ class AudioPlayer:
 
             logger.info(f"Generated TTS: {output_file}")
             return output_file
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             engine = "say" if self._platform == "Darwin" else self.tts_engine
             raise AudioError(f"TTS engine '{engine}' not found") from None
         except Exception as e:

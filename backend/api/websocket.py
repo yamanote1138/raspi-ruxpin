@@ -203,6 +203,7 @@ manager = ConnectionManager()
 # Background tasks
 _broadcast_task: asyncio.Task[None] | None = None
 _log_stream_task: asyncio.Task[None] | None = None
+_gpio_broadcast_counter = 0
 
 
 async def state_broadcast_loop(bear_service: BearService) -> None:
@@ -210,6 +211,7 @@ async def state_broadcast_loop(bear_service: BearService) -> None:
 
     This runs at 10Hz to provide smooth visual updates of mouth movements.
     """
+    global _gpio_broadcast_counter
     try:
         while True:
             if manager.active_connections:
@@ -218,13 +220,9 @@ async def state_broadcast_loop(bear_service: BearService) -> None:
                 await manager.broadcast(response.model_dump())
 
                 # Also broadcast GPIO status (every 10 iterations = 1Hz for efficiency)
-                if hasattr(state_broadcast_loop, '_gpio_counter'):
-                    state_broadcast_loop._gpio_counter += 1
-                else:
-                    state_broadcast_loop._gpio_counter = 0
-
-                if state_broadcast_loop._gpio_counter >= 10:
-                    state_broadcast_loop._gpio_counter = 0
+                _gpio_broadcast_counter += 1
+                if _gpio_broadcast_counter >= 10:
+                    _gpio_broadcast_counter = 0
                     gpio_states = bear_service.gpio_manager.get_pin_states()
                     gpio_response = GPIOStatusResponse(data={"pins": gpio_states})
                     await manager.broadcast(gpio_response.model_dump())
@@ -484,7 +482,11 @@ async def websocket_endpoint(websocket: WebSocket, bear_service: BearService) ->
     global _broadcast_task, _log_stream_task
 
     await manager.connect(websocket)
-    logger.info(f"WebSocket connected from {websocket.client.host}:{websocket.client.port}")
+    connect_client = websocket.client
+    connect_client_desc = (
+        f"{connect_client.host}:{connect_client.port}" if connect_client else "unknown client"
+    )
+    logger.info(f"WebSocket connected from {connect_client_desc}")
 
     # Start state broadcast task if this is the first connection
     if len(manager.active_connections) == 1 and (_broadcast_task is None or _broadcast_task.done()):
@@ -513,40 +515,40 @@ async def websocket_endpoint(websocket: WebSocket, bear_service: BearService) ->
             message_type = data.get("type")
 
             if message_type == "update_bear":
-                msg = UpdateBearMessage(**data)
-                await handle_update_bear(msg, bear_service, websocket)
+                update_bear_msg = UpdateBearMessage(**data)
+                await handle_update_bear(update_bear_msg, bear_service, websocket)
 
             elif message_type == "speak":
-                msg = SpeakMessage(**data)
-                await handle_speak(msg, bear_service, websocket)
+                speak_msg = SpeakMessage(**data)
+                await handle_speak(speak_msg, bear_service, websocket)
 
             elif message_type == "play":
-                msg = PlayMessage(**data)
-                await handle_play(msg, bear_service, websocket)
+                play_msg = PlayMessage(**data)
+                await handle_play(play_msg, bear_service, websocket)
 
             elif message_type == "set_volume":
-                msg = SetVolumeMessage(**data)
-                await handle_set_volume(msg, bear_service, websocket)
+                set_volume_msg = SetVolumeMessage(**data)
+                await handle_set_volume(set_volume_msg, bear_service, websocket)
 
             elif message_type == "fetch_phrases":
-                msg = FetchPhrasesMessage(**data)
-                await handle_fetch_phrases(msg, bear_service, websocket)
+                fetch_phrases_msg = FetchPhrasesMessage(**data)
+                await handle_fetch_phrases(fetch_phrases_msg, bear_service, websocket)
 
             elif message_type == "set_blink_enabled":
-                msg = SetBlinkEnabledMessage(**data)
-                await handle_set_blink_enabled(msg, bear_service, websocket)
+                set_blink_enabled_msg = SetBlinkEnabledMessage(**data)
+                await handle_set_blink_enabled(set_blink_enabled_msg, bear_service, websocket)
 
             elif message_type == "set_character":
-                msg = SetCharacterMessage(**data)
-                await handle_set_character(msg, bear_service, websocket)
+                set_character_msg = SetCharacterMessage(**data)
+                await handle_set_character(set_character_msg, bear_service, websocket)
 
             elif message_type == "set_log_level":
-                msg = SetLogLevelMessage(**data)
-                await handle_set_log_level(msg, websocket)
+                set_log_level_msg = SetLogLevelMessage(**data)
+                await handle_set_log_level(set_log_level_msg, websocket)
 
             elif message_type == "get_gpio_status":
-                msg = GetGPIOStatusMessage(**data)
-                await handle_get_gpio_status(msg, bear_service, websocket)
+                get_gpio_status_msg = GetGPIOStatusMessage(**data)
+                await handle_get_gpio_status(get_gpio_status_msg, bear_service, websocket)
 
             else:
                 error = ErrorResponse(message=f"Unknown message type: {message_type}")
@@ -561,7 +563,9 @@ async def websocket_endpoint(websocket: WebSocket, bear_service: BearService) ->
         logger.error(f"WebSocket error: {e}")
         manager.disconnect(websocket)
     finally:
-        logger.debug(f"WebSocket disconnected from {websocket.client.host}:{websocket.client.port}")
+        client = websocket.client
+        client_desc = f"{client.host}:{client.port}" if client else "unknown client"
+        logger.debug(f"WebSocket disconnected from {client_desc}")
 
         # Stop broadcast tasks if this was the last connection
         if len(manager.active_connections) == 0:

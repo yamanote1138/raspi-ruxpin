@@ -1,14 +1,17 @@
 """Pytest configuration and fixtures for backend tests."""
 
-import pytest
-from unittest.mock import Mock, MagicMock
 from pathlib import Path
+from unittest.mock import MagicMock
 
-from backend.config import AppSettings, HardwareSettings, AudioSettings, TTSSettings
+import pytest
+
+from backend.config import AppSettings, AudioSettings, HardwareSettings, TTSSettings
+from backend.hardware.gpio_manager import GPIOManager
+from backend.services.bear_service import BearService
 
 
 @pytest.fixture
-def mock_gpio():
+def mock_gpio() -> MagicMock:
     """Provide mock GPIO for tests."""
     # Mock the RPi.GPIO module
     gpio_mock = MagicMock()
@@ -28,7 +31,7 @@ def mock_gpio():
 
 
 @pytest.fixture
-def test_settings():
+def test_settings() -> AppSettings:
     """Provide test configuration settings."""
     return AppSettings(
         environment="test",
@@ -66,10 +69,8 @@ def test_settings():
 
 
 @pytest.fixture
-def mock_gpio_manager(mock_gpio):
+def mock_gpio_manager(mock_gpio: MagicMock) -> GPIOManager:
     """Provide a mock GPIO manager."""
-    from backend.hardware.gpio_manager import GPIOManager
-
     manager = GPIOManager(use_mock=True)
     manager.gpio = mock_gpio
     manager.initialize()
@@ -78,7 +79,7 @@ def mock_gpio_manager(mock_gpio):
 
 
 @pytest.fixture
-def mock_audio_player():
+def mock_audio_player() -> MagicMock:
     """Provide a mock audio player."""
     player = MagicMock()
     player.play_file = MagicMock(return_value=None)
@@ -91,10 +92,10 @@ def mock_audio_player():
 
 
 @pytest.fixture
-async def mock_bear_service(test_settings, mock_gpio_manager, mock_audio_player):
+async def mock_bear_service(
+    test_settings: AppSettings, mock_gpio_manager: GPIOManager, mock_audio_player: MagicMock
+) -> BearService:
     """Provide a mock bear service."""
-    from backend.services.bear_service import BearService
-
     service = BearService(
         settings=test_settings,
         gpio_manager=mock_gpio_manager,

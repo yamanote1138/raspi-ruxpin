@@ -2,10 +2,10 @@
 
 import logging
 import queue
-from typing import Optional
+from typing import Any
 
 # Queue for streaming logs to WebSocket clients
-log_queue: queue.Queue = queue.Queue(maxsize=1000)
+log_queue: queue.Queue[dict[str, Any]] = queue.Queue(maxsize=1000)
 
 
 class WebSocketHandler(logging.Handler):
@@ -38,7 +38,7 @@ class WebSocketHandler(logging.Handler):
                 try:
                     log_queue.get_nowait()
                     log_queue.put_nowait(log_entry)
-                except:
+                except queue.Empty:
                     pass
         except Exception:
             self.handleError(record)
@@ -99,7 +99,7 @@ def set_log_level(level: str) -> None:
     logging.info(f"Log level changed to {level.upper()}")
 
 
-def get_recent_logs(count: int = 100) -> list[dict]:
+def get_recent_logs(count: int = 100) -> list[dict[str, Any]]:
     """Get recent logs from the queue without removing them.
 
     Args:
@@ -108,8 +108,8 @@ def get_recent_logs(count: int = 100) -> list[dict]:
     Returns:
         List of recent log entries
     """
-    logs = []
-    temp_queue = queue.Queue()
+    logs: list[dict[str, Any]] = []
+    temp_queue: queue.Queue[dict[str, Any]] = queue.Queue()
 
     # Extract logs
     while not log_queue.empty() and len(logs) < count:

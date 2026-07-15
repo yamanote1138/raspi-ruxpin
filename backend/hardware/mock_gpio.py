@@ -35,7 +35,7 @@ class MockPWM:
     def __init__(self, channel: int, frequency: float):
         self.channel = channel
         self.frequency = frequency
-        self.duty_cycle = 0
+        self.duty_cycle: float = 0
         self.running = False
         logger.debug(f"Mock PWM created: channel={channel}, frequency={frequency}Hz")
 

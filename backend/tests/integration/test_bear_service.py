@@ -1,19 +1,23 @@
 """Integration tests for BearService."""
 
 import asyncio
-import pytest
+from collections.abc import AsyncGenerator
 from pathlib import Path
-from unittest.mock import MagicMock, AsyncMock, patch
+from typing import cast
+from unittest.mock import AsyncMock, MagicMock
 
-from backend.services.bear_service import BearService
-from backend.hardware.gpio_manager import GPIOManager
-from backend.hardware.audio_player import AudioPlayer
-from backend.config import AppSettings, HardwareSettings, AudioSettings, TTSSettings
+import pytest
+
+from backend.config import AppSettings, AudioSettings, HardwareSettings, TTSSettings
 from backend.core.enums import State
+from backend.core.exceptions import RaspiRuxpinError
+from backend.hardware.audio_player import AudioPlayer
+from backend.hardware.gpio_manager import GPIOManager
+from backend.services.bear_service import BearService
 
 
 @pytest.fixture
-def integration_test_settings(tmp_path):
+def integration_test_settings(tmp_path: Path) -> AppSettings:
     """Provide integration test settings."""
     sounds_dir = tmp_path / "sounds"
     sounds_dir.mkdir()
@@ -56,7 +60,7 @@ def integration_test_settings(tmp_path):
 
 
 @pytest.fixture
-def mock_gpio_manager():
+def mock_gpio_manager() -> GPIOManager:
     """Provide a mock GPIO manager."""
     manager = GPIOManager(use_mock=True)
     manager.initialize()
@@ -64,10 +68,11 @@ def mock_gpio_manager():
 
 
 @pytest.fixture
-def mock_audio_player():
+def mock_audio_player() -> MagicMock:
     """Provide a mock audio player."""
     player = MagicMock(spec=AudioPlayer)
     player.play_file = AsyncMock()
+    player.play_sound = AsyncMock()
     player.speak = AsyncMock()
     player.set_volume = AsyncMock()
     player.get_amplitude = MagicMock(return_value=0)
@@ -77,7 +82,11 @@ def mock_audio_player():
 
 
 @pytest.fixture
-async def bear_service(integration_test_settings, mock_gpio_manager, mock_audio_player):
+async def bear_service(
+    integration_test_settings: AppSettings,
+    mock_gpio_manager: GPIOManager,
+    mock_audio_player: MagicMock,
+) -> AsyncGenerator[BearService, None]:
     """Provide a BearService instance."""
     service = BearService(
         settings=integration_test_settings,
@@ -92,8 +101,10 @@ async def bear_service(integration_test_settings, mock_gpio_manager, mock_audio_
 
 @pytest.mark.asyncio
 async def test_bear_service_initialization(
-    integration_test_settings, mock_gpio_manager, mock_audio_player
-):
+    integration_test_settings: AppSettings,
+    mock_gpio_manager: GPIOManager,
+    mock_audio_player: MagicMock,
+) -> None:
     """Test BearService initializes correctly."""
     service = BearService(
         settings=integration_test_settings,
@@ -109,7 +120,7 @@ async def test_bear_service_initialization(
 
 
 @pytest.mark.asyncio
-async def test_bear_service_start(bear_service):
+async def test_bear_service_start(bear_service: BearService) -> None:
     """Test BearService starts background tasks."""
     await bear_service.start()
 
@@ -124,7 +135,7 @@ async def test_bear_service_start(bear_service):
 
 
 @pytest.mark.asyncio
-async def test_bear_service_stop(bear_service):
+async def test_bear_service_stop(bear_service: BearService) -> None:
     """Test BearService stops cleanly."""
     await bear_service.start()
 
@@ -137,7 +148,7 @@ async def test_bear_service_stop(bear_service):
 
 
 @pytest.mark.asyncio
-async def test_bear_service_update_eyes(bear_service):
+async def test_bear_service_update_eyes(bear_service: BearService) -> None:
     """Test updating eyes position."""
     await bear_service.start()
 
@@ -148,7 +159,7 @@ async def test_bear_service_update_eyes(bear_service):
 
 
 @pytest.mark.asyncio
-async def test_bear_service_update_mouth(bear_service):
+async def test_bear_service_update_mouth(bear_service: BearService) -> None:
     """Test updating mouth position."""
     await bear_service.start()
 
@@ -159,7 +170,7 @@ async def test_bear_service_update_mouth(bear_service):
 
 
 @pytest.mark.asyncio
-async def test_bear_service_update_both(bear_service):
+async def test_bear_service_update_both(bear_service: BearService) -> None:
     """Test updating both eyes and mouth."""
     await bear_service.start()
 
@@ -171,7 +182,7 @@ async def test_bear_service_update_both(bear_service):
 
 
 @pytest.mark.asyncio
-async def test_bear_service_play_audio(bear_service, tmp_path):
+async def test_bear_service_play_audio(bear_service: BearService, tmp_path: Path) -> None:
     """Test playing audio file."""
     await bear_service.start()
 
@@ -182,54 +193,55 @@ async def test_bear_service_play_audio(bear_service, tmp_path):
     # Play audio
     await bear_service.play_audio("test.wav")
 
-    # Audio player should have been called
-    bear_service.audio_player.play_file.assert_called_once()
+    # Audio player should have been called (it's actually a MagicMock at test time)
+    cast(MagicMock, bear_service.audio_player).play_sound.assert_called_once_with("test.wav")
 
 
 @pytest.mark.asyncio
-async def test_bear_service_speak(bear_service):
+async def test_bear_service_speak(bear_service: BearService) -> None:
     """Test text-to-speech."""
     await bear_service.start()
 
     # Speak some text
     await bear_service.speak("Hello world")
 
-    # Audio player should have been called
-    bear_service.audio_player.speak.assert_called_once_with("Hello world")
+    # Audio player should have been called (it's actually a MagicMock at test time)
+    cast(MagicMock, bear_service.audio_player).speak.assert_called_once_with("Hello world")
 
 
 @pytest.mark.asyncio
-async def test_bear_service_set_volume(bear_service):
+async def test_bear_service_set_volume(bear_service: BearService) -> None:
     """Test setting volume."""
     await bear_service.start()
 
     # Set volume
     await bear_service.set_volume(75)
 
-    # Audio player should have been called
-    bear_service.audio_player.set_volume.assert_called_once_with(75)
+    # Audio player should have been called (it's actually a MagicMock at test time)
+    cast(MagicMock, bear_service.audio_player).set_volume.assert_called_once_with(75)
 
 
 @pytest.mark.asyncio
-async def test_bear_service_busy_state(bear_service):
+async def test_bear_service_busy_state(bear_service: BearService) -> None:
     """Test busy state management."""
     await bear_service.start()
 
     # Initially not busy
     assert not bear_service.is_busy
 
-    # Simulate audio playback
-    bear_service.audio_player.is_playing.return_value = True
+    # Simulate audio playback (it's actually a MagicMock at test time)
+    mock_player = cast(MagicMock, bear_service.audio_player)
+    mock_player.is_playing.return_value = True
 
     # Should be busy now (need to wait for talk monitor to check)
     await asyncio.sleep(0.1)
 
     # Reset
-    bear_service.audio_player.is_playing.return_value = False
+    mock_player.is_playing.return_value = False
 
 
 @pytest.mark.asyncio
-async def test_bear_service_toggle_blink(bear_service):
+async def test_bear_service_toggle_blink(bear_service: BearService) -> None:
     """Test toggling auto-blink."""
     await bear_service.start()
 
@@ -246,7 +258,7 @@ async def test_bear_service_toggle_blink(bear_service):
 
 
 @pytest.mark.asyncio
-async def test_bear_service_get_state(bear_service):
+async def test_bear_service_get_state(bear_service: BearService) -> None:
     """Test getting current state."""
     await bear_service.start()
 
@@ -257,19 +269,21 @@ async def test_bear_service_get_state(bear_service):
     assert "is_busy" in state
     assert "blink_enabled" in state
     assert state["eyes"] in ["open", "closed"]
-    assert state["mouth"] in ["open", "closed"]
+    # Mouth has no preset position on startup; it's driven by talk sync
+    assert state["mouth"] in ["open", "closed", "unknown"]
     assert isinstance(state["is_busy"], bool)
     assert isinstance(state["blink_enabled"], bool)
 
 
 @pytest.mark.asyncio
-async def test_bear_service_talk_monitor(bear_service):
+async def test_bear_service_talk_monitor(bear_service: BearService) -> None:
     """Test talk monitor updates mouth based on amplitude."""
     await bear_service.start()
 
-    # Simulate high amplitude (mouth should open)
-    bear_service.audio_player.get_amplitude.return_value = 1000
-    bear_service.audio_player.is_playing.return_value = True
+    # Simulate high amplitude (mouth should open); it's actually a MagicMock at test time
+    mock_player = cast(MagicMock, bear_service.audio_player)
+    mock_player.get_amplitude.return_value = 1000
+    mock_player.is_playing.return_value = True
 
     # Wait for talk monitor to run
     await asyncio.sleep(0.1)
@@ -280,11 +294,12 @@ async def test_bear_service_talk_monitor(bear_service):
 
 
 @pytest.mark.asyncio
-async def test_bear_service_blink_monitor(bear_service):
+async def test_bear_service_blink_monitor(bear_service: BearService) -> None:
     """Test blink monitor runs when enabled."""
     await bear_service.start()
 
-    # Blink is enabled
+    # Blink is disabled by default; enable it for this test
+    bear_service.set_blink_enabled(True)
     assert bear_service.blink_enabled is True
 
     # Let blink monitor run
@@ -296,7 +311,7 @@ async def test_bear_service_blink_monitor(bear_service):
 
 
 @pytest.mark.asyncio
-async def test_bear_service_lifecycle_full(bear_service):
+async def test_bear_service_lifecycle_full(bear_service: BearService) -> None:
     """Test full lifecycle: start, operate, stop."""
     # Start service
     await bear_service.start()
@@ -323,7 +338,7 @@ async def test_bear_service_lifecycle_full(bear_service):
 
 
 @pytest.mark.asyncio
-async def test_bear_service_concurrent_operations(bear_service):
+async def test_bear_service_concurrent_operations(bear_service: BearService) -> None:
     """Test handling concurrent operations."""
     await bear_service.start()
 
@@ -341,15 +356,15 @@ async def test_bear_service_concurrent_operations(bear_service):
 
 
 @pytest.mark.asyncio
-async def test_bear_service_error_recovery(bear_service):
+async def test_bear_service_error_recovery(bear_service: BearService) -> None:
     """Test error recovery in operations."""
     await bear_service.start()
 
-    # Simulate audio player error
-    bear_service.audio_player.play_file.side_effect = Exception("Audio error")
+    # Simulate audio player error (it's actually a MagicMock at test time)
+    cast(MagicMock, bear_service.audio_player).play_sound.side_effect = Exception("Audio error")
 
     # Should not crash the service
-    with pytest.raises(Exception):
+    with pytest.raises(RaspiRuxpinError):
         await bear_service.play_audio("test.wav")
 
     # Service should still be operational
@@ -359,7 +374,7 @@ async def test_bear_service_error_recovery(bear_service):
 
 
 @pytest.mark.asyncio
-async def test_bear_service_servo_integration(bear_service):
+async def test_bear_service_servo_integration(bear_service: BearService) -> None:
     """Test servo integration with GPIO manager."""
     await bear_service.start()
 

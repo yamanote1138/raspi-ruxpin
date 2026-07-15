@@ -5,10 +5,8 @@ application with WebSocket support, CORS, static file serving, and lifecycle man
 """
 
 import logging
-import sys
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from pathlib import Path
-from typing import AsyncGenerator
 
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
@@ -133,7 +131,7 @@ app.include_router(health_router)
 
 # WebSocket endpoint
 @app.websocket("/ws")
-async def websocket_route(websocket: WebSocket):
+async def websocket_route(websocket: WebSocket) -> None:
     """WebSocket endpoint for real-time communication."""
     bear_service = app.state.bear_service
     await websocket_endpoint(websocket, bear_service)

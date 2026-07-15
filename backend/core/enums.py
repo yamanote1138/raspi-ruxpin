@@ -1,6 +1,6 @@
 """Core enumerations for the Raspi Ruxpin system."""
 
-from enum import Enum, auto
+from enum import Enum
 
 
 class Direction(str, Enum):
