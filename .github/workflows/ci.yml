@@ -14,9 +14,9 @@ jobs:
       # kicks in on Darwin (Mac dev). Force it explicitly here.
       HARDWARE__USE_MOCK_GPIO: "true"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v7
       - name: Set up Python
         run: uv python install 3.12
       - name: Install dependencies
@@ -34,9 +34,9 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: npm
