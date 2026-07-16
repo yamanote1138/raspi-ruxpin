@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "raspi-ruxpin"
-version = "2.1.0"
+version = "2.1.1"
 description = "Modern animatronic bear control system with FastAPI and Vue 3"
 readme = "README.md"
 requires-python = ">=3.12"
