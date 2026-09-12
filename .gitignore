@@ -59,6 +59,13 @@ sounds/tts/*.aiff
 sounds/espeak.wav
 speech.wav
 
+# Generated/cached files from feature/merge-ruxpin-cli (not yet merged to main)
+data/tts/*.wav
+data/tts/*.aiff
+data/sounds/user/*
+!data/sounds/user/.gitkeep
+data/timing/*.csv
+
 # Testing
 .pytest_cache/
 .coverage
