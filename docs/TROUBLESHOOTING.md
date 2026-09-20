@@ -4,6 +4,7 @@ When things go sideways. Find the symptom, try the fixes in order.
 
 **Contents**
 
+- [The service won't start](#the-service-wont-start)
 - [I can't reach the web page](#i-cant-reach-the-web-page)
 - [The Arduino won't connect](#the-arduino-wont-connect)
 - [The bear connects but doesn't move right](#the-bear-connects-but-doesnt-move-right)
@@ -14,6 +15,27 @@ When things go sideways. Find the symptom, try the fixes in order.
 - [Development problems](#development-problems)
 - [Slow on the Pi](#slow-on-the-pi)
 - [Getting help](#getting-help)
+
+---
+
+## The service won't start
+
+If you're running the backend as a systemd service (the deploy script sets this up):
+
+```bash
+sudo systemctl status raspi-ruxpin
+sudo journalctl -u raspi-ruxpin -n 50
+```
+
+The last lines of the log usually say what went wrong. Common causes:
+
+- **The Arduino won't connect.** See [that section](#the-arduino-wont-connect). Note that a service running as your user needs you to be in the `dialout` group, and group changes only apply after you log out and back in.
+- **Something else has the serial port.** If you ran the backend or the terminal menu by hand, stop it first, or stop the service before testing by hand: `sudo systemctl stop raspi-ruxpin`.
+- **A bad `.env`.** Comments have to be on their own lines. The service doesn't understand a `#` after a value.
+- **The service file has the wrong user or folder.** Rerun `./scripts/setup-service.sh` from the project folder. It fills those in.
+- **The `data/` folder isn't writable** by the user the service runs as. Check with `ls -ld data`.
+
+Then try running it by hand to see the error directly (stop the service first): `uv run python -m backend.main`.
 
 ---
 
@@ -144,15 +166,15 @@ The backend measures the clip's loudness ahead of time. It works best on clean a
 - **The mouth is stuck wide open.** The clip is too loud or clipped.
 - **The mouth twitches during pauses.** Background noise. Clean it up.
 
-### The mouth still looks like the old version of a clip
+### The mouth looks wrong after a code or settings change
 
-Analysis results are saved in `data/timing/` and reused. The cache goes by the file *name* and doesn't notice when the audio changes. If you replace a clip and keep its name, delete its saved timing:
+Analysis results are saved in `data/timing/` and reused. If you replace a clip, the backend notices that the audio is newer than the saved result and re-analyzes it. It can't tell if you changed how the analysis itself works, though. In that case, clear the saved results:
 
 ```bash
-rm data/timing/<clip name>_*.csv
+rm data/timing/*.csv
 ```
 
-Do the same if you've changed how the analysis works and want fresh results. It's always safe to delete files in `data/timing/`. They just get rebuilt.
+It's always safe to delete files in `data/timing/`. They just get rebuilt the next time each clip plays.
 
 ### Realtime mode
 
@@ -211,10 +233,10 @@ Usually the Pi is overloaded. See [Slow on the Pi](#slow-on-the-pi).
 |---------|-----|
 | `TTS engine 'espeak' not found` | `sudo apt install espeak-ng`. If the `espeak` command still isn't there, `sudo apt install espeak` |
 | `espeak failed: ...` | Usually a bad voice name. Check `TTS__VOICE` in `.env` (for example `en-us+m7`) |
-| `say failed: ...` | Mac only. The Mac voice is fixed (Fred) and ignores `TTS__VOICE`. Check that `say -v Fred hello` works in Terminal |
+| `say failed: ...` | Mac only. The Mac voice comes from `TTS__MAC_VOICE` (default `Fred`) and ignores `TTS__VOICE`. See what's installed with `say -v '?'` |
 | `Piper binary not found` / `Piper model not found: ...` | Follow the [Piper setup guide](PIPER_SETUP.md), or set `TTS__ENGINE=espeak` |
 
-Generated speech is saved in `data/tts/`. It's safe to delete.
+Generated speech is saved in `data/tts/` and reused. Changing the voice, speed, or pitch gets you fresh speech automatically. It's safe to delete the folder's contents.
 
 ---
 
@@ -241,8 +263,6 @@ You also need the espeak-ng program and library: `brew install espeak-ng` on a M
 **Frontend changes don't show up.** Are you looking at the right port? The dev server (5173) shows changes right away. The backend's own page (8888) shows the *last build*, so run `npm run build` again.
 
 **Backend changes don't show up.** Use `make dev`, which restarts on changes. `make run` doesn't.
-
-**`make install` fails with "virtual environment already exists".** It's meant to be run once. To refresh dependencies, run `uv pip install -e ".[dev]"` and `cd frontend && npm install`.
 
 **Type errors after pulling.** Run `uv sync --extra dev` so your tools match the lockfile.
 

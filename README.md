@@ -64,7 +64,7 @@ More detail is in the [Quick Start guide](docs/QUICKSTART.md).
 
 ## Running it on a Pi
 
-Short version: flash the Arduino, plug it into the Pi over USB, split the Pi's audio between the speaker and the Arduino, and start the backend.
+Short version: flash the Arduino, plug it into the Pi over USB, split the Pi's audio between the speaker and the Arduino, then run `./scripts/deploy.sh` on the Pi. It sets everything up and starts the bear on boot.
 
 The full walkthrough (wiring, firmware, Pi setup) is in the [Deployment guide](docs/DEPLOYMENT.md).
 
@@ -93,6 +93,7 @@ Settings come from environment variables in `.env`. Nested settings use a double
 | `AUDIO__DEVICE` / `AUDIO__CARD_INDEX` / `AUDIO__MIXER` | ALSA sound card settings (Linux only) | system default |
 | `TTS__ENGINE` | `espeak` or `piper` (Mac uses `say` for `espeak`) | `espeak` |
 | `TTS__VOICE`, `TTS__SPEED`, `TTS__PITCH` | Voice tuning | see `.env.example` |
+| `TTS__MAC_VOICE` | Voice for the Mac's `say` command (`say -v '?'` lists them) | `Fred` |
 
 Volume is capped at 90%. Anything higher makes the Pi unstable.
 

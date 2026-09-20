@@ -20,6 +20,8 @@ make install                 # Python and frontend dependencies
 cp .env.example.mac .env
 ```
 
+(`./scripts/setup-dev.sh` does the same thing and creates `.env` for you. Both are safe to run again.)
+
 ## Run it
 
 You need two terminals.
@@ -37,7 +39,7 @@ Open http://localhost:5173.
 ## Try it out
 
 - **Play a clip.** Pick one from the dropdown and hit play. The mouth on the bear picture should move along with the audio.
-- **Speak some text.** Type something in the text box and hit speak. On a Mac this uses the built-in `say` voice.
+- **Speak some text.** Type something in the text box and hit speak. On a Mac this uses the built-in `say` command with the Fred voice. Pick another with `TTS__MAC_VOICE` in `.env` (`say -v '?'` lists them).
 - **Switch sync modes.** The sync button cycles through amplitude, realtime, and (if installed) phoneme. See below for what each one does.
 - **Toggle the eyes, mouth, and blinking** with the buttons at the top of the controls.
 - **Click the info button** to see what the backend thinks is going on: platform, TTS engine, how many clips it found, and whether phoneme mode is available.
