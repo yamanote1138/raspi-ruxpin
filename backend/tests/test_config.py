@@ -38,6 +38,7 @@ def test_tts_settings_defaults() -> None:
 
     assert settings.engine == "espeak"
     assert settings.voice == "en+m3"
+    assert settings.mac_voice == "Fred"
     assert settings.speed == 125
     assert settings.pitch == 50
     assert isinstance(settings.output_dir, Path)
@@ -66,6 +67,7 @@ def test_settings_with_environment_override(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.setenv("PORT", "9000")
     monkeypatch.setenv("AUDIO__START_VOLUME", "75")
     monkeypatch.setenv("SERIAL__USE_MOCK", "true")
+    monkeypatch.setenv("TTS__MAC_VOICE", "Samantha")
 
     settings = AppSettings()
 
@@ -73,6 +75,7 @@ def test_settings_with_environment_override(monkeypatch: pytest.MonkeyPatch) -> 
     assert settings.port == 9000
     assert settings.audio.start_volume == 75
     assert settings.serial.use_mock is True
+    assert settings.tts.mac_voice == "Samantha"
 
 
 def test_nested_settings_structure() -> None:

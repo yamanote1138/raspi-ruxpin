@@ -55,6 +55,7 @@ class AudioPlayer:
         tts_output_dir: Path = Path("data/tts"),
         tts_engine: str = "espeak",
         tts_voice: str = "en+m3",
+        mac_voice: str = "Fred",
         tts_speed: int = 125,
         tts_pitch: int = 50,
         start_volume: int = 100,
@@ -71,6 +72,7 @@ class AudioPlayer:
             tts_output_dir: Directory for TTS output
             tts_engine: TTS engine name
             tts_voice: TTS voice
+            mac_voice: Voice for macOS 'say' (used on Mac regardless of engine)
             tts_speed: TTS speaking speed
             tts_pitch: TTS voice pitch (0-99)
             start_volume: Initial volume level
@@ -84,6 +86,7 @@ class AudioPlayer:
         self.tts_output_dir = tts_output_dir
         self.tts_engine = tts_engine
         self.tts_voice = tts_voice
+        self.mac_voice = mac_voice
         self.tts_speed = tts_speed
         self.tts_pitch = tts_pitch
         self.alsa_device = alsa_device
@@ -234,6 +237,19 @@ class AudioPlayer:
         else:
             return await self._generate_tts_espeak(text, output_file)
 
+    def _tts_cache_path(self, text: str) -> Path:
+        """Cache path for a phrase; voice settings are part of the key so changes take effect."""
+        parts = (
+            self.tts_engine,
+            self.tts_voice,
+            self.mac_voice,
+            self.tts_speed,
+            self.tts_pitch,
+            text,
+        )
+        key = "|".join(str(part) for part in parts)
+        return self.tts_output_dir / f"{hashlib.md5(key.encode()).hexdigest()[:12]}.wav"
+
     async def _generate_tts_piper(self, text: str, output_file: Path | None = None) -> Path:
         """Generate TTS using Piper CLI (neural TTS).
 
@@ -248,8 +264,7 @@ class AudioPlayer:
             AudioError: If TTS generation fails
         """
         if not output_file:
-            text_hash = hashlib.md5(text.encode()).hexdigest()[:12]
-            output_file = self.tts_output_dir / f"{text_hash}.wav"
+            output_file = self._tts_cache_path(text)
 
         if output_file.exists():
             logger.info(f"TTS cache hit: {output_file.name}")
@@ -321,8 +336,7 @@ class AudioPlayer:
             AudioError: If TTS generation fails
         """
         if not output_file:
-            text_hash = hashlib.md5(text.encode()).hexdigest()[:12]
-            output_file = self.tts_output_dir / f"{text_hash}.wav"
+            output_file = self._tts_cache_path(text)
 
         if output_file.exists():
             logger.info(f"TTS cache hit: {output_file.name}")
@@ -333,10 +347,7 @@ class AudioPlayer:
 
         try:
             if self._platform == "Darwin":
-                # macOS: Use built-in 'say' command with high-quality voices
-                # Available voices: Fred (male), Samantha (female), Alex (default male)
-                voice = "Fred"  # Natural male voice
-
+                # macOS: Use built-in 'say' command (list voices with: say -v '?')
                 # Generate TTS using macOS 'say'
                 # Output as AIFF first (say's native format)
                 aiff_file = output_file.with_suffix(".aiff")
@@ -344,7 +355,7 @@ class AudioPlayer:
                 process = await asyncio.create_subprocess_exec(
                     "say",
                     "-v",
-                    voice,
+                    self.mac_voice,
                     "-o",
                     str(aiff_file),
                     text,
