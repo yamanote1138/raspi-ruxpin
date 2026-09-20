@@ -6,6 +6,7 @@ from backend.core.enums import MouthPosition, SyncMode
 from backend.core.exceptions import SerialError
 from backend.hardware.arduino import ArduinoController
 from backend.hardware.calibration import get_default_calibration
+from backend.hardware.mock_serial import MockSerial
 
 
 @pytest.fixture
@@ -30,14 +31,27 @@ async def test_connect_with_mock(controller: ArduinoController) -> None:
 
 
 @pytest.mark.unit
-async def test_connect_sends_config(controller: ArduinoController) -> None:
-    """Test that connect sends calibration and mode."""
-    calibration = get_default_calibration()
-    await controller.connect(
-        calibration=calibration,
-        sync_mode=SyncMode.AMPLITUDE,
-    )
+async def test_connect_sends_config(
+    controller: ArduinoController, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that connect sends one calibration line per position, then mode, then done."""
+    sent: list[str] = []
+    original_write = MockSerial.write
+
+    def recording_write(self: MockSerial, data: bytes) -> int:
+        sent.append(data.decode().strip())
+        return original_write(self, data)
+
+    monkeypatch.setattr(MockSerial, "write", recording_write)
+
+    await controller.connect(calibration=get_default_calibration(), sync_mode=SyncMode.PHONEME)
+
     assert controller.connected is True
+    count = len(MouthPosition)
+    assert [line.split(":")[:3] for line in sent[:count]] == [
+        ["CFG", "CAL", pos.value] for pos in MouthPosition
+    ]
+    assert sent[count:] == ["CFG:MODE:PHONEME", "CFG:DONE"]
     await controller.disconnect()
 
 

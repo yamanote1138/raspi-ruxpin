@@ -37,7 +37,6 @@ class MockSerial:
 
         self._read_buffer: deque[bytes] = deque()
         self._lock = threading.Lock()
-        self._config_lines_received = 0
         self._config_started = False
         self._sync_mode = "AMPLITUDE"
         self._realtime_thread: threading.Thread | None = None
