@@ -50,8 +50,8 @@ class TimingStore:
         """
         csv_path = self._csv_path(audio_file, method)
 
-        # Try cache first
-        if csv_path.exists():
+        # Try cache first, unless the audio was replaced after the cache was written
+        if csv_path.exists() and csv_path.stat().st_mtime >= audio_file.stat().st_mtime:
             cached = await self.load(csv_path)
             if cached:
                 logger.info(f"Loaded cached timing: {csv_path.name} ({len(cached)} entries)")
