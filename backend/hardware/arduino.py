@@ -23,7 +23,7 @@ MouthPositionCallback = Callable[[MouthPosition], None]
 class SerialPort(Protocol):
     """Structural type for serial port objects (pyserial and MockSerial)."""
 
-    def write(self, data: bytes) -> int: ...
+    def write(self, data: bytes) -> int | None: ...
     def readline(self) -> bytes: ...
     def close(self) -> None: ...
 
@@ -290,6 +290,7 @@ class ArduinoController:
         """
         if self._serial is None:
             raise SerialError("Not connected to Arduino")
+        assert self._write_lock is not None  # created in connect()
 
         async with self._write_lock:
             try:
@@ -319,6 +320,7 @@ class ArduinoController:
                         except ValueError:
                             logger.warning(f"Invalid mouth position code from Arduino: {code}")
                     else:
+                        assert self._response_queue is not None  # created in connect()
                         await self._response_queue.put(line)
                 else:
                     await asyncio.sleep(0.01)
@@ -351,6 +353,7 @@ class ArduinoController:
         Returns:
             True if the expected response was received.
         """
+        assert self._response_queue is not None  # created in connect()
         try:
             deadline = asyncio.get_event_loop().time() + timeout
             while asyncio.get_event_loop().time() < deadline:
@@ -379,6 +382,7 @@ class ArduinoController:
         Returns:
             The full line if found, None on timeout.
         """
+        assert self._response_queue is not None  # created in connect()
         try:
             deadline = asyncio.get_event_loop().time() + timeout
             while asyncio.get_event_loop().time() < deadline:

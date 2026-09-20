@@ -453,6 +453,7 @@ class AudioPlayer:
         """
         if not amplitudes:
             return
+        assert self._amplitude_lock is not None  # created in start()
 
         samples_per_update = max(1, len(amplitudes) // int(duration * 50))  # 50Hz update rate
         update_interval = duration / (len(amplitudes) / samples_per_update)
@@ -491,6 +492,7 @@ class AudioPlayer:
         """
         if not audio_file.exists():
             raise AudioError(f"Audio file not found: {audio_file}")
+        assert self._amplitude_lock is not None  # created in start()
 
         try:
             # Read amplitude data
