@@ -84,7 +84,7 @@ else
         log_info "Creating .env from Raspberry Pi template..."
         cp .env.example.pi .env
         log_success ".env file created"
-        log_warning "IMPORTANT: Verify GPIO pin numbers match your wiring!"
+        log_warning "IMPORTANT: Check SERIAL__PORT matches your Arduino (ls /dev/ttyUSB* /dev/ttyACM*)"
         echo ""
         read -p "Press Enter to review .env now, or Ctrl+C to skip..."
         nano .env
@@ -96,7 +96,7 @@ else
     sudo apt-get update
     sudo apt-get install -y \
         python3-dev \
-        espeak \
+        espeak-ng \
         alsa-utils \
         libasound2-dev
 
@@ -105,7 +105,7 @@ else
         echo ""
         echo "Installing uv package manager..."
         curl -LsSf https://astral.sh/uv/install.sh | sh
-        export PATH="$HOME/.cargo/bin:$PATH"
+        export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
     fi
 fi
 
@@ -146,16 +146,16 @@ npm run build
 
 cd ..
 
-# Check GPIO permissions
+# Check serial port permissions (the Arduino shows up as a serial device)
 echo ""
-log_info "Checking GPIO permissions..."
-if groups | grep -q gpio; then
-    log_success "User is in gpio group"
+log_info "Checking serial port permissions..."
+if groups | grep -q dialout; then
+    log_success "User is in dialout group"
 else
-    log_warning "User is not in gpio group"
-    log_info "Adding user to gpio group..."
-    sudo usermod -a -G gpio $USER
-    log_success "User added to gpio group"
+    log_warning "User is not in dialout group"
+    log_info "Adding user to dialout group..."
+    sudo usermod -a -G dialout $USER
+    log_success "User added to dialout group"
     log_warning "You need to log out and back in for group changes to take effect"
 fi
 
@@ -267,6 +267,8 @@ if [ "$UPDATE_MODE" = false ]; then
     sed "s|/home/pi/raspi-ruxpin|$PROJECT_DIR|g" "$SERVICE_FILE" > "$TEMP_SERVICE"
     sed -i "s|User=pi|User=$USER|g" "$TEMP_SERVICE"
     sed -i "s|Group=pi|Group=$USER|g" "$TEMP_SERVICE"
+    sed -i "s|/home/pi/.cache|$HOME/.cache|g" "$TEMP_SERVICE"
+    mkdir -p "$HOME/.cache"
 
     # Install service
     log_info "Installing service file..."
@@ -335,18 +337,19 @@ echo ""
 echo "View logs:"
 echo "  ${GREEN}sudo journalctl -u raspi-ruxpin -f${NC}"
 echo ""
+PORT=$(grep -E '^PORT=' .env 2>/dev/null | cut -d= -f2)
 echo "Access the web interface:"
-echo "  ${BLUE}http://$(hostname -I | awk '{print $1}'):8080${NC}"
+echo "  ${BLUE}http://$(hostname -I | awk '{print $1}'):${PORT:-8888}${NC}"
 echo ""
 
 if [ "$UPDATE_MODE" = false ]; then
     log_warning "Configuration notes:"
-    echo "  - GPIO pin numbers: Edit .env to match your wiring"
-    echo "  - Add sounds: sounds/ directory"
+    echo "  - Serial port: set SERIAL__PORT in .env to match your Arduino"
+    echo "  - Add sounds: data/sounds/user/ directory (restart to pick them up)"
     echo ""
 
     # Check if group change requires logout
-    if ! groups | grep -q gpio; then
+    if ! groups | grep -q dialout; then
         log_warning "Group changes detected - please log out and back in"
     fi
 fi

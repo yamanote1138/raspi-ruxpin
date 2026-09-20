@@ -62,6 +62,8 @@ log_info "Configuring service file..."
 sed "s|/home/pi/raspi-ruxpin|$PROJECT_DIR|g" "$SERVICE_FILE" > "$TEMP_SERVICE"
 sed -i "s|User=pi|User=$CURRENT_USER|g" "$TEMP_SERVICE"
 sed -i "s|Group=pi|Group=$CURRENT_USER|g" "$TEMP_SERVICE"
+sed -i "s|/home/pi/.cache|$HOME/.cache|g" "$TEMP_SERVICE"
+mkdir -p "$HOME/.cache"
 
 # Show what will be installed
 echo ""
@@ -73,12 +75,12 @@ echo ""
 
 # Check if user is in required groups
 log_info "Checking group membership..."
-NEEDS_GPIO=false
+NEEDS_SERIAL=false
 NEEDS_AUDIO=false
 
-if ! groups | grep -q gpio; then
-    log_warning "User is not in gpio group"
-    NEEDS_GPIO=true
+if ! groups | grep -q dialout; then
+    log_warning "User is not in dialout group"
+    NEEDS_SERIAL=true
 fi
 
 if ! groups | grep -q audio; then
@@ -86,12 +88,12 @@ if ! groups | grep -q audio; then
     NEEDS_AUDIO=true
 fi
 
-if [ "$NEEDS_GPIO" = true ] || [ "$NEEDS_AUDIO" = true ]; then
+if [ "$NEEDS_SERIAL" = true ] || [ "$NEEDS_AUDIO" = true ]; then
     log_info "Adding user to required groups..."
 
-    if [ "$NEEDS_GPIO" = true ]; then
-        sudo usermod -a -G gpio $CURRENT_USER
-        log_success "Added to gpio group"
+    if [ "$NEEDS_SERIAL" = true ]; then
+        sudo usermod -a -G dialout $CURRENT_USER
+        log_success "Added to dialout group"
     fi
 
     if [ "$NEEDS_AUDIO" = true ]; then
@@ -173,7 +175,8 @@ echo "  Recent:     ${GREEN}sudo journalctl -u $SERVICE_NAME -n 50${NC}"
 echo "  Follow:     ${GREEN}sudo journalctl -u $SERVICE_NAME -f${NC}"
 echo "  Since boot: ${GREEN}sudo journalctl -u $SERVICE_NAME -b${NC}"
 echo ""
+PORT=$(grep -E '^PORT=' "$PROJECT_DIR/.env" 2>/dev/null | cut -d= -f2)
 echo "Access the web interface:"
-echo "  ${BLUE}http://$(hostname -I | awk '{print $1}'):8080${NC}"
+echo "  ${BLUE}http://$(hostname -I | awk '{print $1}'):${PORT:-8888}${NC}"
 echo ""
 log_success "Setup complete! 🐻"
