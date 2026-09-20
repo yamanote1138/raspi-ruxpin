@@ -93,8 +93,10 @@ def test_load_calibration_missing_positions(tmp_path: Path) -> None:
 def test_interpolate_positions() -> None:
     """Interpolation from closed + wide should produce 7 positions."""
     table = interpolate_positions(
-        closed_upper=100, closed_lower=98,
-        wide_upper=40, wide_lower=38,
+        closed_upper=100,
+        closed_lower=98,
+        wide_upper=40,
+        wide_lower=38,
     )
     assert len(table.positions) == 7
 

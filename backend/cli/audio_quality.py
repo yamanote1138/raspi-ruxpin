@@ -321,10 +321,7 @@ def _generate_comments(
             f"mouth stays fully open with little variation"
         )
     elif activity_percent < 20:
-        comments.append(
-            f"Very quiet audio ({activity_percent:.0f}% open) — "
-            f"mouth will barely move"
-        )
+        comments.append(f"Very quiet audio ({activity_percent:.0f}% open) — mouth will barely move")
     else:
         comments.append(f"Activity is outside ideal range ({activity_percent:.0f}% open)")
 
@@ -347,8 +344,7 @@ def _generate_comments(
         pass  # Clean audio, no comment needed
     elif noise_floor >= 0.01:
         comments.append(
-            f"High noise floor ({noise_floor:.4f}) — "
-            f"mouth may twitch during silent passages"
+            f"High noise floor ({noise_floor:.4f}) — mouth may twitch during silent passages"
         )
     elif snr_db < 10:
         comments.append(

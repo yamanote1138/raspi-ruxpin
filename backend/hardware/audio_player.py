@@ -623,4 +623,3 @@ class AudioPlayer:
                     title = self.read_wav_title(wav)
                     sounds[wav.stem] = title or wav.stem
         return sounds
-

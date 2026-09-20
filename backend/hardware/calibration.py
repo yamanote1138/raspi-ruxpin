@@ -139,5 +139,3 @@ def interpolate_positions(
         table.positions[pos] = PositionAngles(upper=upper, lower=lower)
 
     return table
-
-

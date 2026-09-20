@@ -219,7 +219,9 @@ def _ensure_espeak_library() -> None:
             if espeak_dylib.exists():
                 existing = os.environ.get("DYLD_LIBRARY_PATH", "")
                 if lib_path not in existing:
-                    os.environ["DYLD_LIBRARY_PATH"] = f"{lib_path}:{existing}" if existing else lib_path
+                    os.environ["DYLD_LIBRARY_PATH"] = (
+                        f"{lib_path}:{existing}" if existing else lib_path
+                    )
                     logger.info(f"Added {lib_path} to DYLD_LIBRARY_PATH for espeak-ng")
                 break
 
@@ -230,8 +232,7 @@ def _analyze_phoneme_sync(audio_file: Path) -> list[tuple[int, MouthPosition]]:
         from faster_whisper import WhisperModel
     except ImportError as exc:
         raise ImportError(
-            "Phoneme analysis requires faster-whisper. "
-            "Install with: uv pip install -e '.[phoneme]'"
+            "Phoneme analysis requires faster-whisper. Install with: uv pip install -e '.[phoneme]'"
         ) from exc
 
     _ensure_espeak_library()
@@ -241,8 +242,7 @@ def _analyze_phoneme_sync(audio_file: Path) -> list[tuple[int, MouthPosition]]:
         from phonemizer.separator import Separator
     except ImportError as exc:
         raise ImportError(
-            "Phoneme analysis requires phonemizer. "
-            "Install with: uv pip install -e '.[phoneme]'"
+            "Phoneme analysis requires phonemizer. Install with: uv pip install -e '.[phoneme]'"
         ) from exc
 
     # Transcribe with word-level timestamps

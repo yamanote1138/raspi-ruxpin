@@ -119,9 +119,7 @@ class ArduinoController:
             # Wait for READY
             ready = await self._wait_for_response("READY", timeout=self.connect_timeout)
             if not ready:
-                raise SerialError(
-                    f"Arduino did not send READY within {self.connect_timeout}s"
-                )
+                raise SerialError(f"Arduino did not send READY within {self.connect_timeout}s")
 
             # Send configuration
             await self._send_config(servo_type, calibration, sync_mode)

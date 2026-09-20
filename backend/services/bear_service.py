@@ -316,7 +316,9 @@ class BearService:
         sound_file = self.audio_player.resolve_sound_file(sound_name)
         await self._perform_playback(sound_file, error_label="Audio playback failed")
 
-    async def _perform_playback(self, audio_file: Path, error_label: str = "Playback failed") -> None:
+    async def _perform_playback(
+        self, audio_file: Path, error_label: str = "Playback failed"
+    ) -> None:
         """Play an audio file with mouth sync, managing busy state.
 
         Args:
@@ -365,9 +367,7 @@ class BearService:
             # Amplitude or phoneme — pre-analyze timing, then send commands
             method_label = self.sync_mode.value
             self.status_text = f"Analyzing audio ({method_label})..."
-            timeline = await self.timing_store.get_or_analyze(
-                audio_file, self.sync_mode
-            )
+            timeline = await self.timing_store.get_or_analyze(audio_file, self.sync_mode)
             self.status_text = "Playing..."
             await self._play_audio_with_timing(audio_file, timeline)
 
@@ -391,9 +391,7 @@ class BearService:
         def on_audio_start() -> None:
             audio_started.set()
 
-        timing_task = asyncio.create_task(
-            self._execute_timing_schedule(timeline, audio_started)
-        )
+        timing_task = asyncio.create_task(self._execute_timing_schedule(timeline, audio_started))
         try:
             await self.audio_player.play_file(audio_file, start_callback=on_audio_start)
         finally:
@@ -506,4 +504,3 @@ class BearService:
         """
         if self.is_busy:
             self.mouth_position = position
-

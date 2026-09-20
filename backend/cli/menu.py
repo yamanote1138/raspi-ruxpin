@@ -121,9 +121,7 @@ class RuxpinCLI:
             await self._pause()
             return
 
-        selected = await interactive_file_selector(
-            wav_files, title_fn=AudioPlayer.read_wav_title
-        )
+        selected = await interactive_file_selector(wav_files, title_fn=AudioPlayer.read_wav_title)
         if selected is None:
             return
 
@@ -188,9 +186,15 @@ class RuxpinCLI:
                 f"{Colors.YELLOW}Blink={blink}{Colors.RESET}"
             )
             print()
-            print(f"  {Colors.CYAN}V{Colors.RESET}. Set volume (current: {Colors.YELLOW}{vol}%{Colors.RESET})")
-            print(f"  {Colors.CYAN}M{Colors.RESET}. Set sync mode (current: {Colors.YELLOW}{mode}{Colors.RESET})")
-            print(f"  {Colors.CYAN}B{Colors.RESET}. Toggle blink ({Colors.YELLOW}{blink}{Colors.RESET})")
+            print(
+                f"  {Colors.CYAN}V{Colors.RESET}. Set volume (current: {Colors.YELLOW}{vol}%{Colors.RESET})"
+            )
+            print(
+                f"  {Colors.CYAN}M{Colors.RESET}. Set sync mode (current: {Colors.YELLOW}{mode}{Colors.RESET})"
+            )
+            print(
+                f"  {Colors.CYAN}B{Colors.RESET}. Toggle blink ({Colors.YELLOW}{blink}{Colors.RESET})"
+            )
             print(f"  {Colors.CYAN}E{Colors.RESET}. Test eyes")
             print(f"  {Colors.CYAN}T{Colors.RESET}. Test mouth positions")
             print()
@@ -215,7 +219,7 @@ class RuxpinCLI:
             elif choice == "B":
                 enabled = not self.bear_service.blink_enabled
                 self.bear_service.set_blink_enabled(enabled)
-                print(f"\n{Colors.success(f'Blink {'enabled' if enabled else 'disabled'}')}")
+                print(f"\n{Colors.success(f'Blink {"enabled" if enabled else "disabled"}')}")
                 await self._pause()
             elif choice == "E":
                 await self._test_eyes()
@@ -507,9 +511,7 @@ class RuxpinCLI:
             try:
                 report = analyze_wav_quality(wav)
                 color = _grade_color(report.grade)
-                print(
-                    f"  {color}{report.score:3d}/100 {report.grade:<9s}{Colors.RESET} {label}"
-                )
+                print(f"  {color}{report.score:3d}/100 {report.grade:<9s}{Colors.RESET} {label}")
                 scores.append(report.score)
                 grade_counts[report.grade] += 1
                 if report.grade == "Poor":
@@ -534,10 +536,7 @@ class RuxpinCLI:
             print(f"  Grades:     {', '.join(grade_parts)}")
 
         if poor_files:
-            print(
-                f"\n  {Colors.YELLOW}⚠ Poor quality: "
-                f"{', '.join(poor_files)}{Colors.RESET}"
-            )
+            print(f"\n  {Colors.YELLOW}⚠ Poor quality: {', '.join(poor_files)}{Colors.RESET}")
 
         await self._pause()
 
@@ -559,34 +558,13 @@ class RuxpinCLI:
             for comment in report.comments:
                 print(f"    • {comment}")
             print()
-            print(
-                f"  {Colors.GRAY}Peak amplitude:   "
-                f"{report.peak_amplitude:.3f}{Colors.RESET}"
-            )
-            print(
-                f"  {Colors.GRAY}Mean RMS:         "
-                f"{report.rms_mean:.4f}{Colors.RESET}"
-            )
-            print(
-                f"  {Colors.GRAY}Noise floor:      "
-                f"{report.noise_floor:.4f}{Colors.RESET}"
-            )
-            print(
-                f"  {Colors.GRAY}SNR:              "
-                f"{report.snr_db:.1f} dB{Colors.RESET}"
-            )
-            print(
-                f"  {Colors.GRAY}Crest factor:     "
-                f"{report.crest_factor_db:.1f} dB{Colors.RESET}"
-            )
-            print(
-                f"  {Colors.GRAY}Position variety: "
-                f"{report.position_variety}/7{Colors.RESET}"
-            )
-            print(
-                f"  {Colors.GRAY}Activity:         "
-                f"{report.activity_percent:.0f}%{Colors.RESET}"
-            )
+            print(f"  {Colors.GRAY}Peak amplitude:   {report.peak_amplitude:.3f}{Colors.RESET}")
+            print(f"  {Colors.GRAY}Mean RMS:         {report.rms_mean:.4f}{Colors.RESET}")
+            print(f"  {Colors.GRAY}Noise floor:      {report.noise_floor:.4f}{Colors.RESET}")
+            print(f"  {Colors.GRAY}SNR:              {report.snr_db:.1f} dB{Colors.RESET}")
+            print(f"  {Colors.GRAY}Crest factor:     {report.crest_factor_db:.1f} dB{Colors.RESET}")
+            print(f"  {Colors.GRAY}Position variety: {report.position_variety}/7{Colors.RESET}")
+            print(f"  {Colors.GRAY}Activity:         {report.activity_percent:.0f}%{Colors.RESET}")
         except Exception as e:
             print(Colors.error(f"Could not analyze: {e}"))
 
@@ -645,7 +623,9 @@ class RuxpinCLI:
                 n_frames = wf.getnframes()
                 duration = n_frames / frame_rate if frame_rate > 0 else 0.0
 
-                ch_label = "mono" if channels == 1 else "stereo" if channels == 2 else f"{channels}ch"
+                ch_label = (
+                    "mono" if channels == 1 else "stereo" if channels == 2 else f"{channels}ch"
+                )
                 bit_depth = sample_width * 8
 
                 print(f"  Codec:       {Colors.WHITE}PCM (WAV){Colors.RESET}")
@@ -661,10 +641,11 @@ class RuxpinCLI:
                 warnings_found = False
                 print()
                 if frame_rate not in compatible_rates:
-                    print(Colors.warning(
-                        f"Sample rate is {frame_rate} Hz "
-                        f"(expected 16000 or 22050 Hz)"
-                    ))
+                    print(
+                        Colors.warning(
+                            f"Sample rate is {frame_rate} Hz (expected 16000 or 22050 Hz)"
+                        )
+                    )
                     warnings_found = True
                 if channels != 1:
                     print(Colors.warning(f"File is {ch_label} (mono required)"))

@@ -325,7 +325,9 @@ async def websocket_endpoint(websocket: WebSocket, bear_service: BearService) ->
     global _broadcast_task
 
     await manager.connect(websocket)
-    client_info = f"{websocket.client.host}:{websocket.client.port}" if websocket.client else "unknown"
+    client_info = (
+        f"{websocket.client.host}:{websocket.client.port}" if websocket.client else "unknown"
+    )
     logger.info(f"WebSocket connected from {client_info}")
 
     # Start broadcast task on first connection

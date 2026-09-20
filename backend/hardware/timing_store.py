@@ -86,9 +86,7 @@ class TimingStore:
 
         return await asyncio.to_thread(self._load_sync, csv_path)
 
-    async def save(
-        self, csv_path: Path, timeline: list[tuple[int, MouthPosition]]
-    ) -> None:
+    async def save(self, csv_path: Path, timeline: list[tuple[int, MouthPosition]]) -> None:
         """Save timing data to a CSV file.
 
         Args:
@@ -120,9 +118,7 @@ class TimingStore:
         return timeline
 
     @staticmethod
-    def _save_sync(
-        csv_path: Path, timeline: list[tuple[int, MouthPosition]]
-    ) -> None:
+    def _save_sync(csv_path: Path, timeline: list[tuple[int, MouthPosition]]) -> None:
         """Synchronous CSV save."""
         csv_path.parent.mkdir(parents=True, exist_ok=True)
         with open(csv_path, "w", encoding="utf-8", newline="") as f:

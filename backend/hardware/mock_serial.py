@@ -91,9 +91,7 @@ class MockSerial:
         elif command == "PING":
             self._enqueue_response("PONG")
         elif command == "STATUS":
-            self._enqueue_response(
-                f"STATUS:MODE:{self._sync_mode},MOUTH:C,EYES:open"
-            )
+            self._enqueue_response(f"STATUS:MODE:{self._sync_mode},MOUTH:C,EYES:open")
         elif command.startswith("M") and len(command) <= 3:
             # Mouth position command (MC, MT, MS, etc.)
             logger.debug(f"MockSerial: mouth → {command[1:]}")

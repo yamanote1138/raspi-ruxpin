@@ -29,5 +29,3 @@ class ConfigurationError(RaspiRuxpinError):
     """Raised when configuration is invalid."""
 
     pass
-
-

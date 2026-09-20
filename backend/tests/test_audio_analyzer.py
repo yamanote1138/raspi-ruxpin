@@ -75,9 +75,7 @@ def test_threshold_just_below() -> None:
         just_below = threshold - 0.001
         result = amplitude_to_position(just_below)
         _, next_pos = AMPLITUDE_THRESHOLDS[i + 1]
-        assert result == next_pos, (
-            f"Just below {threshold}: expected {next_pos}, got {result}"
-        )
+        assert result == next_pos, f"Just below {threshold}: expected {next_pos}, got {result}"
 
 
 def _create_test_wav(path: Path, samples: list[int], sample_rate: int = 16000) -> None:

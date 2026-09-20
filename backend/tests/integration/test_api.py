@@ -90,9 +90,7 @@ async def test_websocket_update_bear(client: TestClient) -> None:
         assert initial["type"] == "bear_state"
 
         # Send update_bear message
-        websocket.send_json(
-            {"type": "update_bear", "data": {"eyes": "closed", "mouth": "open"}}
-        )
+        websocket.send_json({"type": "update_bear", "data": {"eyes": "closed", "mouth": "open"}})
 
         # Should receive updated state (may be interleaved with broadcast)
         response = _receive_until_type(websocket, "bear_state")
