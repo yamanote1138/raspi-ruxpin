@@ -40,7 +40,6 @@ export interface BearState {
   arduino_baud_rate: number
   arduino_connection_type: string // 'serial' or 'mock'
   status_text: string
-  servo_type: string // 'hbridge' or 'standard'
   tts_engine: string // 'espeak' or 'piper'
   tts_voice: string
   environment: string // 'development' or 'production'

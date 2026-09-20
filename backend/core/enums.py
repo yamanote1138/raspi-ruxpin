@@ -33,10 +33,3 @@ class SyncMode(StrEnum):
     AMPLITUDE = "amplitude"  # Pi pre-analyzes WAV amplitude, sends timed commands over serial
     PHONEME = "phoneme"  # Pi pre-analyzes phonemes (Whisper+phonemizer), sends timed commands
     REALTIME = "realtime"  # Arduino reads audio ADC, drives servos autonomously
-
-
-class ServoType(StrEnum):
-    """Servo hardware type for Arduino configuration."""
-
-    HBRIDGE = "hbridge"  # 5-wire H-bridge (original Teddy Ruxpin servos)
-    STANDARD = "standard"  # 3-wire standard hobby servos

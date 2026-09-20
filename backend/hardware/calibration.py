@@ -14,7 +14,7 @@ from backend.core.enums import MouthPosition
 
 logger = logging.getLogger(__name__)
 
-# Default calibration values (from hardware testing with original Teddy Ruxpin servos)
+# Placeholder servo angles in degrees; recalibrate for your servos and linkage
 DEFAULT_CALIBRATION: dict[str, dict[str, int]] = {
     "C": {"upper": 101, "lower": 99},
     "T": {"upper": 97, "lower": 95},

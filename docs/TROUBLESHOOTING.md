@@ -139,11 +139,10 @@ uv run raspi-ruxpin-cli
 Go to **Settings**, then **Test eyes** and **Test mouth positions**. That sends commands straight to the Arduino.
 
 **Nothing moves at all.**
-- Check motor power. Motors need their own supply, not the Arduino's 5V pin, and all the grounds need to be connected.
-- Check that `SYNC__SERVO_TYPE` matches what you wired: `hbridge` for the original 5-wire mechanism, `standard` for 3-wire hobby servos.
+- Check servo power. Servos need their own supply, not the Arduino's 5V pin, and all the grounds need to be connected.
 - Check the pins against the [wiring table](DEPLOYMENT.md#wiring).
 
-**A motor runs backward.** For H-bridge motors, swap the two direction wires (for example, pins 4 and 5 for the upper jaw).
+**A jaw or eye moves the wrong way.** Flip the direction in `config/jaw_calibration.json` (or the eye angles in the firmware) rather than rewiring.
 
 **The mouth doesn't open far enough (or opens too far).** Adjust the numbers in `config/jaw_calibration.json` and restart the backend. See [Calibrating the mouth](DEPLOYMENT.md#calibrating-the-mouth).
 

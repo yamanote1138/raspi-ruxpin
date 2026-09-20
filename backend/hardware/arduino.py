@@ -10,7 +10,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Protocol
 
-from backend.core.enums import MouthPosition, ServoType, SyncMode
+from backend.core.enums import MouthPosition, SyncMode
 from backend.core.exceptions import SerialError
 from backend.hardware.calibration import CalibrationTable
 
@@ -76,14 +76,12 @@ class ArduinoController:
 
     async def connect(
         self,
-        servo_type: ServoType = ServoType.HBRIDGE,
         calibration: CalibrationTable | None = None,
         sync_mode: SyncMode = SyncMode.AMPLITUDE,
     ) -> None:
         """Open serial connection and perform handshake.
 
         Args:
-            servo_type: Type of servo hardware on the Arduino.
             calibration: Calibration table to send. Uses defaults if None.
             sync_mode: Initial sync mode.
 
@@ -122,7 +120,7 @@ class ArduinoController:
                 raise SerialError(f"Arduino did not send READY within {self.connect_timeout}s")
 
             # Send configuration
-            await self._send_config(servo_type, calibration, sync_mode)
+            await self._send_config(calibration, sync_mode)
 
             self.connected = True
             logger.info(f"Arduino connected on {self.port} (mock={self.use_mock})")
@@ -248,7 +246,6 @@ class ArduinoController:
 
     async def _send_config(
         self,
-        servo_type: ServoType,
         calibration: CalibrationTable | None,
         sync_mode: SyncMode,
     ) -> None:
@@ -257,9 +254,6 @@ class ArduinoController:
 
         if calibration is None:
             calibration = get_default_calibration()
-
-        # Servo type
-        await self._send_command(f"CFG:SERVO:{servo_type.value.upper()}")
 
         # Calibration data — one line per position
         for pos in MouthPosition:

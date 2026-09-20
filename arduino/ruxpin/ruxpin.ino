@@ -2,7 +2,7 @@
  * Raspi Ruxpin — Arduino Motor Controller
  *
  * Receives serial commands from the Pi to drive eyes and mouth servos.
- * Supports two servo types (H-bridge and standard) and three sync modes
+ * Drives three standard 3-wire hobby servos and supports three sync modes
  * (realtime from ADC, amplitude from serial, phoneme from serial).
  *
  * Serial protocol: 115200 baud, newline-terminated ASCII.
@@ -17,13 +17,6 @@
 #define PIN_EYES        11
 #define PIN_AUDIO       A0
 
-// H-bridge direction pins (only used in HBRIDGE mode)
-#define PIN_UPPER_DIR   4
-#define PIN_UPPER_CDIR  5
-#define PIN_LOWER_DIR   6
-#define PIN_LOWER_CDIR  7
-#define PIN_EYES_DIR    12
-#define PIN_EYES_CDIR   13
 
 // ─── Constants ───────────────────────────────────────────────────
 #define SERIAL_BAUD     115200
@@ -32,7 +25,6 @@
 #define ADC_WINDOW_MS    20
 #define NUM_POSITIONS    7
 #define BLINK_CLOSE_MS   150
-#define BLINK_DURATION   400   // total ms for close + pause + open
 
 // ─── Enums ───────────────────────────────────────────────────────
 enum SystemState {
@@ -40,11 +32,6 @@ enum SystemState {
   STATE_HANDSHAKE,
   STATE_CONFIG,
   STATE_RUNNING
-};
-
-enum ServoMode {
-  MODE_HBRIDGE,
-  MODE_STANDARD
 };
 
 enum SyncMode {
@@ -67,7 +54,7 @@ struct CalEntry {
   int lower;
 };
 
-// Default calibration (degrees for standard servos, duty% for H-bridge)
+// Default calibration (servo angles in degrees)
 CalEntry calibration[NUM_POSITIONS] = {
   {101, 99},  // C - closed
   {97,  95},  // T
@@ -88,17 +75,16 @@ const MouthPos AMP_POSITIONS[] = {POS_W, POS_L, POS_M, POS_N, POS_S, POS_T, POS_
 
 // ─── State ───────────────────────────────────────────────────────
 SystemState sysState = STATE_BOOT;
-ServoMode servoMode = MODE_HBRIDGE;
 SyncMode syncMode = SYNC_AMPLITUDE;
 MouthPos currentMouth = POS_C;
 bool eyesOpen = true;
 
-// Servo objects (only used in STANDARD mode)
+// Servo objects
 Servo upperServo;
 Servo lowerServo;
 Servo eyesServo;
 
-// Standard servo positions for eyes
+// Servo angles for the eyes
 #define EYES_OPEN_ANGLE   90
 #define EYES_CLOSED_ANGLE 10
 
@@ -126,24 +112,12 @@ void startBlink();
 void updateBlink();
 void processADC();
 MouthPos amplitudeToPosition(float normalizedRms);
-void driveHBridge(int pwmPin, int dirPin, int cdirPin, int value, bool forward);
 void sendStatus();
 
 // ─── Setup ───────────────────────────────────────────────────────
 void setup() {
   Serial.begin(SERIAL_BAUD);
   while (!Serial) { ; } // Wait for serial
-
-  // Default pin modes (H-bridge)
-  pinMode(PIN_UPPER_JAW, OUTPUT);
-  pinMode(PIN_LOWER_JAW, OUTPUT);
-  pinMode(PIN_EYES, OUTPUT);
-  pinMode(PIN_UPPER_DIR, OUTPUT);
-  pinMode(PIN_UPPER_CDIR, OUTPUT);
-  pinMode(PIN_LOWER_DIR, OUTPUT);
-  pinMode(PIN_LOWER_CDIR, OUTPUT);
-  pinMode(PIN_EYES_DIR, OUTPUT);
-  pinMode(PIN_EYES_CDIR, OUTPUT);
 
   // Audio input
   pinMode(PIN_AUDIO, INPUT);
@@ -269,20 +243,6 @@ void handleConfig(const char* cfg) {
     sysState = STATE_CONFIG;
   }
 
-  // SERVO type
-  if (strncmp(cfg, "SERVO:", 6) == 0) {
-    if (strcmp(cfg + 6, "HBRIDGE") == 0) {
-      servoMode = MODE_HBRIDGE;
-    } else if (strcmp(cfg + 6, "STANDARD") == 0) {
-      servoMode = MODE_STANDARD;
-      // Attach standard servos
-      upperServo.attach(PIN_UPPER_JAW);
-      lowerServo.attach(PIN_LOWER_JAW);
-      eyesServo.attach(PIN_EYES);
-    }
-    return;
-  }
-
   // Calibration: CAL:<code>:<upper>:<lower>
   if (strncmp(cfg, "CAL:", 4) == 0) {
     char code;
@@ -314,8 +274,11 @@ void handleConfig(const char* cfg) {
     sysState = STATE_RUNNING;
     Serial.println("OK");
 
-    // Initialize positions
-    setMouthPosition(POS_C);
+    // Attach servos and move to the starting pose (mouth closed, eyes open)
+    upperServo.attach(PIN_UPPER_JAW);
+    lowerServo.attach(PIN_LOWER_JAW);
+    eyesServo.attach(PIN_EYES);
+    setMouthAngles(calibration[POS_C].upper, calibration[POS_C].lower);
     openEyes();
     return;
   }
@@ -345,38 +308,18 @@ void setMouthPosition(MouthPos pos) {
 }
 
 void setMouthAngles(int upper, int lower) {
-  if (servoMode == MODE_STANDARD) {
-    upperServo.write(constrain(upper, 0, 180));
-    lowerServo.write(constrain(lower, 0, 180));
-  } else {
-    // H-bridge: use calibration values as PWM duty cycle
-    // Direction based on opening vs closing relative to current position
-    bool opening = (upper < calibration[currentMouth].upper);
-    driveHBridge(PIN_UPPER_JAW, PIN_UPPER_DIR, PIN_UPPER_CDIR, abs(upper), opening);
-    driveHBridge(PIN_LOWER_JAW, PIN_LOWER_DIR, PIN_LOWER_CDIR, abs(lower), !opening);
-  }
+  upperServo.write(constrain(upper, 0, 180));
+  lowerServo.write(constrain(lower, 0, 180));
 }
 
 void openEyes() {
   eyesOpen = true;
-  if (servoMode == MODE_STANDARD) {
-    eyesServo.write(EYES_OPEN_ANGLE);
-  } else {
-    driveHBridge(PIN_EYES, PIN_EYES_DIR, PIN_EYES_CDIR, 100, true);
-    delay(BLINK_DURATION / 2);
-    analogWrite(PIN_EYES, 0); // Stop
-  }
+  eyesServo.write(EYES_OPEN_ANGLE);
 }
 
 void closeEyes() {
   eyesOpen = false;
-  if (servoMode == MODE_STANDARD) {
-    eyesServo.write(EYES_CLOSED_ANGLE);
-  } else {
-    driveHBridge(PIN_EYES, PIN_EYES_DIR, PIN_EYES_CDIR, 100, false);
-    delay(BLINK_DURATION / 2);
-    analogWrite(PIN_EYES, 0); // Stop
-  }
+  eyesServo.write(EYES_CLOSED_ANGLE);
 }
 
 void startBlink() {
@@ -395,17 +338,6 @@ void updateBlink() {
     openEyes();
     blinking = false;
   }
-}
-
-void driveHBridge(int pwmPin, int dirPin, int cdirPin, int value, bool forward) {
-  if (forward) {
-    digitalWrite(dirPin, HIGH);
-    digitalWrite(cdirPin, LOW);
-  } else {
-    digitalWrite(dirPin, LOW);
-    digitalWrite(cdirPin, HIGH);
-  }
-  analogWrite(pwmPin, constrain(value, 0, 255));
 }
 
 // ─── ADC amplitude processing ────────────────────────────────────

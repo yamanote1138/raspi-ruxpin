@@ -123,7 +123,7 @@ class MockSerial:
             self._config_started = False
             logger.debug("MockSerial: config complete")
         else:
-            # CFG:SERVO:..., CFG:CAL:..., CFG:MODE:...
+            # CFG:CAL:..., CFG:MODE:...
             if command.startswith("CFG:MODE:"):
                 self._sync_mode = command[9:]
             self._config_started = True

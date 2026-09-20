@@ -4,7 +4,7 @@
 
 Make a creepy old Teddy Ruxpin say whatever you want, with his mouth moving in time.
 
-A Raspberry Pi (or your Mac, while you're developing) plays the audio and figures out how the mouth should move. An Arduino runs the motors. You drive it all from a web page or a terminal menu.
+A Raspberry Pi (or your Mac, while you're developing) plays the audio and figures out how the mouth should move. An Arduino runs the servos. You drive it all from a web page or a terminal menu.
 
 ## How it works
 
@@ -20,13 +20,13 @@ A Raspberry Pi (or your Mac, while you're developing) plays the audio and figure
                              ▼               ▼
                       ┌────────────┐    ┌─────────┐
                       │  Arduino   │◄───┤ Y-split ├──► speaker
-                      │  (motors)  │ A0 └─────────┘
+                      │  (servos)  │ A0 └─────────┘
                       └─────┬──────┘
                             ▼
                     eyes + mouth servos
 ```
 
-The bear has two moving parts: **eyes** (open, closed, blink) and a **mouth** with seven positions. Both the original 5-wire H-bridge motors and regular 3-wire hobby servos work.
+The bear has two moving parts: **eyes** (open, closed, blink) and a **mouth** with seven positions. Each one is driven by a regular 3-wire hobby servo (three in total: upper jaw, lower jaw, and eyes).
 
 ### Three ways to sync the mouth
 
@@ -88,7 +88,6 @@ Settings come from environment variables in `.env`. Nested settings use a double
 | `SERIAL__PORT` | Arduino serial port | `/dev/ttyUSB0` |
 | `SERIAL__USE_MOCK` | Use a fake Arduino (on by default on a Mac) | `false` on Linux |
 | `SYNC__MODE` | `amplitude`, `phoneme`, or `realtime` | `amplitude` |
-| `SYNC__SERVO_TYPE` | `hbridge` (original 5-wire) or `standard` (3-wire) | `hbridge` |
 | `AUDIO__START_VOLUME` | Starting volume, 0–90 | `90` |
 | `AUDIO__DEVICE` / `AUDIO__CARD_INDEX` / `AUDIO__MIXER` | ALSA sound card settings (Linux only) | system default |
 | `TTS__ENGINE` | `espeak` or `piper` (Mac uses `say` for `espeak`) | `espeak` |

@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Raspi Ruxpin 2.0 — an animatronic Teddy Ruxpin control system. A Raspberry Pi (or Mac in dev) serves as the brain: audio playback, analysis, web UI. An Arduino handles all motor control via serial. The Pi's audio output is Y-split — one end to speaker, one end to Arduino's analog input for realtime mode.
 
-Two servos: eyes (open/close/blink) and mouth (7-position model: C/T/S/N/M/L/W). Both 5-wire H-bridge (original Teddy Ruxpin) and 3-wire standard servos are supported via Arduino firmware abstraction.
+Three 3-wire hobby servos: upper jaw, lower jaw (together the 7-position mouth model: C/T/S/N/M/L/W), and eyes (open/close/blink).
 
 ## Commands
 
@@ -69,7 +69,7 @@ State machine: BOOT → HANDSHAKE → CONFIG → RUNNING. Serial protocol: 11520
 
 **Commands:** `M<code>` (mouth position), `J<u>,<l>` (direct angles), `EO`/`EC`/`EB` (eyes), `MODE:<mode>`, `PING`, `STATUS`, `AUDIO:START`/`AUDIO:STOP` (informational).
 
-**Servo abstraction:** H-bridge (PWM + DIR + CDIR, timed movements) or Standard (Servo.h, direct angles).
+**Servos:** standard 3-wire hobby servos via `Servo.h`, direct angles. Attached on `CFG:DONE`.
 
 **ADC processing (realtime mode):** Reads A0 at ~50Hz, 20ms RMS windows, 0.7 power compression, 7-threshold mapping. Reports position changes via `MOUTH:<code>\n`.
 

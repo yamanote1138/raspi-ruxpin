@@ -2,7 +2,7 @@
 
 import pytest
 
-from backend.core.enums import MouthPosition, ServoType, SyncMode
+from backend.core.enums import MouthPosition, SyncMode
 from backend.core.exceptions import SerialError
 from backend.hardware.arduino import ArduinoController
 from backend.hardware.calibration import get_default_calibration
@@ -31,10 +31,9 @@ async def test_connect_with_mock(controller: ArduinoController) -> None:
 
 @pytest.mark.unit
 async def test_connect_sends_config(controller: ArduinoController) -> None:
-    """Test that connect sends servo type, calibration, and mode."""
+    """Test that connect sends calibration and mode."""
     calibration = get_default_calibration()
     await controller.connect(
-        servo_type=ServoType.HBRIDGE,
         calibration=calibration,
         sync_mode=SyncMode.AMPLITUDE,
     )

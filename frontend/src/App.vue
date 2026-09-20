@@ -112,10 +112,6 @@
                   </td>
                 </tr>
                 <tr>
-                  <td class="fw-bold">Servo Type</td>
-                  <td>{{ bearState.servo_type === 'hbridge' ? 'H-Bridge (5-wire)' : 'Standard (3-wire)' }}</td>
-                </tr>
-                <tr>
                   <td class="fw-bold">Sync Mode</td>
                   <td>{{ bearState.sync_mode }}</td>
                 </tr>

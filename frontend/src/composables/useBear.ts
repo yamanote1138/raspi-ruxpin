@@ -245,7 +245,6 @@ export function useBear(): BearComposable {
           arduino_baud_rate: stateMsg.data.arduino_baud_rate ?? 0,
           arduino_connection_type: stateMsg.data.arduino_connection_type ?? 'unknown',
           status_text: stateMsg.data.status_text ?? '',
-          servo_type: stateMsg.data.servo_type ?? 'hbridge',
           tts_engine: stateMsg.data.tts_engine ?? 'espeak',
           tts_voice: stateMsg.data.tts_voice ?? '',
           environment: stateMsg.data.environment ?? 'development',

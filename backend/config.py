@@ -11,7 +11,7 @@ import yaml
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from backend.core.enums import ServoType, SyncMode
+from backend.core.enums import SyncMode
 from backend.core.exceptions import ConfigurationError
 
 
@@ -119,9 +119,6 @@ class SyncSettings(BaseSettings):
     )
 
     mode: SyncMode = Field(default=SyncMode.AMPLITUDE, description="Sync mode")
-    servo_type: ServoType = Field(
-        default=ServoType.HBRIDGE, description="Servo hardware type on Arduino"
-    )
     calibration_file: Path = Field(
         default=Path("config/jaw_calibration.json"),
         description="Jaw calibration data file",

@@ -96,7 +96,6 @@ class BearService:
                 calibration = get_default_calibration()
 
             await self.arduino.connect(
-                servo_type=self.settings.sync.servo_type,
                 calibration=calibration,
                 sync_mode=self.sync_mode,
             )
@@ -473,7 +472,6 @@ class BearService:
             "arduino_baud_rate": self.arduino.baud_rate,
             "arduino_connection_type": connection_type,
             "status_text": self.status_text,
-            "servo_type": self.settings.sync.servo_type.value,
             "tts_engine": self.settings.tts.engine,
             "tts_voice": self.settings.tts.voice,
             "environment": self.settings.environment,

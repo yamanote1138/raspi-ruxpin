@@ -1,6 +1,6 @@
 # Deployment Guide
 
-How to build the real thing: an Arduino running the motors, a Raspberry Pi running everything else.
+How to build the real thing: an Arduino running the servos, a Raspberry Pi running everything else.
 
 > **Heads up:** the Arduino setup is new and hasn't been tested on real hardware yet. The software has been tested against a mock Arduino, so the serial protocol, the analysis, and the web app are solid. The wiring and firmware are the parts still waiting on a real bear. If something here doesn't match reality, trust reality and please fix the doc.
 
@@ -9,15 +9,14 @@ How to build the real thing: an Arduino running the motors, a Raspberry Pi runni
 - Raspberry Pi 3, 4, or 5 running Raspberry Pi OS
 - An Arduino with a USB port (an Uno or Nano works; it needs the `Servo` library, PWM pins, and an analog input)
 - USB cable from the Arduino to the Pi
-- A Teddy Ruxpin with working motors, or standard 3-wire hobby servos
-- An H-bridge motor driver for each motor, if you're using the original 5-wire mechanism
+- Three standard 3-wire hobby servos (upper jaw, lower jaw, eyes)
 - A speaker
 - An audio Y-splitter or similar, so the Pi's audio can go to both the speaker and the Arduino
 
 ## How the pieces connect
 
 ```
- Pi ── USB ─────────────────────► Arduino ──► eyes + mouth motors
+ Pi ── USB ─────────────────────► Arduino ──► eyes + mouth servos
   │                                  ▲
   └── audio out ──┬──► speaker       │ A0 (realtime mode only)
                   └──────────────────┘
@@ -30,17 +29,16 @@ How to build the real thing: an Arduino running the motors, a Raspberry Pi runni
 
 These pins come from the firmware (`arduino/ruxpin/ruxpin.ino`).
 
-| Part | PWM / signal | Direction | Reverse direction |
-|------|:------------:|:---------:|:-----------------:|
-| Upper jaw | 9 | 4 | 5 |
-| Lower jaw | 10 | 6 | 7 |
-| Eyes | 11 | 12 | 13 |
-| Audio in | A0 | | |
+| Part | Pin |
+|------|:---:|
+| Upper jaw servo | 9 |
+| Lower jaw servo | 10 |
+| Eyes servo | 11 |
+| Audio in | A0 |
 
-- **H-bridge (original 5-wire mechanism):** all three pins per motor are used. Set `SYNC__SERVO_TYPE=hbridge`.
-- **Standard 3-wire servos:** only the signal pin (9, 10, 11) is used. Set `SYNC__SERVO_TYPE=standard`.
+Each servo has three wires: signal (the pin above), 5V, and ground.
 
-Give the motors their own power supply. Don't run them off the Arduino's 5V pin, and tie all the grounds together (Arduino, motor supply, Pi audio ground).
+Give the servos their own power supply. Don't run them off the Arduino's 5V pin, and tie all the grounds together (Arduino, servo supply, Pi audio ground).
 
 ### The audio input
 
@@ -153,12 +151,11 @@ The settings you're most likely to change:
 ```bash
 SERIAL__PORT=/dev/ttyUSB0
 SERIAL__USE_MOCK=false
-SYNC__SERVO_TYPE=hbridge
 SYNC__MODE=amplitude
 AUDIO__START_VOLUME=90
 ```
 
-Set `SERIAL__PORT` to whatever you found in the last step. `SYNC__SERVO_TYPE` is `hbridge` or `standard`. `SYNC__MODE` is `amplitude`, `phoneme`, or `realtime`. 90 is the highest volume allowed.
+Set `SERIAL__PORT` to whatever you found in the last step. `SYNC__MODE` is `amplitude`, `phoneme`, or `realtime`. 90 is the highest volume allowed.
 
 Keep comments on their own lines in `.env`. The systemd service reads this file too, and it doesn't understand a `#` comment after a value.
 
@@ -222,7 +219,7 @@ Each one has an upper and lower jaw value in `config/jaw_calibration.json`:
 }
 ```
 
-(The real file lists all seven.) For standard servos these are angles in degrees. For H-bridge motors they're power levels, as a percentage.
+(The real file lists all seven.) These are servo angles in degrees.
 
 Edit the file, then restart the backend (`sudo systemctl restart raspi-ruxpin` if it's running as a service). It sends the table to the Arduino every time it connects.
 
