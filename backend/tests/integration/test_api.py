@@ -144,6 +144,20 @@ async def test_websocket_invalid_message(client: TestClient) -> None:
             pass
 
 
+def test_websocket_survives_validation_error(client: TestClient) -> None:
+    """A malformed message gets an error reply and the connection stays usable."""
+    with client.websocket_connect("/ws") as websocket:
+        websocket.receive_json()
+
+        websocket.send_json({"type": "set_volume", "level": 101})
+        error = _receive_until_type(websocket, "error")
+        assert error is not None
+        assert "Invalid message" in error["message"]
+
+        websocket.send_json({"type": "fetch_phrases"})
+        assert _receive_until_type(websocket, "phrases") is not None
+
+
 @pytest.mark.asyncio
 async def test_websocket_unknown_message_type(client: TestClient) -> None:
     """Test WebSocket handles unknown message type."""

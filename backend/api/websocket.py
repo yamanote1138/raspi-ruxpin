@@ -346,19 +346,21 @@ async def websocket_endpoint(websocket: WebSocket, bear_service: BearService) ->
             data = await websocket.receive_json()
             message_type = data.get("type")
 
-            if message_type in _MESSAGE_HANDLERS:
-                model_cls, handler = _MESSAGE_HANDLERS[message_type]
-                msg = model_cls(**data)
-                await handler(msg, bear_service, websocket)
-            else:
-                error = ErrorResponse(message=f"Unknown message type: {message_type}")
+            try:
+                if message_type in _MESSAGE_HANDLERS:
+                    model_cls, handler = _MESSAGE_HANDLERS[message_type]
+                    msg = model_cls(**data)
+                    await handler(msg, bear_service, websocket)
+                else:
+                    error = ErrorResponse(message=f"Unknown message type: {message_type}")
+                    await manager.send_personal(error.model_dump(), websocket)
+            except ValidationError as e:
+                # Bad message gets an error reply; the connection stays open
+                error = ErrorResponse(message=f"Invalid message: {e}")
                 await manager.send_personal(error.model_dump(), websocket)
 
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-    except ValidationError as e:
-        error = ErrorResponse(message=f"Invalid message: {e}")
-        await manager.send_personal(error.model_dump(), websocket)
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
         manager.disconnect(websocket)
