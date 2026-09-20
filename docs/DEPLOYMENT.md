@@ -1,501 +1,250 @@
 # Deployment Guide
 
-This guide covers deploying Raspi Ruxpin to a Raspberry Pi for production use.
+How to build the real thing: an Arduino running the motors, a Raspberry Pi running everything else.
 
-## Prerequisites
+> **Heads up:** the Arduino setup is new and hasn't been tested on real hardware yet. The software has been tested against a mock Arduino, so the serial protocol, the analysis, and the web app are solid. The wiring and firmware are the parts still waiting on a real bear. If something here doesn't match reality, trust reality and please fix the doc.
 
-- Raspberry Pi 3 or newer (tested on Pi 4)
-- Raspberry Pi OS (Bullseye or newer)
-- SSH access to your Pi
-- Git installed on Pi
-- Internet connection for initial setup
+## What you need
 
-## Hardware Setup
+- Raspberry Pi 3, 4, or 5 running Raspberry Pi OS
+- An Arduino with a USB port (an Uno or Nano works; it needs the `Servo` library, PWM pins, and an analog input)
+- USB cable from the Arduino to the Pi
+- A Teddy Ruxpin with working motors, or standard 3-wire hobby servos
+- An H-bridge motor driver for each motor, if you're using the original 5-wire mechanism
+- A speaker
+- An audio Y-splitter or similar, so the Pi's audio can go to both the speaker and the Arduino
 
-### Required Components
-
-1. **Teddy Ruxpin bear** (vintage animatronic toy)
-2. **Raspberry Pi** (3 or newer recommended)
-3. **Motor driver** (L293D or similar H-bridge)
-4. **Power supply** (5V 3A for Pi + motors)
-5. **Speaker** (USB or 3.5mm audio)
-6. **Jumper wires** and breadboard
-
-### Wiring Diagram
-
-Connect servos to GPIO pins as configured in your `.env`:
+## How the pieces connect
 
 ```
-Eyes Servo:
-├── PWM    → GPIO 21 (default)
-├── DIR    → GPIO 16 (default)
-└── CDIR   → GPIO 20 (default)
-
-Mouth Servo:
-├── PWM    → GPIO 25 (default)
-├── DIR    → GPIO 7 (default)
-└── CDIR   → GPIO 8 (default)
+ Pi ── USB ─────────────────────► Arduino ──► eyes + mouth motors
+  │                                  ▲
+  └── audio out ──┬──► speaker       │ A0 (realtime mode only)
+                  └──────────────────┘
 ```
 
-**Important**: These are configurable via environment variables. Adjust based on your wiring.
+- **USB** carries the commands (and the mouth reports coming back in realtime mode).
+- **Audio** goes to the speaker for people to hear, and to the Arduino's `A0` pin so it can react live. If you only use amplitude or phoneme mode you can skip the connection to `A0`, because the Pi already knows what the mouth should do.
 
-## Software Installation
+## Wiring
 
-### 1. Initial System Setup
+These pins come from the firmware (`arduino/ruxpin/ruxpin.ino`).
+
+| Part | PWM / signal | Direction | Reverse direction |
+|------|:------------:|:---------:|:-----------------:|
+| Upper jaw | 9 | 4 | 5 |
+| Lower jaw | 10 | 6 | 7 |
+| Eyes | 11 | 12 | 13 |
+| Audio in | A0 | | |
+
+- **H-bridge (original 5-wire mechanism):** all three pins per motor are used. Set `SYNC__SERVO_TYPE=hbridge`.
+- **Standard 3-wire servos:** only the signal pin (9, 10, 11) is used. Set `SYNC__SERVO_TYPE=standard`.
+
+Give the motors their own power supply. Don't run them off the Arduino's 5V pin, and tie all the grounds together (Arduino, motor supply, Pi audio ground).
+
+### The audio input
+
+The firmware reads `A0` as a signal that swings around the middle of the Arduino's range (about 2.5V). Audio straight from a Pi swings around 0V, so it needs a little circuit in front of `A0` to shift it up. A capacitor plus two equal resistors forming a voltage divider is the usual trick.
+
+The exact parts haven't been settled yet. Once you've got a version that works, add it here.
+
+## Flash the Arduino
+
+1. Open `arduino/ruxpin/ruxpin.ino` in the [Arduino IDE](https://www.arduino.cc/en/software).
+2. Pick your board and port.
+3. Upload.
+
+After a reset the Arduino waits for the Pi. When the backend connects, it does this:
+
+1. The Arduino says `READY`.
+2. The Pi sends the servo type, the position table for the mouth, and the sync mode.
+3. The Arduino answers `OK` and starts running.
+
+That means you don't reflash to change the servo type, the calibration, or the sync mode. Change the setting on the Pi and restart it.
+
+## Set up the Pi
+
+### 1. System packages
 
 ```bash
-# Update system
-sudo apt-get update
-sudo apt-get upgrade -y
-
-# Install system dependencies
-sudo apt-get install -y \
-    git \
-    python3-dev \
-    espeak \
-    alsa-utils \
-    libasound2-dev
+sudo apt update
+sudo apt install -y python3-dev libasound2-dev alsa-utils espeak-ng git
 ```
 
-### 2. Install uv (Python Package Manager)
+You also need Node.js 20 or newer to build the frontend. The [NodeSource instructions](https://github.com/nodesource/distributions) are the easiest way.
+
+### 2. Install uv
 
 ```bash
-# Install uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Reload shell or add to PATH
-source $HOME/.cargo/env
 ```
 
-### 3. Clone Repository
+Open a new shell afterward so `uv` is on your path.
+
+### 3. Get the code
 
 ```bash
-# Clone the repo
-cd ~
-git clone https://github.com/yourusername/raspi-ruxpin.git
+git clone https://github.com/yamanote1138/raspi-ruxpin.git
 cd raspi-ruxpin
 ```
 
-### 4. Install Python Dependencies
+### 4. Install dependencies and build the frontend
 
 ```bash
-# Create virtual environment
-uv venv
-
-# Activate it
-source .venv/bin/activate
-
-# Install with hardware dependencies
-uv pip install -e ".[hardware]"
+make install-pi
+cd frontend && npm install && npm run build && cd ..
 ```
 
-**Optional: Install Piper TTS** (recommended for better voice quality)
+That installs the Pi extras (ALSA and Piper) and builds the web UI. (Run `make install-pi` only once. It creates the virtual environment and fails if one already exists.) The backend serves the built UI itself, so you don't need the dev server.
+
+Want phoneme mode? Add the extra packages too:
 
 ```bash
-uv pip install piper-tts
+uv pip install -e '.[phoneme]'
 ```
 
-### 5. Install Node.js and Build Frontend
+Whisper can be slow on a Pi. The first analysis of each clip takes a while, but the result is cached in `data/timing/`, so it only happens once per clip.
+
+### 5. Find the Arduino's port
+
+Plug it in, then:
 
 ```bash
-# Install Node.js (if not already installed)
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt-get install -y nodejs
-
-# Install frontend dependencies
-cd frontend
-npm install
-
-# Build production frontend
-npm run build
-cd ..
+ls /dev/ttyUSB* /dev/ttyACM* 2>/dev/null
 ```
 
-### 6. Configure Environment
+Genuine Uno boards usually show up as `/dev/ttyACM0`. Nano clones with a CH340 chip usually show up as `/dev/ttyUSB0`.
+
+Your user needs permission to open it:
 
 ```bash
-# Copy example env file
-cp .env.example .env
+sudo usermod -a -G dialout $USER
+```
 
-# Edit configuration
+Log out and back in (or reboot) for that to take effect.
+
+### 6. Configure
+
+```bash
+cp .env.example.pi .env
 nano .env
 ```
 
-**Key settings for Raspberry Pi:**
+The settings you're most likely to change:
 
 ```bash
-ENVIRONMENT=production
-DEBUG=false
-HOST=0.0.0.0
-PORT=8080
-
-# IMPORTANT: Disable mock GPIO for real hardware
-HARDWARE__USE_MOCK_GPIO=false
-
-# Configure your GPIO pins (defaults shown)
-HARDWARE__EYES_PWM=21
-HARDWARE__EYES_DIR=16
-HARDWARE__EYES_CDIR=20
-HARDWARE__MOUTH_PWM=25
-HARDWARE__MOUTH_DIR=7
-HARDWARE__MOUTH_CDIR=8
-
-# Audio settings
-AUDIO__START_VOLUME=80
-AUDIO__MIXER=PCM
-
-# TTS Engine (espeak or piper)
-TTS__ENGINE=espeak
-TTS__VOICE=en+m3
-TTS__SPEED=125
+SERIAL__PORT=/dev/ttyUSB0      # whatever you found above
+SERIAL__USE_MOCK=false
+SYNC__SERVO_TYPE=hbridge       # or standard
+SYNC__MODE=amplitude           # or phoneme, realtime
+AUDIO__START_VOLUME=90         # 90 is the max, see below
 ```
 
-### 7. Test Run
+The full list is in the [README](../README.md#configuration).
 
-Before setting up as a service, test that everything works:
+### 7. Test run
 
 ```bash
-# From the raspi-ruxpin directory
-source .venv/bin/activate
-python -m backend.main
+uv run python -m backend.main
 ```
 
-Visit `http://your-pi-ip:8080` in a browser. Test:
-- Eyes and mouth controls
-- Text-to-speech
-- Phrase playback
-- Volume control
+Look for the Arduino connecting in the log. If it stalls, jump to [Troubleshooting](TROUBLESHOOTING.md#the-arduino-wont-connect).
 
-Press `Ctrl+C` to stop when testing is complete.
-
-## Production Deployment
-
-### Create Systemd Service
-
-Create a systemd service file to run Raspi Ruxpin automatically on boot:
+Then open `http://<your-pi-address>:8888` from another device. Find the Pi's address with `hostname -I`. You can also check that the backend is up:
 
 ```bash
-sudo nano /etc/systemd/system/raspi-ruxpin.service
+curl http://localhost:8888/api/health
 ```
 
-Add the following content (adjust paths as needed):
+Press Ctrl+C to stop.
 
-```ini
-[Unit]
-Description=Raspi Ruxpin Animatronic Control
-After=network.target
+## Calibrating the mouth
 
-[Service]
-Type=simple
-User=pi
-WorkingDirectory=/home/pi/raspi-ruxpin
-Environment="PATH=/home/pi/raspi-ruxpin/.venv/bin"
-ExecStart=/home/pi/raspi-ruxpin/.venv/bin/python -m backend.main
-Restart=always
-RestartSec=10
+The mouth has seven positions:
 
-[Install]
-WantedBy=multi-user.target
+| Code | Meaning | Sounds like |
+|:----:|---------|-------------|
+| C | Closed | silence |
+| T | Teeth together | t, d, s, z, n, l |
+| S | Slightly open | th, sh, ch, j |
+| N | Neutral | short vowels |
+| M | Medium open | eh, ae |
+| L | Large open | ah, aw |
+| W | Wide open | aa, ow |
+
+Each one has an upper and lower jaw value in `config/jaw_calibration.json`:
+
+```json
+{
+  "C": {"upper": 101, "lower": 99},
+  "W": {"upper": 55,  "lower": 53}
+}
 ```
 
-**Enable and start the service:**
+(The real file lists all seven.) For standard servos these are angles in degrees. For H-bridge motors they're power levels, as a percentage.
+
+Edit the file, then restart the backend. It sends the table to the Arduino every time it connects.
+
+To see what your numbers actually do, use the terminal menu. In **Settings**, choose **Test mouth positions** and it steps through all seven.
 
 ```bash
-# Reload systemd
-sudo systemctl daemon-reload
-
-# Enable service to start on boot
-sudo systemctl enable raspi-ruxpin
-
-# Start the service now
-sudo systemctl start raspi-ruxpin
-
-# Check status
-sudo systemctl status raspi-ruxpin
+uv run raspi-ruxpin-cli
 ```
 
-### View Logs
+## Audio
+
+### Pick the right sound card
 
 ```bash
-# View service logs
-sudo journalctl -u raspi-ruxpin -f
-
-# View last 100 lines
-sudo journalctl -u raspi-ruxpin -n 100
+aplay -l                  # list sound cards
+amixer scontrols          # list volume controls
+speaker-test -t wav -c 2  # play a test sound (Ctrl+C to stop)
 ```
 
-### Service Management
+If the default output isn't the one you want, set these in `.env`:
 
 ```bash
-# Stop service
-sudo systemctl stop raspi-ruxpin
-
-# Restart service
-sudo systemctl restart raspi-ruxpin
-
-# Disable auto-start
-sudo systemctl disable raspi-ruxpin
+AUDIO__DEVICE=plughw:1,0   # card 1, device 0
+AUDIO__CARD_INDEX=1        # same card, for the volume control
+AUDIO__MIXER=PCM           # PCM, Master, or Speaker
 ```
 
-## Updates and Maintenance
+### Volume
 
-### Updating the Application
+The volume is capped at 90%. Going higher makes the Pi unstable, so the backend refuses it.
+
+### Nicer speech
+
+The default voice is espeak, which sounds like a robot. For something closer to a person, see the [Piper setup guide](PIPER_SETUP.md).
+
+## Updating
 
 ```bash
-# Stop the service
-sudo systemctl stop raspi-ruxpin
-
-# Navigate to project directory
-cd ~/raspi-ruxpin
-
-# Pull latest changes
+cd raspi-ruxpin
 git pull
-
-# Activate virtual environment
-source .venv/bin/activate
-
-# Update Python dependencies
 uv pip install -e ".[hardware]"
-
-# Rebuild frontend (if frontend changed)
-cd frontend
-npm install
-npm run build
-cd ..
-
-# Restart service
-sudo systemctl start raspi-ruxpin
+cd frontend && npm install && npm run build && cd ..
 ```
 
-### Audio Configuration
+Then restart the backend. If the firmware changed, reflash the Arduino too.
 
-**Test audio output:**
+## Backing up
+
+The bits that are yours:
 
 ```bash
-# Test speaker
-speaker-test -t wav -c 2
-
-# List audio devices
-aplay -l
-
-# Set default audio device (if needed)
-sudo raspi-config
-# Select: System Options → Audio → Select your output
+tar czf ruxpin-backup.tar.gz .env config/ data/sounds/user/
 ```
 
-**Adjust volume:**
+## Reaching it from other devices
 
-```bash
-# Use alsamixer
-alsamixer
+Once it's running, anything on your network can use `http://<pi-address>:8888`. If you'd like the address to stay put, reserve it for the Pi in your router's settings.
 
-# Or set directly
-amixer set PCM 80%
-```
+There's no login. Don't expose port 8888 to the internet.
 
-### GPIO Permissions
+## Not covered yet
 
-If you encounter GPIO permission errors:
+- **Starting on boot.** The `raspi-ruxpin.service` file in the repo still has settings from the old GPIO setup (the `gpio` group and old folder paths), and the `deploy.sh` and `setup-service.sh` scripts have the same problem. Until those are updated, start the backend by hand.
+- **Real-hardware notes.** Servo timing, the audio input circuit, and realtime-mode tuning all need a session with a real bear.
 
-```bash
-# Add user to gpio group
-sudo usermod -a -G gpio pi
-
-# Reboot to apply
-sudo reboot
-```
-
-## Network Configuration
-
-### Static IP Address (Optional)
-
-For reliable access, set a static IP:
-
-```bash
-sudo nano /etc/dhcpcd.conf
-```
-
-Add at the end:
-
-```
-interface wlan0
-static ip_address=192.168.1.100/24
-static routers=192.168.1.1
-static domain_name_servers=192.168.1.1 8.8.8.8
-```
-
-Reboot to apply:
-
-```bash
-sudo reboot
-```
-
-### Access from Other Devices
-
-Once running, access from any device on your network:
-- Web UI: `http://your-pi-ip:8080`
-- Find your Pi's IP: `hostname -I`
-
-## Troubleshooting
-
-### Service Won't Start
-
-```bash
-# Check detailed status
-sudo systemctl status raspi-ruxpin -l
-
-# Check logs
-sudo journalctl -u raspi-ruxpin -n 50 --no-pager
-
-# Test manually
-cd ~/raspi-ruxpin
-source .venv/bin/activate
-python -m backend.main
-```
-
-### GPIO Errors
-
-```bash
-# Verify GPIO access
-python3 -c "import RPi.GPIO as GPIO; GPIO.setmode(GPIO.BCM); print('GPIO OK')"
-
-# Check permissions
-groups | grep gpio
-```
-
-### Audio Not Working
-
-```bash
-# Check audio devices
-aplay -l
-
-# Test audio output
-speaker-test -t wav -c 2
-
-# Check ALSA mixer
-alsamixer
-
-# Verify audio settings in .env
-cat .env | grep AUDIO
-```
-
-### WebSocket Connection Issues
-
-- Check firewall: `sudo ufw status`
-- Verify port 8080 is not blocked
-- Check if service is running: `sudo systemctl status raspi-ruxpin`
-- Test from Pi itself: `curl http://localhost:8080/api/health`
-
-### High CPU Usage
-
-If experiencing high CPU usage:
-
-1. Check DEBUG mode is off in `.env`:
-   ```bash
-   DEBUG=false
-   ENVIRONMENT=production
-   ```
-
-2. Reduce log level:
-   ```bash
-   # In web UI: Config → System Logs → Set to WARNING or ERROR
-   ```
-
-3. Restart service:
-   ```bash
-   sudo systemctl restart raspi-ruxpin
-   ```
-
-## Performance Optimization
-
-### Reduce Boot Time
-
-```bash
-# Disable unnecessary services
-sudo systemctl disable bluetooth
-sudo systemctl disable cups
-```
-
-### Memory Management
-
-For Pi 3 or systems with limited RAM:
-
-```bash
-# Increase swap size
-sudo dphys-swapfile swapoff
-sudo nano /etc/dphys-swapfile
-# Set: CONF_SWAPSIZE=1024
-sudo dphys-swapfile setup
-sudo dphys-swapfile swapon
-```
-
-## Security Recommendations
-
-1. **Change default password:**
-   ```bash
-   passwd
-   ```
-
-2. **Enable SSH key authentication:**
-   ```bash
-   ssh-keygen
-   ssh-copy-id pi@your-pi-ip
-   ```
-
-3. **Firewall (optional):**
-   ```bash
-   sudo apt-get install ufw
-   sudo ufw allow 22/tcp    # SSH
-   sudo ufw allow 8080/tcp  # Raspi Ruxpin
-   sudo ufw enable
-   ```
-
-4. **Keep system updated:**
-   ```bash
-   sudo apt-get update && sudo apt-get upgrade -y
-   ```
-
-## Backup and Restore
-
-### Backup Configuration
-
-```bash
-# Backup environment and config
-cd ~/raspi-ruxpin
-tar -czf raspi-ruxpin-config-$(date +%Y%m%d).tar.gz .env config/ sounds/
-
-# Download to your computer
-scp pi@your-pi-ip:~/raspi-ruxpin/raspi-ruxpin-config-*.tar.gz .
-```
-
-### Restore from Backup
-
-```bash
-# Upload backup to Pi
-scp raspi-ruxpin-config-*.tar.gz pi@your-pi-ip:~/
-
-# Extract on Pi
-cd ~/raspi-ruxpin
-tar -xzf ~/raspi-ruxpin-config-*.tar.gz
-
-# Restart service
-sudo systemctl restart raspi-ruxpin
-```
-
-## Additional Resources
-
-- [Raspberry Pi GPIO Pinout](https://pinout.xyz/)
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [Vue 3 Documentation](https://vuejs.org/)
-- [Project Issues](https://github.com/yourusername/raspi-ruxpin/issues)
-
-## Support
-
-For issues and questions:
-- Check the [Troubleshooting section](#troubleshooting)
-- Review logs: `sudo journalctl -u raspi-ruxpin -n 100`
-- Open an issue on GitHub with:
-  - Description of the problem
-  - Log output
-  - Hardware configuration
-  - Software versions
+Something not working? See [Troubleshooting](TROUBLESHOOTING.md).

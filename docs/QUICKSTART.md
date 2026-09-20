@@ -1,307 +1,100 @@
-# Raspi Ruxpin 2.0 - Quick Start Guide
+# Quick Start
 
-## Installation
+Get the bear running on your Mac, no hardware needed. A fake Arduino stands in for the real one, so you can play with everything except the actual servos.
 
-### Prerequisites
+Setting up the real thing? Skip to the [Deployment guide](DEPLOYMENT.md).
 
-**Install uv (Python package manager):**
-```bash
-# macOS/Linux
-curl -LsSf https://astral.sh/uv/install.sh | sh
+## What you need
 
-# or with Homebrew
-brew install uv
+- [uv](https://github.com/astral-sh/uv): `brew install uv` (or `curl -LsSf https://astral.sh/uv/install.sh | sh`)
+- [Node.js](https://nodejs.org/) 20 or newer
+- Python 3.12 or newer (uv will fetch one if you don't have it)
 
-# Windows
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-```
-
-**Install Node.js:**
-- Download from https://nodejs.org/
-
-### Automated Setup (Recommended)
+## Set it up
 
 ```bash
-# Run setup script
-./scripts/setup-dev.sh
-```
+git clone https://github.com/yamanote1138/raspi-ruxpin.git
+cd raspi-ruxpin
 
-This will:
-- Check for uv installation
-- Create virtual environment with uv
-- Create `.env` file with appropriate settings
-- Install Python dependencies (with mock GPIO for Mac)
-- Install frontend dependencies
-- Create necessary directories
-
-### Manual Setup
-
-**On macOS:**
-```bash
-# 1. Create virtual environment
-uv venv
-
-# 2. Create .env file from Mac template
+make install                 # Python and frontend dependencies
 cp .env.example.mac .env
-
-# 3. Install Python dependencies
-uv pip install -e ".[dev]"
-
-# 4. Install frontend dependencies
-cd frontend
-npm install
-cd ..
-
-# 5. Create TTS directory
-mkdir -p data/sounds data/tts data/timing
 ```
 
-**On Raspberry Pi:**
-```bash
-# 1. Create virtual environment
-uv venv
+## Run it
 
-# 2. Create .env file from Pi template
-cp .env.example.pi .env
-
-# 3. Install Python dependencies with hardware support
-uv pip install -e ".[hardware]"
-
-# 4. Install frontend dependencies
-cd frontend
-npm install
-cd ..
-
-# 5. Create TTS directory
-mkdir -p data/sounds data/tts data/timing
-```
-
-## Running the Application
-
-### Development Mode (Mac/Linux)
-
-**Terminal 1 - Backend:**
-```bash
-uv run python -m backend.main
-# or: source .venv/bin/activate && python -m backend.main
-```
-
-**Terminal 2 - Frontend:**
-```bash
-cd frontend
-npm run dev
-```
-
-**Browser:**
-```
-http://localhost:5173
-```
-
-The frontend dev server will proxy API and WebSocket requests to the backend.
-
-### Production Mode (Raspberry Pi)
+You need two terminals.
 
 ```bash
-# Build frontend
-cd frontend
-npm run build
-cd ..
+# Terminal 1: backend on http://localhost:8888
+make dev
 
-# Run backend (serves built frontend)
-uv run python -m backend.main
+# Terminal 2: frontend on http://localhost:5173
+make frontend
 ```
 
-**Browser:**
-```
-http://<raspberry-pi-ip>:8080
-```
+Open http://localhost:5173.
 
-## First Run Checklist
+## Try it out
 
-1. ✅ Backend starts without errors
-2. ✅ Frontend dev server starts
-3. ✅ Browser shows Raspi Ruxpin UI
-4. ✅ Connection status shows "Connected" (green)
-5. ✅ Can switch between Puppet and Speak modes
-6. ✅ Bear image updates when clicking controls
-7. ✅ Volume slider works
-8. ✅ Phrases load in dropdown
+- **Play a clip.** Pick one from the dropdown and hit play. The mouth on the bear picture should move along with the audio.
+- **Speak some text.** Type something in the text box and hit speak. On a Mac this uses the built-in `say` voice.
+- **Switch sync modes.** The sync button cycles through amplitude, realtime, and (if installed) phoneme. See below for what each one does.
+- **Toggle the eyes, mouth, and blinking** with the buttons at the top of the controls.
+- **Click the info button** to see what the backend thinks is going on: platform, TTS engine, how many clips it found, and whether phoneme mode is available.
 
-## Testing the Interface
+Audio plays through your Mac's speakers at the current system volume, so check that before you hit play.
 
-### Puppet Mode
+### The three sync modes
 
-1. Click "Puppet Mode" button
-2. Click "Open Eyes" - bear image should update
-3. Click "Close Eyes" - bear image should update
-4. Click "Open Mouth" - bear image should update
-5. Click "Close Mouth" - bear image should update
-6. Try clicking directly on bear's eyes/mouth
+- **Amplitude** is the default. The backend measures how loud the clip is, ahead of time, and sends timed mouth commands.
+- **Realtime** has the Arduino listening to the audio and reacting live. On a Mac the mock Arduino fakes this, so you'll see the mouth move but it isn't a real test of the hardware.
+- **Phoneme** works out mouth shapes from the actual sounds in the speech. It needs extra packages (below).
 
-### Speak Mode
-
-1. Click "Speak Mode" button
-2. Adjust volume slider - should see volume change
-3. Type text in the text area
-4. Click "Speak" - on Mac, should hear TTS through speakers
-5. Select a phrase from dropdown
-6. Click "Play Phrase" - should hear audio
-
-## On Mac (Mock Hardware)
-
-When running on Mac with mock GPIO:
-
-**What Works:**
-- ✅ Full web interface
-- ✅ Bear state updates
-- ✅ WebSocket communication
-- ✅ TTS generation and playback
-- ✅ Audio file playback
-- ✅ Volume control (Mac system volume)
-- ✅ Console logging of GPIO operations
-
-**What Doesn't Work:**
-- ❌ Actual servo movement (no hardware)
-- ❌ Hardware GPIO pins (mocked)
-
-Check the terminal for mock GPIO logs to see what would be sent to hardware.
-
-## On Raspberry Pi (Real Hardware)
-
-When running on Pi with real GPIO:
-
-**Additional Setup Required:**
-1. Install uv:
-   ```bash
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-   ```
-
-2. Install system dependencies:
-   ```bash
-   sudo apt-get update
-   sudo apt-get install espeak alsa-utils python3-dev
-   ```
-
-3. Create Pi-specific `.env` file:
-   ```bash
-   cp .env.example.pi .env
-   # Verify pin numbers match your wiring!
-   ```
-
-4. Wire up servos according to hardware guide
-
-5. Run with sudo if needed for GPIO access:
-   ```bash
-   sudo uv run python -m backend.main
-   ```
-
-## Common Issues
-
-### Backend won't start
-
-**Error:** `ModuleNotFoundError: No module named 'fastapi'`
-- **Solution:** Run `uv pip install -e ".[dev]"`
-
-**Error:** `command not found: uv`
-- **Solution:** Install uv: `curl -LsSf https://astral.sh/uv/install.sh | sh`
-
-**Error:** `GPIO not found`
-- **Solution:** On Pi, install RPi.GPIO: `uv pip install RPi.GPIO`
-- **Note:** Mac development uses built-in mock GPIO (no installation needed)
-
-### Frontend won't start
-
-**Error:** `command not found: npm`
-- **Solution:** Install Node.js from https://nodejs.org/
-
-**Error:** `Cannot find module 'vue'`
-- **Solution:** `cd frontend && npm install`
-
-### WebSocket won't connect
-
-**Error:** Connection status shows "Disconnected"
-- **Solution:** Make sure backend is running on port 8080
-- **Solution:** Check browser console for errors
-- **Solution:** Try refreshing the page
-
-### No sound on Mac
-
-**Issue:** Can't hear TTS or audio
-- **Solution:** Check Mac system volume
-- **Solution:** Check that audio files exist in `sounds/` directory
-- **Solution:** Verify espeak is installed: `brew install espeak`
-
-## API Endpoints
-
-Once running, explore:
-
-- **Health Check:** http://localhost:8080/api/health
-- **System Status:** http://localhost:8080/api/status
-- **API Docs:** http://localhost:8080/docs
-- **WebSocket:** ws://localhost:8080/ws
-
-## Development Tips
-
-### Hot Reload
-
-Both backend and frontend support hot reload:
-- Backend: Uses `uvicorn --reload`
-- Frontend: Vite HMR
-
-Just save your files and see changes instantly!
-
-### Type Checking
+### Turning on phoneme mode (optional)
 
 ```bash
-# Backend
-uv run mypy backend/
-
-# Frontend
-cd frontend && npm run type-check
+brew install espeak-ng
+uv pip install -e '.[phoneme]'
 ```
 
-### Linting
+The first time you use it, Whisper downloads a small speech model, so expect a pause. After that, results are cached in `data/timing/`.
+
+If the sync button skips phoneme, the packages aren't installed. The info button will tell you what's missing.
+
+## Use the terminal menu instead
 
 ```bash
-# Backend
-uv run ruff check backend/
-uv run black backend/
-
-# Frontend
-cd frontend && npm run lint
+uv run raspi-ruxpin-cli
 ```
 
-### Debugging
+Same bear, no browser. Press a letter to pick an option: play a clip, speak text, manage sound files, or open settings. Esc goes back.
 
-Add breakpoints in VS Code or use print statements. Console logs appear in:
-- Backend logs: Terminal running `python -m backend.main`
-- Frontend logs: Browser Developer Console
-- GPIO logs: Backend terminal (when using mock GPIO on Mac)
+## Add your own clips
 
-## Next Steps
+Drop WAV files into `data/sounds/user/`. They show up in the dropdown after a restart. See [Audio Files](AUDIO_FILES.md) for the format and how to convert things, and [Audio Guide](audio-guide.md) for making clips that animate well.
 
-1. **Customize Configuration**
-   - Edit `.env` for your setup (use `.env.example.mac` or `.env.example.pi` as starting point)
-   - Add custom sounds to `sounds/` directory
+## Production build
 
-2. **Deploy to Pi**
-   - Follow hardware setup guide
-   - Build and deploy
-   - Test with real hardware
+To serve the UI straight from the backend (this is how it runs on a Pi), build it and turn on production mode:
 
-3. **Contribute**
-   - Add new features
-   - Write tests (Phase 8)
-   - Improve documentation
+```bash
+cd frontend && npm run build && cd ..
+ENVIRONMENT=production make run
+```
 
-## Getting Help
+Then open http://localhost:8888. Without `ENVIRONMENT=production` the backend won't serve the built UI, and you'll get a blank page.
 
-- Check `IMPLEMENTATION_SUMMARY.md` for technical details
-- Review `README.md` for full documentation
-- See the [wiki](https://github.com/yamanote1138/raspi-ruxpin/wiki/) for hardware guides
+## Run the checks
 
-## Success!
+```bash
+make check        # ruff + mypy + pytest
+```
 
-If you see the bear interface and can control it, you're all set! The modernization is complete and working. 🎉
+## If something's off
 
-Enjoy your modernized Raspi Ruxpin!
+- **The page says disconnected.** Make sure `make dev` is running. The frontend expects the backend on port 8888.
+- **Port 8888 is taken.** Change `PORT` in `.env`. If you're using the dev server, update the proxy in `frontend/vite.config.ts` to match.
+- **No sound.** Check your system volume and output device. Playback uses `afplay`.
+- **Phoneme mode is missing.** Install the extras above.
+
+More in [Troubleshooting](TROUBLESHOOTING.md).

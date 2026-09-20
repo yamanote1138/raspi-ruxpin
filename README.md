@@ -2,398 +2,202 @@
 
 ![creepy bear](https://raw.githubusercontent.com/yamanote1138/raspi-ruxpin/master/public/img/teddy_eomo.png)
 
-Modern animatronic bear control system with FastAPI and Vue 3!
+Make a creepy old Teddy Ruxpin say whatever you want, with his mouth moving in time.
 
-**Version 2.0** - Complete modernization with:
-- 🚀 FastAPI backend with WebSocket support
-- 🎨 Vue 3 + TypeScript + Vite frontend
-- 🔧 Async hardware control
-- 📦 Modern dependency management with [uv](https://github.com/astral-sh/uv) (10-100x faster than pip!)
-- 🧪 Full type safety
-- 💻 Mac development support (no hardware required!)
+A Raspberry Pi (or your Mac, while you're developing) plays the audio and figures out how the mouth should move. An Arduino runs the motors. You drive it all from a web page or a terminal menu.
 
-Make a creepy old Teddy Ruxpin say whatever you want with synchronized mouth movements!
+## How it works
 
-## Introduction
+```
+                      ┌──────────────────────────────┐
+  Browser / CLI ─────►│  Pi or Mac (the brain)       │
+   (WebSocket)        │  • plays audio               │
+                      │  • analyzes it for mouth     │
+                      │    movement                  │
+                      │  • serves the web UI         │
+                      └──────┬───────────────┬───────┘
+                             │ USB serial    │ audio out
+                             ▼               ▼
+                      ┌────────────┐    ┌─────────┐
+                      │  Arduino   │◄───┤ Y-split ├──► speaker
+                      │  (motors)  │ A0 └─────────┘
+                      └─────┬──────┘
+                            ▼
+                    eyes + mouth servos
+```
 
-This project was originally based on the [version](https://www.hackster.io/chip/c-h-i-p-py-ruxpin-5f02f1) constructed by the nice folks at NextThing, inc. Version 2.0 is a complete modernization with best practices for Python and Vue development.
+The bear has two moving parts: **eyes** (open, closed, blink) and a **mouth** with seven positions. Both the original 5-wire H-bridge motors and regular 3-wire hobby servos work.
+
+### Three ways to sync the mouth
+
+| Mode | Who does the work | Good for |
+|------|-------------------|----------|
+| **Amplitude** | The Pi checks how loud each 20ms slice of the clip is ahead of time, then sends timed mouth commands | The default. Works everywhere |
+| **Phoneme** | The Pi transcribes the clip (Whisper) and works out the mouth shapes from the sounds | Better-looking speech, but needs extra packages |
+| **Realtime** | The Arduino listens to the audio signal on pin A0 and moves the mouth on its own | Lowest latency, no analysis step |
+
+Amplitude and phoneme results are cached in `data/timing/`, so a clip is only analyzed once.
 
 ## Features
 
-- 🎮 **Control Mode**: Unified interface for bear control
-  - Interactive bear status panel with clickable controls
-  - Text-to-speech with synchronized mouth movements
-  - Phrase library with pre-recorded audio
-  - Real-time volume control
-  - Auto-blink toggle
-- 📊 **Config Mode**: System monitoring and configuration
-  - Real-time log viewer with level filtering
-  - Bear status monitoring
-  - System settings management
-- 🌐 **Modern Web Interface**: Responsive design with Bootstrap 5
-  - Clean, playful UI with rounded fonts
-  - Mobile-friendly layout
-  - Real-time status updates
-- 🔄 **WebSocket Communication**: Instant bi-directional updates
-- 🎙️ **Multiple TTS Engines**: Support for espeak, macOS built-in, and Piper
-- 🧪 **Mock Hardware**: Full development on Mac without Raspberry Pi
+- Web interface: bear picture, eye/mouth/blink controls, volume, sync mode, clip player, and text-to-speech
+- Terminal menu (`raspi-ruxpin-cli`) for playing clips, speaking text, testing the servos, and scoring audio files
+- Text-to-speech with espeak, macOS `say`, or Piper
+- Audio quality scoring so you can tell if a clip will animate well
+- Full Mac development with a fake Arduino, so you don't need hardware to work on the software
 
-## Quick Start
+## Quick start (Mac, no hardware)
 
-### Mac Development (No Hardware Required)
+You need [uv](https://github.com/astral-sh/uv) (`brew install uv`) and [Node.js](https://nodejs.org/) 20 or newer.
 
-**Prerequisites:**
-- Install [uv](https://github.com/astral-sh/uv): `curl -LsSf https://astral.sh/uv/install.sh | sh` or `brew install uv`
-- Install [Node.js](https://nodejs.org/)
-
-**Quick Setup with Makefile:**
 ```bash
-# Install all dependencies
-make install
+make install                 # Python + frontend dependencies
+cp .env.example.mac .env
 
-# Create .env file
-cp .env.example .env
-
-# Start backend (Terminal 1)
-make run
-
-# Start frontend dev server (Terminal 2)
-make frontend
-
-# Open browser at http://localhost:5173
+make dev                     # backend on http://localhost:8888
+make frontend                # in a second terminal: UI on http://localhost:5173
 ```
 
-**Manual Setup:**
+Open http://localhost:5173 and play a clip. The mock Arduino is turned on automatically on a Mac.
+
+More detail is in the [Quick Start guide](docs/QUICKSTART.md).
+
+## Running it on a Pi
+
+Short version: flash the Arduino, plug it into the Pi over USB, split the Pi's audio between the speaker and the Arduino, and start the backend.
+
+The full walkthrough (wiring, firmware, Pi setup) is in the [Deployment guide](docs/DEPLOYMENT.md).
+
+> The Arduino side is new and hasn't been tested on real hardware yet. Everything has been tested against the mock.
+
+## The terminal menu
+
 ```bash
-# 1. Create virtual environment and install dependencies
-uv venv
-uv pip install -e ".[dev,mock]"
-
-# 2. Install frontend dependencies
-cd frontend && npm install && cd ..
-
-# 3. Create .env file
-cp .env.example .env
-
-# 4. Start backend (Terminal 1)
-uv run python -m backend.main
-
-# 5. Start frontend dev server (Terminal 2)
-cd frontend && npm run dev
-
-# 6. Open browser at http://localhost:5173
+uv run raspi-ruxpin-cli
 ```
 
-### Raspberry Pi Production
-
-**Quick Deploy:**
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/raspi-ruxpin.git
-cd raspi-ruxpin
-
-# Run deployment script (installs everything and sets up systemd service)
-./scripts/deploy.sh
-```
-
-**Manual Setup:**
-```bash
-# 1. Install uv
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# 2. Create virtual environment and install Python dependencies
-uv venv
-uv pip install -e ".[hardware]"
-
-# 3. Install system dependencies
-sudo apt-get install espeak alsa-utils
-
-# 4. Build frontend
-cd frontend
-npm install
-npm run build
-cd ..
-
-# 5. Configure environment
-cp .env.example .env
-# Edit .env and set HARDWARE__USE_MOCK_GPIO=false
-
-# 6. Run backend (serves built frontend)
-uv run python -m backend.main
-```
-
-For detailed production deployment instructions including systemd service setup, see [DEPLOYMENT.md](docs/DEPLOYMENT.md).
-
-## Project Structure
-
-```
-raspi-ruxpin/
-├── backend/                    # Python backend
-│   ├── main.py                # FastAPI app entry point
-│   ├── config.py              # Pydantic settings with env vars
-│   ├── dependencies.py        # FastAPI dependency injection
-│   ├── logging_config.py      # Logging with WebSocket streaming
-│   ├── api/                   # API layer
-│   │   ├── websocket.py       # WebSocket endpoint
-│   │   └── endpoints/         # REST endpoints
-│   ├── services/              # Business logic
-│   │   └── bear_service.py    # Bear orchestration & control
-│   ├── hardware/              # Hardware abstraction
-│   │   ├── gpio_manager.py    # GPIO lifecycle management
-│   │   ├── servo.py           # Async servo control
-│   │   ├── audio_player.py    # Async audio playback
-│   │   └── models.py          # Hardware Pydantic models
-│   └── core/                  # Domain models
-│       ├── enums.py           # State, Direction enums
-│       └── exceptions.py      # Custom exceptions
-├── frontend/                  # Vue 3 + TypeScript + Vite
-│   ├── src/
-│   │   ├── main.ts           # App entry point
-│   │   ├── App.vue           # Root component
-│   │   ├── components/       # Vue SFCs
-│   │   │   ├── BearVisualization.vue
-│   │   │   ├── ControlMode.vue
-│   │   │   ├── ConfigMode.vue
-│   │   │   ├── ModeSelector.vue
-│   │   │   └── StatusBar.vue
-│   │   ├── composables/      # Vue composables
-│   │   │   ├── useBear.ts    # Bear state management
-│   │   │   └── useWebSocket.ts # WebSocket singleton
-│   │   └── types/            # TypeScript definitions
-│   ├── vite.config.ts        # Vite configuration
-│   ├── tsconfig.json         # TypeScript config
-│   └── package.json          # Node dependencies
-├── config/                    # Configuration files
-├── sounds/                    # Audio files (WAV)
-├── public/                    # Static assets
-│   └── img/                  # Bear images
-├── pyproject.toml            # Python packaging & dependencies
-├── .env.example              # Environment template
-└── .env                      # Environment config (create from example)
-```
+It runs the same services as the web app, without the web part. From the menu you can play a clip, speak some text, change the volume or sync mode, test the eyes and mouth, edit clip titles, and check how well your audio files will animate.
 
 ## Configuration
 
-### Environment Variables
+Settings come from environment variables in `.env`. Nested settings use a double underscore. Copy `.env.example.mac` or `.env.example.pi` to get started.
 
-Copy `.env.example` to `.env` and configure:
+| Variable | What it does | Default |
+|----------|--------------|---------|
+| `PORT` | Web server port | `8888` |
+| `SERIAL__PORT` | Arduino serial port | `/dev/ttyUSB0` |
+| `SERIAL__USE_MOCK` | Use a fake Arduino (on by default on a Mac) | `false` on Linux |
+| `SYNC__MODE` | `amplitude`, `phoneme`, or `realtime` | `amplitude` |
+| `SYNC__SERVO_TYPE` | `hbridge` (original 5-wire) or `standard` (3-wire) | `hbridge` |
+| `AUDIO__START_VOLUME` | Starting volume, 0–90 | `90` |
+| `AUDIO__DEVICE` / `AUDIO__CARD_INDEX` / `AUDIO__MIXER` | ALSA sound card settings (Linux only) | system default |
+| `TTS__ENGINE` | `espeak` or `piper` (Mac uses `say` for `espeak`) | `espeak` |
+| `TTS__VOICE`, `TTS__SPEED`, `TTS__PITCH` | Voice tuning | see `.env.example` |
 
-```bash
-# Application
-ENVIRONMENT=development
-DEBUG=true              # Enable debug mode (sets log level to DEBUG)
-HOST=0.0.0.0
-PORT=8080
+Volume is capped at 90%. Anything higher makes the Pi unstable.
 
-# Hardware (Mac: set USE_MOCK_GPIO=true for development)
-HARDWARE__USE_MOCK_GPIO=false
-HARDWARE__EYES_PWM=21
-HARDWARE__EYES_DIR=16
-HARDWARE__EYES_CDIR=20
-HARDWARE__MOUTH_PWM=25
-HARDWARE__MOUTH_DIR=7
-HARDWARE__MOUTH_CDIR=8
+Jaw positions live in `config/jaw_calibration.json`. See the [Deployment guide](docs/DEPLOYMENT.md#calibrating-the-mouth) for how that works.
 
-# Audio
-AUDIO__START_VOLUME=100
-AUDIO__MIXER=PCM        # ALSA mixer name (Linux only)
+## Project layout
 
-# Text-to-Speech
-TTS__ENGINE=espeak      # Options: espeak, piper, macos
-TTS__VOICE=en+m3        # Voice (espeak: en+m3, piper: model path)
-TTS__SPEED=125          # Speech speed
-TTS__PITCH=50           # Voice pitch
 ```
-
-**TTS Engine Options:**
-- `espeak` - Available on Linux (apt install espeak)
-- `piper` - High-quality neural TTS (install with `uv pip install piper-tts`)
-- `macos` - Uses macOS built-in TTS (Mac development only)
-
-### Hardware Configuration (Optional)
-
-Create `config/hardware.yaml` to override settings:
-
-```yaml
-hardware:
-  eyes_speed: 100
-  eyes_duration: 0.4
-  mouth_speed: 100
-  mouth_duration: 0.15
+raspi-ruxpin/
+├── backend/
+│   ├── main.py               # FastAPI app
+│   ├── config.py             # Settings
+│   ├── api/                  # WebSocket + health endpoints
+│   ├── services/
+│   │   └── bear_service.py   # Runs the show: audio, mouth sync, blinking
+│   ├── hardware/
+│   │   ├── arduino.py        # Serial link to the Arduino
+│   │   ├── mock_serial.py    # Fake Arduino for Mac development
+│   │   ├── audio_player.py   # Playback, volume, text-to-speech
+│   │   ├── audio_analyzer.py # Amplitude and phoneme analysis
+│   │   ├── timing_store.py   # Cached analysis results
+│   │   └── calibration.py    # Mouth position table
+│   ├── cli/                  # Terminal menu
+│   ├── core/                 # Enums and exceptions
+│   └── tests/
+├── arduino/ruxpin/ruxpin.ino # Motor controller firmware
+├── frontend/                 # Vue 3 + TypeScript + Vite
+├── config/                   # Jaw calibration
+├── data/
+│   ├── sounds/               # examples/ (in the repo) and user/ (yours)
+│   ├── timing/               # Analysis cache
+│   └── tts/                  # Generated speech
+├── docs/
+└── .env.example{,.mac,.pi}
 ```
 
 ## Development
 
-### Common Commands (using Makefile)
-
 ```bash
-# Show all available commands
-make help
-
-# Run backend with auto-reload
-make dev
-
-# Run frontend dev server
-make frontend
-
-# Run tests
-make test              # Basic test run
-make test-verbose      # With verbose output
-make test-cov          # With coverage report
-
-# Code quality
-make lint              # Run linters
-make format            # Format code
-make type-check        # Run type checker
-make check             # Run all checks (lint, type-check, test)
-
-# Cleanup
-make clean             # Remove build artifacts and caches
+make dev           # backend with auto-reload
+make frontend      # frontend dev server
+make check         # lint + type check + tests
+make help          # everything else
 ```
 
-### Backend Development (using uv directly)
+The backend uses `ruff` and `mypy` (strict). The frontend builds with `npm run build` inside `frontend/`.
 
-```bash
-# Run with auto-reload
-uv run uvicorn backend.main:app --reload --host 0.0.0.0 --port 8080
+## API
 
-# Type checking
-uv run mypy backend/
+With the backend running:
 
-# Linting and formatting
-uv run ruff check backend/
-uv run ruff format backend/
+- Web UI: http://localhost:5173 (dev server), or http://localhost:8888 once you've run `npm run build` and set `ENVIRONMENT=production`
+- API docs: http://localhost:8888/docs
+- Health: http://localhost:8888/api/health
+- Status: http://localhost:8888/api/status
 
-# Testing
-uv run pytest --cov=backend --cov-report=html
-```
+### WebSocket
 
-### Frontend Development
+Everything real-time goes through `/ws` as JSON.
 
-```bash
-cd frontend
-
-# Dev server with hot reload
-npm run dev
-
-# Type checking
-npm run type-check
-
-# Build for production
-npm run build
-```
-
-## Using the Interface
-
-The web interface has two main views:
-
-### Control Mode
-The primary control interface with three sections:
-- **Bear Status Panel** (top): Interactive bear image and status controls
-  - Click bear image to toggle eyes/mouth (or use buttons)
-  - Button bar: Eyes, Mouth, Blink, and Status indicators
-  - Volume dropdown (0-100% in 20% increments)
-- **Phrase Library** (left): Play pre-recorded audio clips
-  - Select from dropdown and click "Play Phrase"
-- **Text-to-Speech** (right): Generate speech from text
-  - Type text and click "Speak"
-  - Mouth movements sync with audio amplitude
-
-### Config Mode
-System monitoring and settings:
-- **System Logs**: Real-time log viewer
-  - Filter by log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-  - Auto-scroll toggle
-  - Clear logs button
-  - Shows WebSocket events, GPIO operations, audio playback, etc.
-
-## API Documentation
-
-Once running, visit:
-- **Web UI**: http://localhost:8080 (or http://localhost:5173 in dev mode)
-- **API docs**: http://localhost:8080/docs
-- **Health check**: http://localhost:8080/api/health
-
-## WebSocket Protocol
-
-Connect to `/ws` and send JSON messages:
+**You send:**
 
 ```javascript
-// Update bear positions
 { "type": "update_bear", "eyes": "open", "mouth": "closed" }
-
-// Speak text with TTS
 { "type": "speak", "text": "Hello world" }
-
-// Play pre-recorded phrase
 { "type": "play", "sound": "starwars_iamyourfather" }
-
-// Set volume (0-100)
 { "type": "set_volume", "level": 75 }
-
-// Toggle auto-blink
 { "type": "set_blink_enabled", "enabled": true }
-
-// Fetch available phrases
+{ "type": "set_sync_mode", "mode": "amplitude" }   // amplitude | phoneme | realtime
+{ "type": "set_character", "character": "teddy" }
+{ "type": "analyze_audio", "sound": "starwars_iamyourfather" }
 { "type": "fetch_phrases" }
 ```
 
-**Received Messages:**
+**You get back:**
 
 ```javascript
-// Bear state updates
-{ "type": "bear_state", "data": { "eyes": "open", "mouth": "closed", "volume": 75, ... } }
-
-// Available phrases
-{ "type": "phrases", "data": { "phrase_key": "Description", ... } }
-
-// Log messages (streamed in real-time)
-{ "type": "log", "data": { "level": "INFO", "message": "...", "timestamp": 1234567890, ... } }
-
-// Error messages
-{ "type": "error", "message": "Error description" }
-
-// Success confirmations
-{ "type": "success", "message": "Operation completed" }
+{ "type": "bear_state", "data": { "eyes": "open", "mouth_code": "C", "sync_mode": "amplitude", "volume": 75, ... } }  // 10 times a second
+{ "type": "phrases", "data": { "phrase_key": "Title", ... } }
+{ "type": "success", "message": "..." }
+{ "type": "error", "message": "..." }
 ```
 
-## Hardware Setup
+A bad message gets an `error` back and the connection stays open.
 
-See the [wiki](https://github.com/yamanote1138/raspi-ruxpin/wiki/) for detailed hardware setup instructions.
+## Docs
 
-## Project Status
+- [Quick Start](docs/QUICKSTART.md): get running on your Mac
+- [Deployment](docs/DEPLOYMENT.md): wiring, firmware, and Pi setup
+- [Troubleshooting](docs/TROUBLESHOOTING.md): when things go sideways
+- [Audio Files](docs/AUDIO_FILES.md): adding your own clips
+- [Audio Guide](docs/audio-guide.md): making clips that animate well
+- [Piper TTS](docs/PIPER_SETUP.md): nicer-sounding speech on the Pi
 
-**Current Phase:** Deployment ready - awaiting hardware testing
+## Background
 
-See [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md) for detailed progress and next steps.
-
-## Documentation
-
-**Local Documentation:**
-- [Quick Start Guide](docs/QUICKSTART.md) - Setup and installation
-- [Deployment Guide](docs/DEPLOYMENT.md) - Raspberry Pi deployment
-- [Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions
-- [Piper TTS Setup](docs/PIPER_SETUP.md) - Neural TTS configuration
-
-**External Resources:**
-- [Hardware Setup](https://github.com/yamanote1138/raspi-ruxpin/wiki/Hardware-Setup)
-- [Software Installation](https://github.com/yamanote1138/raspi-ruxpin/wiki/Software-Installation)
-- [Operation](https://github.com/yamanote1138/raspi-ruxpin/wiki/Operation)
+This started as a rebuild of the [C.H.I.P.py Ruxpin](https://www.hackster.io/chip/c-h-i-p-py-ruxpin-5f02f1) project from NextThing. There are build notes from the original on the [wiki](https://github.com/yamanote1138/raspi-ruxpin/wiki/), but some of them may predate the Arduino setup.
 
 ## License
 
 MIT
 
-## Version History
+## Version history
 
-- **2.0.0** (2025) - Complete modernization
-  - FastAPI backend with async/await patterns
-  - Vue 3 + TypeScript + Vite frontend
-  - Unified Control mode interface
-  - Real-time log viewer with WebSocket streaming
-  - Multiple TTS engine support (espeak, piper, macOS)
-  - Modern responsive UI with Bootstrap 5
-  - Comprehensive deployment automation
-  - Full type safety throughout
-  - Mac development support with Mock GPIO
-- **1.0.0** (2023) - Original Vue 2 + aiohttp version
+- **Next**: Motors now run from an Arduino over serial (no more Pi GPIO). Adds amplitude, phoneme, and realtime sync, a terminal menu, and audio quality scoring. Frontend reworked into a simpler two-column layout.
+- **2.1.1**: Dependency updates and CI.
+- **2.0.0** (2025): FastAPI + Vue 3 rewrite, WebSocket control, text-to-speech, Mac development mode.
+- **1.0.0** (2023): Original Vue 2 + aiohttp version.
