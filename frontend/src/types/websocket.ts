@@ -39,6 +39,13 @@ export interface BearStateMessage {
     arduino_baud_rate: number
     arduino_connection_type: string
     status_text: string
+    servo_type: string
+    tts_engine: string
+    tts_voice: string
+    environment: string
+    platform: string
+    sound_count: number
+    phoneme_available: boolean
   }
 }
 
