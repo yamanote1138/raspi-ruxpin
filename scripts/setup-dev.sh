@@ -32,10 +32,8 @@ echo ""
 # Check if we're on macOS or Linux
 if [[ "$OSTYPE" == "darwin"* ]]; then
     PLATFORM="macOS"
-    USE_MOCK="true"
 else
     PLATFORM="Linux"
-    USE_MOCK="false"
 fi
 
 echo "Platform: $PLATFORM"
@@ -54,13 +52,10 @@ echo ""
 # Create .env if it doesn't exist
 if [ ! -f .env ]; then
     echo "Creating .env file..."
-    cp .env.example .env
-
-    # Set mock GPIO for macOS
     if [ "$PLATFORM" == "macOS" ]; then
-        echo "" >> .env
-        echo "# Mac Development Override" >> .env
-        echo "HARDWARE__USE_MOCK_GPIO=true" >> .env
+        cp .env.example.mac .env
+    else
+        cp .env.example .env
     fi
 
     echo "✓ Created .env file"
@@ -72,7 +67,7 @@ echo ""
 # Install Python dependencies with uv
 echo "Installing Python dependencies with uv..."
 if [ "$PLATFORM" == "macOS" ]; then
-    uv pip install -e ".[dev,mock]"
+    uv pip install -e ".[dev]"
 else
     uv pip install -e ".[dev,hardware]"
 fi
@@ -88,7 +83,7 @@ echo "✓ Frontend dependencies installed"
 echo ""
 
 # Create TTS output directory
-mkdir -p sounds/tts
+mkdir -p data/tts
 echo "✓ Created TTS output directory"
 echo ""
 

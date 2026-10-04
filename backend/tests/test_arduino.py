@@ -1,0 +1,133 @@
+"""Tests for Arduino serial communication."""
+
+import pytest
+
+from backend.core.enums import MouthPosition, SyncMode
+from backend.core.exceptions import SerialError
+from backend.hardware.arduino import ArduinoController
+from backend.hardware.calibration import get_default_calibration
+from backend.hardware.mock_serial import MockSerial
+
+
+@pytest.fixture
+def controller() -> ArduinoController:
+    """Provide a mock-mode Arduino controller."""
+    return ArduinoController(
+        port="/dev/mock",
+        baud_rate=115200,
+        timeout=1.0,
+        connect_timeout=5.0,
+        use_mock=True,
+    )
+
+
+@pytest.mark.unit
+async def test_connect_with_mock(controller: ArduinoController) -> None:
+    """Test connection with mock serial."""
+    await controller.connect()
+    assert controller.connected is True
+    await controller.disconnect()
+    assert controller.connected is False
+
+
+@pytest.mark.unit
+async def test_connect_sends_config(
+    controller: ArduinoController, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that connect sends one calibration line per position, then mode, then done."""
+    sent: list[str] = []
+    original_write = MockSerial.write
+
+    def recording_write(self: MockSerial, data: bytes) -> int:
+        sent.append(data.decode().strip())
+        return original_write(self, data)
+
+    monkeypatch.setattr(MockSerial, "write", recording_write)
+
+    await controller.connect(calibration=get_default_calibration(), sync_mode=SyncMode.PHONEME)
+
+    assert controller.connected is True
+    count = len(MouthPosition)
+    assert [line.split(":")[:3] for line in sent[:count]] == [
+        ["CFG", "CAL", pos.value] for pos in MouthPosition
+    ]
+    assert sent[count:] == ["CFG:MODE:PHONEME", "CFG:DONE"]
+    await controller.disconnect()
+
+
+@pytest.mark.unit
+async def test_mouth_position_command(controller: ArduinoController) -> None:
+    """Test sending mouth position commands."""
+    await controller.connect()
+    await controller.set_mouth_position(MouthPosition.W)
+    await controller.set_mouth_position(MouthPosition.C)
+    await controller.disconnect()
+
+
+@pytest.mark.unit
+async def test_mouth_angles_command(controller: ArduinoController) -> None:
+    """Test sending direct jaw angle commands."""
+    await controller.connect()
+    await controller.set_mouth_angles(90, 85)
+    await controller.disconnect()
+
+
+@pytest.mark.unit
+async def test_eyes_commands(controller: ArduinoController) -> None:
+    """Test eye control commands."""
+    await controller.connect()
+    await controller.open_eyes()
+    await controller.close_eyes()
+    await controller.blink_eyes()
+    await controller.disconnect()
+
+
+@pytest.mark.unit
+async def test_mode_switch(controller: ArduinoController) -> None:
+    """Test switching sync mode."""
+    await controller.connect()
+    await controller.set_mode(SyncMode.PHONEME)
+    await controller.set_mode(SyncMode.AMPLITUDE)
+    await controller.disconnect()
+
+
+@pytest.mark.unit
+async def test_ping(controller: ArduinoController) -> None:
+    """Test ping/pong health check."""
+    await controller.connect()
+    result = await controller.ping()
+    assert result is True
+    await controller.disconnect()
+
+
+@pytest.mark.unit
+async def test_send_command_when_disconnected() -> None:
+    """Test that sending commands when disconnected raises error."""
+    controller = ArduinoController(use_mock=True)
+    with pytest.raises(SerialError, match="Not connected"):
+        await controller.set_mouth_position(MouthPosition.C)
+
+
+@pytest.mark.unit
+async def test_status_parsing() -> None:
+    """Test parsing of STATUS response lines."""
+    status = ArduinoController._parse_status("STATUS:MODE:AMPLITUDE,MOUTH:C,EYES:open")
+    assert status.mode == SyncMode.AMPLITUDE
+    assert status.mouth_position == MouthPosition.C
+    assert status.eyes_open is True
+
+
+@pytest.mark.unit
+async def test_status_parsing_phoneme_closed() -> None:
+    """Test parsing STATUS with phoneme mode and closed eyes."""
+    status = ArduinoController._parse_status("STATUS:MODE:PHONEME,MOUTH:W,EYES:closed")
+    assert status.mode == SyncMode.PHONEME
+    assert status.mouth_position == MouthPosition.W
+    assert status.eyes_open is False
+
+
+@pytest.mark.unit
+async def test_status_parsing_invalid() -> None:
+    """Test parsing invalid STATUS response."""
+    with pytest.raises(SerialError, match="Failed to parse"):
+        ArduinoController._parse_status("STATUS:COMPLETELY_INVALID_NO_COMMAS")

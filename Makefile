@@ -6,16 +6,16 @@ help:  ## Show this help message
 	@echo 'Available targets:'
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-install:  ## Install dependencies for Mac development (mock GPIO)
-	uv venv
-	uv pip install -e ".[dev,mock]"
+install:  ## Install dependencies for Mac development (mock serial)
+	uv venv --allow-existing
+	uv pip install -e ".[dev]"
 	cd frontend && npm install
 
-install-dev:  ## Install development dependencies with mock GPIO
-	uv pip install -e ".[dev,mock]"
+install-dev:  ## Install development dependencies
+	uv pip install -e ".[dev]"
 
 install-pi:  ## Install dependencies for Raspberry Pi (hardware)
-	uv venv
+	uv venv --allow-existing
 	uv pip install -e ".[hardware]"
 
 test:  ## Run backend tests
@@ -31,7 +31,7 @@ run:  ## Run backend server
 	uv run python -m backend.main
 
 dev:  ## Run backend in development mode (auto-reload)
-	uv run uvicorn backend.main:app --reload --host 0.0.0.0 --port 8080
+	uv run uvicorn backend.main:app --reload --host 0.0.0.0 --port 8888
 
 frontend:  ## Run frontend dev server
 	cd frontend && npm run dev

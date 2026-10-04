@@ -5,7 +5,7 @@ for mouth synchronization. It supports both Linux (ALSA) and macOS (afplay).
 """
 
 import asyncio
-import importlib.util
+import hashlib
 import logging
 import platform
 import struct
@@ -13,11 +13,17 @@ import wave
 from collections.abc import Callable
 from pathlib import Path
 
+from mutagen.wave import WAVE
+
 from backend.core.exceptions import AudioError
 
-# Piper is only available on Pi with the [hardware] extra; we shell out to its
-# CLI rather than importing the package, so we just probe for its presence.
-PIPER_AVAILABLE = importlib.util.find_spec("piper") is not None
+# Optional piper import (only available on Pi with [hardware] dependencies)
+try:
+    from piper import PiperVoice  # noqa: F401
+
+    PIPER_AVAILABLE = True
+except ImportError:
+    PIPER_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -45,10 +51,11 @@ class AudioPlayer:
         self,
         sample_rate: int = 16000,
         amplitude_threshold: int = 500,
-        sounds_dir: Path = Path("sounds"),
-        tts_output_dir: Path = Path("sounds/tts"),
+        sounds_dir: Path = Path("data/sounds"),
+        tts_output_dir: Path = Path("data/tts"),
         tts_engine: str = "espeak",
         tts_voice: str = "en+m3",
+        mac_voice: str = "Fred",
         tts_speed: int = 125,
         tts_pitch: int = 50,
         start_volume: int = 100,
@@ -65,6 +72,7 @@ class AudioPlayer:
             tts_output_dir: Directory for TTS output
             tts_engine: TTS engine name
             tts_voice: TTS voice
+            mac_voice: Voice for macOS 'say' (used on Mac regardless of engine)
             tts_speed: TTS speaking speed
             tts_pitch: TTS voice pitch (0-99)
             start_volume: Initial volume level
@@ -78,6 +86,7 @@ class AudioPlayer:
         self.tts_output_dir = tts_output_dir
         self.tts_engine = tts_engine
         self.tts_voice = tts_voice
+        self.mac_voice = mac_voice
         self.tts_speed = tts_speed
         self.tts_pitch = tts_pitch
         self.alsa_device = alsa_device
@@ -85,12 +94,9 @@ class AudioPlayer:
         self.alsa_mixer = alsa_mixer
 
         self._current_amplitude = 0
-        self._amplitude_lock = asyncio.Lock()
+        self._amplitude_lock: asyncio.Lock | None = None
         self._volume = start_volume
         self._platform = platform.system()
-
-        # Read current system volume and sync
-        asyncio.create_task(self._initialize_volume(start_volume))
 
         device_info = f", device={alsa_device}" if alsa_device else ""
         card_info = f", card={alsa_card_index}" if alsa_card_index is not None else ""
@@ -99,6 +105,11 @@ class AudioPlayer:
             f"sample_rate={sample_rate}Hz, threshold={amplitude_threshold}"
             f"{device_info}{card_info}"
         )
+
+    async def start(self) -> None:
+        """Initialize async primitives and sync volume. Call from lifespan."""
+        self._amplitude_lock = asyncio.Lock()
+        await self._initialize_volume(self._volume)
 
     @property
     def current_amplitude(self) -> int:
@@ -226,6 +237,19 @@ class AudioPlayer:
         else:
             return await self._generate_tts_espeak(text, output_file)
 
+    def _tts_cache_path(self, text: str) -> Path:
+        """Cache path for a phrase; voice settings are part of the key so changes take effect."""
+        parts = (
+            self.tts_engine,
+            self.tts_voice,
+            self.mac_voice,
+            self.tts_speed,
+            self.tts_pitch,
+            text,
+        )
+        key = "|".join(str(part) for part in parts)
+        return self.tts_output_dir / f"{hashlib.md5(key.encode()).hexdigest()[:12]}.wav"
+
     async def _generate_tts_piper(self, text: str, output_file: Path | None = None) -> Path:
         """Generate TTS using Piper CLI (neural TTS).
 
@@ -240,9 +264,11 @@ class AudioPlayer:
             AudioError: If TTS generation fails
         """
         if not output_file:
-            # Generate unique filename
-            safe_text = "".join(c if c.isalnum() else "_" for c in text[:30])
-            output_file = self.tts_output_dir / f"{safe_text}.wav"
+            output_file = self._tts_cache_path(text)
+
+        if output_file.exists():
+            logger.info(f"TTS cache hit: {output_file.name}")
+            return output_file
 
         # Ensure output directory exists
         output_file.parent.mkdir(parents=True, exist_ok=True)
@@ -310,19 +336,18 @@ class AudioPlayer:
             AudioError: If TTS generation fails
         """
         if not output_file:
-            # Generate unique filename
-            safe_text = "".join(c if c.isalnum() else "_" for c in text[:30])
-            output_file = self.tts_output_dir / f"{safe_text}.wav"
+            output_file = self._tts_cache_path(text)
+
+        if output_file.exists():
+            logger.info(f"TTS cache hit: {output_file.name}")
+            return output_file
 
         # Ensure output directory exists
         output_file.parent.mkdir(parents=True, exist_ok=True)
 
         try:
             if self._platform == "Darwin":
-                # macOS: Use built-in 'say' command with high-quality voices
-                # Available voices: Fred (male), Samantha (female), Alex (default male)
-                voice = "Fred"  # Natural male voice
-
+                # macOS: Use built-in 'say' command (list voices with: say -v '?')
                 # Generate TTS using macOS 'say'
                 # Output as AIFF first (say's native format)
                 aiff_file = output_file.with_suffix(".aiff")
@@ -330,7 +355,7 @@ class AudioPlayer:
                 process = await asyncio.create_subprocess_exec(
                     "say",
                     "-v",
-                    voice,
+                    self.mac_voice,
                     "-o",
                     str(aiff_file),
                     text,
@@ -439,6 +464,7 @@ class AudioPlayer:
         """
         if not amplitudes:
             return
+        assert self._amplitude_lock is not None  # created in start()
 
         samples_per_update = max(1, len(amplitudes) // int(duration * 50))  # 50Hz update rate
         update_interval = duration / (len(amplitudes) / samples_per_update)
@@ -460,19 +486,24 @@ class AudioPlayer:
                 self._current_amplitude = 0
 
     async def play_file(
-        self, audio_file: Path, amplitude_callback: Callable[[], None] | None = None
+        self,
+        audio_file: Path,
+        amplitude_callback: Callable[[], None] | None = None,
+        start_callback: Callable[[], None] | None = None,
     ) -> None:
         """Play audio file with amplitude tracking.
 
         Args:
             audio_file: Path to audio file
             amplitude_callback: Optional callback for amplitude updates
+            start_callback: Optional callback invoked at the exact moment audio starts
 
         Raises:
             AudioError: If playback fails
         """
         if not audio_file.exists():
             raise AudioError(f"Audio file not found: {audio_file}")
+        assert self._amplitude_lock is not None  # created in start()
 
         try:
             # Read amplitude data
@@ -494,6 +525,10 @@ class AudioPlayer:
 
             # Give mouth time to start moving (monitor checks every 0.04s + servo needs ~0.1s)
             await asyncio.sleep(0.10)
+
+            # Signal that audio is about to start
+            if start_callback:
+                start_callback()
 
             # Now start both amplitude tracking and audio together (in sync)
             amplitude_task = asyncio.create_task(
@@ -541,67 +576,61 @@ class AudioPlayer:
         except Exception as e:
             raise AudioError(f"Failed to play {audio_file}: {e}") from e
 
-    async def play_sound(
-        self, sound_name: str, amplitude_callback: Callable[[], None] | None = None
-    ) -> None:
-        """Play a sound file by name.
+    def resolve_sound_file(self, sound_name: str) -> Path:
+        """Resolve a sound name to its file path, searching examples/ then user/.
 
         Args:
             sound_name: Name of sound file (without .wav extension)
-            amplitude_callback: Optional callback for amplitude updates
-
-        Raises:
-            AudioError: If sound file not found or playback fails
-        """
-        sound_file = self.sounds_dir / f"{sound_name}.wav"
-        await self.play_file(sound_file, amplitude_callback)
-
-    async def speak(self, text: str, amplitude_callback: Callable[[], None] | None = None) -> None:
-        """Synthesize and play speech.
-
-        Args:
-            text: Text to speak
-            amplitude_callback: Optional callback for amplitude updates
-
-        Raises:
-            AudioError: If TTS or playback fails
-        """
-        # Generate TTS
-        tts_file = await self.generate_tts(text)
-
-        # Play the generated file
-        await self.play_file(tts_file, amplitude_callback)
-
-    def is_mouth_open_threshold(self) -> bool:
-        """Check if current amplitude exceeds mouth threshold.
 
         Returns:
-            True if amplitude is above threshold
-        """
-        return self._current_amplitude > self.amplitude_threshold
+            Path to the sound file
 
-    def get_mouth_position(self, max_amplitude: int = 3000) -> int:
-        """Get mouth position as percentage based on current amplitude.
+        Raises:
+            AudioError: If sound file not found in any subdirectory
+        """
+        filename = f"{sound_name}.wav"
+        for subdir in ("examples", "user"):
+            candidate = self.sounds_dir / subdir / filename
+            if candidate.exists():
+                return candidate
+        raise AudioError(
+            f"Sound file not found: {sound_name} "
+            f"(searched {self.sounds_dir}/examples/ and {self.sounds_dir}/user/)"
+        )
+
+    @staticmethod
+    def read_wav_title(path: Path) -> str | None:
+        """Read the title metadata from a WAV file.
 
         Args:
-            max_amplitude: Maximum expected amplitude value (default 3000)
+            path: Path to WAV file
 
         Returns:
-            Mouth position as percentage (0-100)
+            Title string or None if no title metadata
         """
-        # Use the configured amplitude threshold instead of hardcoded 100
-        # This ensures mouth closes fully during quiet moments
-        if self._current_amplitude < self.amplitude_threshold:
-            return 0
+        try:
+            w = WAVE(path)  # type: ignore[no-untyped-call]
+            if w.tags and "TIT2" in w.tags:
+                return str(w.tags["TIT2"])
+        except Exception as e:
+            logger.debug(f"Failed to read metadata from {path}: {e}")
+        return None
 
-        # Map amplitude above threshold to 0-100% with more aggressive scaling
-        # Subtract threshold so mouth opens from actual speech, not background noise
-        effective_amplitude = self._current_amplitude - self.amplitude_threshold
-        effective_max = max_amplitude - self.amplitude_threshold
+    def list_sounds(self) -> dict[str, str]:
+        """Discover all available sounds with titles from WAV metadata.
 
-        # Use square root for more natural response (quieter sounds open mouth less)
-        normalized = min(effective_amplitude / effective_max, 1.0)
-        scaled = normalized**0.6  # Adjusted exponent for better talking motion
-        position = int(scaled * 100)
+        Scans examples/ and user/ subdirectories. Returns a dictionary
+        mapping sound name to its title (from WAV metadata) or the
+        filename stem if no title is embedded.
 
-        return min(max(position, 0), 100)
+        Returns:
+            Dictionary mapping sound name to display title
+        """
+        sounds: dict[str, str] = {}
+        for subdir in ("examples", "user"):
+            subdir_path = self.sounds_dir / subdir
+            if subdir_path.is_dir():
+                for wav in sorted(subdir_path.glob("*.wav")):
+                    title = self.read_wav_title(wav)
+                    sounds[wav.stem] = title or wav.stem
+        return sounds

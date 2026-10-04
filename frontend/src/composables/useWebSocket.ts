@@ -2,8 +2,7 @@
  * WebSocket connection composable
  */
 
-import { ref, onUnmounted, type Ref } from 'vue'
-import type { WebSocketMessage } from '@/types/websocket'
+import { ref, type Ref } from 'vue'
 
 export interface WebSocketComposable {
   socket: Ref<WebSocket | null>

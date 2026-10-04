@@ -2,17 +2,16 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, "release/**"]
   pull_request:
-    branches: [main]
+    branches: [main, "release/**"]
 
 jobs:
   backend:
     runs-on: ubuntu-latest
     env:
-      # CI runs on Linux, but this repo's mock-GPIO auto-detection only
-      # kicks in on Darwin (Mac dev). Force it explicitly here.
-      HARDWARE__USE_MOCK_GPIO: "true"
+      # Mock serial auto-detection only kicks in on Darwin (Mac dev). Force it here.
+      SERIAL__USE_MOCK: "true"
     steps:
       - uses: actions/checkout@v7
       - name: Install uv
