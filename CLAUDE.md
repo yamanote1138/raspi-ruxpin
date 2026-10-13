@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Raspi Ruxpin 2.0 — an animatronic Teddy Ruxpin control system. A Raspberry Pi (or Mac in dev) serves as the brain: audio playback, analysis, web UI. An Arduino handles all motor control via serial. The Pi's audio output is Y-split — one end to speaker, one end to Arduino's analog input for realtime mode.
+Raspi Ruxpin — an animatronic Teddy Ruxpin control system. A Raspberry Pi (or Mac in dev) serves as the brain: audio playback, analysis, web UI. An Arduino handles all motor control via serial. The Pi's audio output is Y-split — one end to speaker, one end to Arduino's analog input for realtime mode.
 
 Three 3-wire hobby servos: upper jaw, lower jaw (together the 7-position mouth model: C/T/S/N/M/L/W), and eyes (open/close/blink).
 

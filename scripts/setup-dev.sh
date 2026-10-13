@@ -1,10 +1,10 @@
 #!/bin/bash
-# Development setup script for Raspi Ruxpin 2.0
+# Development setup script for Raspi Ruxpin
 # Uses uv for fast Python dependency management
 
 set -e
 
-echo "🐻 Raspi Ruxpin 2.0 - Development Setup"
+echo "🐻 Raspi Ruxpin - Development Setup"
 echo "========================================"
 echo ""
 
