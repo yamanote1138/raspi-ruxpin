@@ -12,6 +12,7 @@ from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from backend import __version__
 from backend.api.endpoints.health import router as health_router
 from backend.api.websocket import websocket_endpoint
 from backend.config import get_settings
@@ -122,7 +123,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 app = FastAPI(
     title="Raspi Ruxpin",
     description="Modern animatronic bear control system",
-    version="2.0.0",
+    version=__version__,
     lifespan=lifespan,
 )
 

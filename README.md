@@ -1,4 +1,4 @@
-# Raspi Ruxpin 2.0
+# Raspi Ruxpin
 
 ![creepy bear](https://raw.githubusercontent.com/yamanote1138/raspi-ruxpin/master/public/img/teddy_eomo.png)
 
@@ -197,7 +197,8 @@ MIT
 
 ## Version history
 
-- **Next**: Motors now run from an Arduino over serial (no more Pi GPIO). Adds amplitude, phoneme, and realtime sync, a terminal menu, and audio quality scoring. Frontend reworked into a simpler two-column layout.
+- **3.0.0** (in development): Motors now run from an Arduino over serial (no more Pi GPIO). Adds amplitude, phoneme, and realtime sync, a terminal menu, and audio quality scoring. Frontend reworked into a simpler two-column layout.
+- **2.1.2**: Dependency updates and CI (TypeScript 6).
 - **2.1.1**: Dependency updates and CI.
 - **2.0.0** (2025): FastAPI + Vue 3 rewrite, WebSocket control, text-to-speech, Mac development mode.
 - **1.0.0** (2023): Original Vue 2 + aiohttp version.
