@@ -1,6 +1,6 @@
 [Unit]
 Description=Raspi Ruxpin Animatronic Control System
-Documentation=https://github.com/yourusername/raspi-ruxpin
+Documentation=https://github.com/yamanote1138/raspi-ruxpin
 After=network-online.target sound.target
 Wants=network-online.target
 
@@ -8,8 +8,8 @@ Wants=network-online.target
 Type=simple
 User=pi
 Group=pi
-# Grant access to GPIO and audio devices
-SupplementaryGroups=gpio audio
+# Grant access to the Arduino's serial port and audio devices
+SupplementaryGroups=dialout audio
 
 # Project directory
 WorkingDirectory=/home/pi/raspi-ruxpin
@@ -36,12 +36,12 @@ RestartSec=10
 StartLimitBurst=5
 StartLimitIntervalSec=600
 
-# Security hardening
-# Note: Removed NoNewPrivileges as it may interfere with GPIO access
+# Security hardening (data/ holds TTS, timing cache, and sounds; .cache holds Whisper models)
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/home/pi/raspi-ruxpin/sounds/tts
+ReadWritePaths=/home/pi/raspi-ruxpin/data
+ReadWritePaths=-/home/pi/.cache
 
 # Logging
 StandardOutput=journal
